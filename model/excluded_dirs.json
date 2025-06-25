@@ -1,0 +1,15 @@
+[
+  ".git", ".svn", ".hg",
+  "node_modules", "bower_components", "vendor",
+  "build", "dist", "target", "out", "bin", "obj",
+  "__pycache__", ".pytest_cache", ".mypy_cache",
+  ".gradle", ".next", ".nuxt",
+  ".vscode", ".idea", ".project", ".settings", ".classpath",
+  ".venv", "venv", "env", "ENV",
+  "__MACOSX", ".DS_Store",
+  ".github", ".gitlab", ".circleci",
+  "logs", "temp", "tmp",
+  "testdata", "fixtures", "__snapshots__",
+  "site", "storybook-static",
+  ".eggs", "*.egg-info"
+] 
