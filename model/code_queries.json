@@ -1,0 +1,130 @@
+{
+  "python": {
+    "Imports": "(import_statement name: (dotted_name) @name)",
+    "Classes": "(class_definition name: (identifier) @name)",
+    "Functions": "(function_definition name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "javascript": {
+    "Imports": "(import_statement source: (string) @name)",
+    "Classes": "(class_declaration name: (identifier) @name)",
+    "Functions": ["(function_declaration name: (identifier) @name)", "(arrow_function) @name"],
+    "Variables": ["(lexical_declaration (variable_declarator name: (identifier) @name))", "(variable_declaration (variable_declarator name: (identifier) @name))"],
+    "Comments": "(comment) @comment"
+  },
+  "typescript": {
+    "Imports": "(import_statement source: (string) @name)",
+    "Classes": "(class_declaration name: (type_identifier) @name)",
+    "Interfaces": "(interface_declaration name: (type_identifier) @name)",
+    "Functions": "(function_declaration name: (identifier) @name)",
+    "Types": "(type_alias_declaration name: (type_identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "tsx": {
+    "Imports": "(import_statement source: (string) @name)",
+    "Classes": "(class_declaration name: (type_identifier) @name)",
+    "Interfaces": "(interface_declaration name: (type_identifier) @name)",
+    "Functions": "(function_declaration name: (identifier) @name)",
+    "Components": "(jsx_opening_element name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "java": {
+    "Imports": "(import_declaration) @name",
+    "Classes": "(class_declaration name: (identifier) @name)",
+    "Interfaces": "(interface_declaration name: (identifier) @name)",
+    "Methods": "(method_declaration name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "go": {
+    "Imports": "(import_spec path: (interpreted_string_literal) @name)",
+    "Structs": "(type_spec name: (type_identifier) @name)",
+    "Interfaces": "(interface_type) @name",
+    "Functions": "(function_declaration name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "rust": {
+    "Imports": "(use_declaration) @name",
+    "Structs": "(struct_item name: (type_identifier) @name)",
+    "Traits": "(trait_item name: (type_identifier) @name)",
+    "Functions": "(function_item name: (identifier) @name)",
+    "Comments": ["(line_comment) @comment", "(block_comment) @comment"]
+  },
+  "ruby": {
+    "Requires": "(call method: (identifier) @call (#eq? @call \"require\"))",
+    "Classes": "(class name: (constant) @name)",
+    "Modules": "(module name: (constant) @name)",
+    "Methods": "(method name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "php": {
+    "Imports": "(namespace_use_clause) @name",
+    "Classes": "(class_declaration name: (name) @name)",
+    "Traits": "(trait_declaration name: (name) @name)",
+    "Functions": "(function_definition name: (name) @name)",
+    "Comments": ["(comment) @comment"]
+  },
+  "c": {
+    "Includes": "(preproc_include path: (_) @name)",
+    "Structs": "(struct_specifier name: (type_identifier) @name)",
+    "Functions": "(function_declarator declarator: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "cpp": {
+    "Includes": "(preproc_include path: (_) @name)",
+    "Classes": "(class_specifier name: (type_identifier) @name)",
+    "Structs": "(struct_specifier name: (type_identifier) @name)",
+    "Functions": "(function_declarator declarator: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "c_sharp": {
+    "Imports": "(using_directive) @name",
+    "Classes": "(class_declaration name: (identifier) @name)",
+    "Interfaces": "(interface_declaration name: (identifier) @name)",
+    "Methods": "(method_declaration name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "swift": {
+    "Imports": "(import_declaration) @name",
+    "Classes": "(class_declaration name: (identifier) @name)",
+    "Structs": "(struct_declaration name: (identifier) @name)",
+    "Functions": "(function_declaration name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "html": {
+    "Tags": "(tag_name) @name",
+    "Classes": "(class_name) @name",
+    "IDs": "(attribute_value) @name",
+    "Scripts": "(script_element) @name",
+    "Comments": "(comment) @comment"
+  },
+  "css": {
+    "Selectors": ["(class_selector) @name", "(id_selector) @name", "(tag_name) @name"],
+    "Variables": "(declaration property: (custom_property_name) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "scss": {
+    "Imports": "(import_statement) @name",
+    "Selectors": ["(class_selector) @name", "(id_selector) @name", "(tag_name) @name"],
+    "Variables": "(variable_declaration name: (variable_name) @name)",
+    "Mixins": "(mixin_statement name: (identifier) @name)",
+    "Functions": "(function_statement name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "bash": {
+    "Functions": "(function_definition name: (word) @name)",
+    "Variables": "(variable_assignment name: (variable_name) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "lua": {
+    "Functions": "(function_declaration name: (identifier) @name)",
+    "Variables": "(variable_declaration name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  },
+  "scala": {
+    "Imports": "(import_clause) @name",
+    "Classes": "(class_definition name: (identifier) @name)",
+    "Objects": "(object_definition name: (identifier) @name)",
+    "Methods": "(function_definition name: (identifier) @name)",
+    "Comments": "(comment) @comment"
+  }
+} 

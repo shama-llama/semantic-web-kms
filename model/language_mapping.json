@@ -1,0 +1,23 @@
+{
+  ".py": "python",
+  ".js": "javascript",
+  ".mjs": "javascript",
+  ".jsx": "javascript",
+  ".java": "java",
+  ".go": "go",
+  ".rs": "rust",
+  ".ts": "typescript",
+  ".tsx": "tsx",
+  ".rb": "ruby",
+  ".php": "php",
+  ".c": "c",
+  ".cpp": "cpp",
+  ".cs": "c_sharp",
+  ".sh": "bash",
+  ".swift": "swift",
+  ".lua": "lua",
+  ".scala": "scala",
+  ".html": "html",
+  ".css": "css",
+  ".scss": "scss"
+} 
