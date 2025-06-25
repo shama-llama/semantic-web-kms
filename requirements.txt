@@ -1,0 +1,11 @@
+Flask>=2.0.0
+flask-cors>=3.0.10
+elasticsearch>=8.0.0
+rdflib==7.1.4
+requests==2.32.4
+pdfminer.six==20250506
+spacy==3.8.7
+python-magic==0.4.27
+tree-sitter==0.21.3
+tree-sitter-languages==1.10.2
+beautifulsoup4==4.13.4
