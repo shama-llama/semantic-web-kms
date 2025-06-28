@@ -6,6 +6,7 @@ import os
 from rdflib import Graph
 
 # Import services using absolute imports if needed, e.g.:
+# Import services using absolute imports if needed, e.g.:
 # from app.services.rdf_triple_manager import RDFTripleManager
 # from app.services.semantic_annotation import SemanticAnnotator
 # from app.services.extract_code import ...
@@ -25,6 +26,7 @@ app = Flask(__name__)
 CORS(app)
 es = Elasticsearch([ELASTIC_URL])
 
+
 @app.route('/api/sparql', methods=['POST'])
 def sparql_query():
     data = request.get_json()
@@ -34,17 +36,21 @@ def sparql_query():
     fuseki_endpoint = f"{FUSEKI_URL}/{FUSEKI_DATASET}/query"
     headers = {'Accept': 'application/sparql-results+json'}
     auth = (FUSEKI_USER, FUSEKI_PASS) if FUSEKI_USER and FUSEKI_PASS else None
-    resp = requests.post(fuseki_endpoint, data={'query': query}, headers=headers, auth=auth)
+    resp = requests.post(
+        fuseki_endpoint,
+        data={
+            'query': query},
+        headers=headers,
+        auth=auth)
     if resp.status_code == 200:
         return jsonify(resp.json())
     else:
         return jsonify({'error': resp.text}), resp.status_code
 
+
 @app.route('/api/search', methods=['GET'])
 def search():
     q = request.args.get('q', '')
-    filters = request.args.get('filters')  # JSON string or comma-separated
-    sort = request.args.get('sort', 'relevance')
     page = int(request.args.get('page', 1))
     size = int(request.args.get('size', 10))
     # Elasticsearch query
@@ -55,48 +61,16 @@ def search():
                 'fields': ['label^3', 'doc_text', 'code_comments', 'language']
             }
         },
-        'from': (page-1)*size,
+        'from': (page - 1) * size,
         'size': size
     }
     es_results = es.search(index=ELASTIC_INDEX, body=es_query)
     # TODO: Optionally merge with SPARQL results for structured filters
     return jsonify(es_results)
 
-@app.route('/api/related', methods=['GET'])
-def related_assets():
-    asset_uri = request.args.get('assetUri')
-    depth = int(request.args.get('depth', 1))
-    if not asset_uri:
-        return jsonify({'error': 'Missing assetUri'}), 400
-    # Build SPARQL query for 1-hop or 2-hop neighbors
-    if depth == 1:
-        sparql = f'''
-        SELECT DISTINCT ?neighbor ?label WHERE {{
-            <{asset_uri}> ?p ?neighbor .
-            OPTIONAL {{ ?neighbor <http://www.w3.org/2000/01/rdf-schema#label> ?label }}
-        }} LIMIT 100'''
-    else:
-        sparql = f'''
-        SELECT DISTINCT ?neighbor ?label WHERE {{
-            <{asset_uri}> ?p1 ?mid .
-            ?mid ?p2 ?neighbor .
-            OPTIONAL {{ ?neighbor <http://www.w3.org/2000/01/rdf-schema#label> ?label }}
-        }} LIMIT 100'''
-    fuseki_endpoint = f"{FUSEKI_URL}/{FUSEKI_DATASET}/query"
-    headers = {'Accept': 'application/sparql-results+json'}
-    auth = (FUSEKI_USER, FUSEKI_PASS) if FUSEKI_USER and FUSEKI_PASS else None
-    resp = requests.post(fuseki_endpoint, data={'query': sparql}, headers=headers, auth=auth)
-    if resp.status_code == 200:
-        results = resp.json().get('results', {}).get('bindings', [])
-        neighbors = [
-            {'uri': r.get('neighbor', {}).get('value'), 'label': r.get('label', {}).get('value', '')}
-            for r in results if 'neighbor' in r
-        ]
-        return jsonify({'neighbors': neighbors})
-    else:
-        return jsonify({'error': resp.text}), resp.status_code
-
 # --- Indexing logic ---
+
+
 def index_rdf_assets(ttl_path, index_name=ELASTIC_INDEX):
     g = Graph()
     g.parse(ttl_path, format='turtle')
@@ -114,4 +88,6 @@ def index_rdf_assets(ttl_path, index_name=ELASTIC_INDEX):
     ]
     from elasticsearch.helpers import bulk
     bulk(es, actions)
-    print(f"Indexed {len(docs)} assets into Elasticsearch index '{index_name}'") 
+    print(
+        f"Indexed {
+            len(docs)} assets into Elasticsearch index '{index_name}'")

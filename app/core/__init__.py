@@ -7,6 +7,3 @@ MESSAGES = {
     'invalid_input': 'Invalid input provided.',
     # Add more as needed
 }
-
-
-

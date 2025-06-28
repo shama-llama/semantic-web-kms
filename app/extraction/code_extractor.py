@@ -1,237 +1,566 @@
-# extract_code.py
-import os
+import ast
 import json
-from app.core.config import LOG_DIR, DEFAULT_INPUT_DIR
-from app.core.paths import (
-    get_log_path, get_output_path, get_excluded_dirs_path, get_language_mapping_path, get_code_queries_path
-)
-from tree_sitter_languages import get_language, get_parser
-import warnings
-import sys
 import logging
-from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn, TimeRemainingColumn
+import os
+import warnings
+from pathlib import Path
+from typing import Any, Dict, List
+
+from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib.namespace import RDF, RDFS, XSD
 from rich.console import Console
+from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
+from tree_sitter_languages import get_language, get_parser
 
-warnings.filterwarnings("ignore", category=FutureWarning, module='tree_sitter')
+from app.core.ontology_cache import (
+    get_code_extraction_classes,
+    get_code_extraction_properties,
+    get_ontology_cache,
+)
+from app.core.paths import (
+    get_code_queries_path,
+    get_excluded_directories_path,
+    get_input_path,
+    get_language_mapping_path,
+    get_log_path,
+    get_output_path,
+    uri_safe_string,
+)
 
-# Setup dedicated logger
-os.makedirs(LOG_DIR, exist_ok=True)
+# Suppress the FutureWarning from tree_sitter about deprecated Language constructor
+warnings.filterwarnings("ignore", category=FutureWarning, module="tree_sitter")
+
+# Setup logging to file only
 log_path = get_log_path("code_extractor.log")
-debug_mode = os.environ.get("EXTRACT_DEBUG", "0") == "1"
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG if debug_mode else logging.INFO)
-handler = logging.FileHandler(log_path, mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-logger.addHandler(handler)
+os.makedirs(os.path.dirname(log_path), exist_ok=True)
+LOGFORMAT_FILE = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+logging.basicConfig(
+    level=logging.INFO,
+    format=LOGFORMAT_FILE,
+    datefmt="[%Y-%m-%d %H:%M:%S]",
+    handlers=[logging.FileHandler(log_path)],
+)
+logger = logging.getLogger("code_extractor")
 
-# Load excluded directories from external JSON file
-EXCLUDED_DIRS_PATH = get_excluded_dirs_path()
-try:
-    with open(EXCLUDED_DIRS_PATH, 'r', encoding='utf-8') as ed_f:
-        DEFAULT_EXCLUDED_DIRS = set(json.load(ed_f))
-except Exception as e:
-    logger.error(f"Error loading excluded directories from {EXCLUDED_DIRS_PATH}: {e}")
-    DEFAULT_EXCLUDED_DIRS = set()
+# --- Ontology and File Paths ---
+WDO = Namespace("http://semantic-web-kms.edu.et/wdo#")
+INST = Namespace("http://semantic-web-kms.edu.et/wdo/instances/")
 
-# Load language mapping from external JSON file
-LANGUAGE_MAPPING_PATH = get_language_mapping_path()
+TTL_PATH = get_output_path("web_development_ontology.ttl")
+INPUT_DIR = get_input_path("")
+
+# --- Load Configuration from JSON ---
 try:
-    with open(LANGUAGE_MAPPING_PATH, 'r', encoding='utf-8') as lm_f:
-        LANGUAGE_MAPPING = json.load(lm_f)
-except Exception as e:
-    logger.error(f"Error loading language mapping from {LANGUAGE_MAPPING_PATH}: {e}")
+    with open(get_language_mapping_path(), "r") as f:
+        LANGUAGE_MAPPING = json.load(f)
+except Exception:
     LANGUAGE_MAPPING = {}
 
-# Load queries from external JSON file
-QUERIES_PATH = get_code_queries_path()
 try:
-    with open(QUERIES_PATH, 'r', encoding='utf-8') as qf:
-        QUERIES = json.load(qf)
-except Exception as e:
-    logger.error(f"Error loading code queries from {QUERIES_PATH}: {e}")
+    with open(get_code_queries_path(), "r") as f:
+        QUERIES = json.load(f)
+except Exception:
     QUERIES = {}
 
-INPUT_DIR = DEFAULT_INPUT_DIR
-FILES_JSON = get_output_path("extracted_files.json")
-CODE_JSON = get_output_path("extracted_code.json")
+# --- AST Extraction Functions ---
 
-os.makedirs(os.path.dirname(FILES_JSON), exist_ok=True)
 
-console = Console()
-
-def analyze_and_write(file_path, language_name, language_queries, temp_file_handle, base_dir):
-    """
-    Analyzes a single file and writes its result directly to the temporary file.
-    """
-    file_results = {}
-    try:
-        language = get_language(language_name)
-        parser = get_parser(language_name)
-    except Exception as e:
-        logger.error(f"Failed to get language/parser for {language_name}: {e}")
+def extract_tree_sitter_entities(
+    lang_name: str,
+    tree_root: Any,
+    code_bytes: bytes,
+    queries: Dict[str, Any],
+    summary: Dict[str, Any],
+) -> None:
+    """Extract entities from tree-sitter AST using language-specific queries, covering all ontology-relevant entities and relationships."""
+    language = get_language(lang_name)
+    if not language:
         return
 
-    try:
-        with open(file_path, 'rb') as f:
-            code = f.read()
-            tree = parser.parse(code)
-            root_node = tree.root_node
-    except Exception as e:
-        logger.error(f"Failed to parse file {file_path}: {e}")
-        return
+    # Helper to decode node text
+    def node_text(node):
+        return code_bytes[node.start_byte:node.end_byte].decode("utf-8", errors="ignore").strip()
 
-    for construct, query_str_or_list in language_queries.items():
-        query_list = query_str_or_list if isinstance(
-            query_str_or_list, list) else [query_str_or_list]
-        all_captures = []
+    # Map capture names to summary keys
+    capture_to_key = {
+        # Entity types
+        "class": "classes",
+        "struct": "classes",
+        "interface": "classes",
+        "enum": "classes",
+        "trait": "classes",
+        "type": "classes",
+        "function": "functions",
+        "method": "functions",
+        "constructor": "functions",
+        "param": "parameters",
+        "parameter": "parameters",
+        "attr": "fields",
+        "field": "fields",
+        "variable": "variables",
+        "import": "imports",
+        "func": "calls",
+        "call": "calls",
+        "decorator": "decorators",
+        "annotation": "decorators",
+        "type_annotation": "types",
+        "annotation_type": "types",
+        # Add more as needed
+    }
+
+    for query_name, query_list in queries.get(lang_name, {}).items():
         for query_str in query_list:
             try:
+                logger.info(f"Running query for {lang_name} - {query_name}: {query_str}")
                 query = language.query(query_str)
-                captures = query.captures(root_node)
-                for node, _ in captures:
-                    capture_info = {"text": node.text.decode(
-                        'utf-8', errors='ignore').strip(), "line": node.start_point[0] + 1}
-                    if capture_info not in all_captures:
-                        all_captures.append(capture_info)
+                captures = query.captures(tree_root)
+                for node, capture_name in captures:
+                    start_line = node.start_point[0] + 1
+                    end_line = node.end_point[0] + 1
+                    text = node_text(node)
+                    entity_info = {
+                        "raw": text,
+                        "start_line": start_line,
+                        "end_line": end_line,
+                    }
+                    key = capture_to_key.get(capture_name)
+                    if key:
+                        if key not in summary:
+                            summary[key] = []
+                        summary[key].append(entity_info)
+                        logger.info(f"Extracted {key} (tree-sitter): {entity_info}")
             except Exception as e:
-                logger.debug(f"Query failed for {construct} in {file_path}: {e}")
-                continue
-        if all_captures:
-            all_captures.sort(key=lambda c: c['line'])
-            file_results[construct] = all_captures
+                logger.warning(f"Query {query_name} failed for {lang_name}: {e}")
 
-    if file_results:
-        relative_path = os.path.relpath(file_path, base_dir)
-        output_obj = {
-            relative_path: {
-                "language": language_name,
-                "constructs": file_results
-            }
+
+def extract_python_entities(node: ast.AST, summary: Dict[str, Any], parent_class=None) -> None:
+    """Recursively extract classes, functions, attributes, parameters, variables, inheritance, decorators, and calls from a Python AST node."""
+    if isinstance(node, ast.ClassDef):
+        class_info = {
+            "raw": f"class {node.name}(...):",
+            "name": node.name,
+            "start_line": node.lineno,
+            "end_line": getattr(node, "end_lineno", node.lineno),
+            "bases": [getattr(base, 'id', getattr(base, 'attr', str(base))) for base in node.bases],
+            "methods": [],
+            "fields": [],
+            "decorators": [ast.unparse(dec) if hasattr(ast, 'unparse') else '' for dec in node.decorator_list],
         }
-        json.dump(output_obj, temp_file_handle)
-        temp_file_handle.write('\n')
-        logger.info(f"Analyzed and wrote results for {relative_path}")
-        logger.debug(f"Results: {output_obj}")
+        # Class-level attributes (fields)
+        for body_item in node.body:
+            if isinstance(body_item, ast.FunctionDef) or isinstance(body_item, ast.AsyncFunctionDef):
+                # Methods will be handled below
+                pass
+            elif isinstance(body_item, ast.Assign):
+                for target in body_item.targets:
+                    if isinstance(target, ast.Name):
+                        field_info = {
+                            "name": target.id,
+                            "start_line": body_item.lineno,
+                            "end_line": getattr(body_item, "end_lineno", body_item.lineno),
+                            "type": ast.unparse(body_item.value) if hasattr(ast, 'unparse') else type(body_item.value).__name__,
+                        }
+                        class_info["fields"].append(field_info)
+            elif isinstance(body_item, ast.AnnAssign):
+                # Annotated assignment
+                if isinstance(body_item.target, ast.Name):
+                    field_info = {
+                        "name": body_item.target.id,
+                        "start_line": body_item.lineno,
+                        "end_line": getattr(body_item, "end_lineno", body_item.lineno),
+                        "type": ast.unparse(body_item.annotation) if hasattr(ast, 'unparse') else str(body_item.annotation),
+                    }
+                    class_info["fields"].append(field_info)
+        # Methods
+        for body_item in node.body:
+            if isinstance(body_item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                extract_python_entities(body_item, summary, parent_class=node.name)
+                # Methods are added to summary in the function handler
+        if "classes" not in summary:
+            summary["classes"] = []
+        summary["classes"].append(class_info)
+        # Record inheritance relationships
+        if class_info["bases"]:
+            if "extends" not in summary:
+                summary["extends"] = []
+            for base in class_info["bases"]:
+                summary["extends"].append({"class": node.name, "base": base})
+        logger.info(f"Extracted class (python): {class_info}")
+    elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        func_info = {
+            "raw": f"def {node.name}(...):",
+            "name": node.name,
+            "start_line": node.lineno,
+            "end_line": getattr(node, "end_lineno", node.lineno),
+            "parameters": [],
+            "variables": [],
+            "calls": [],
+            "decorators": [ast.unparse(dec) if hasattr(ast, 'unparse') else '' for dec in node.decorator_list],
+            "returns": ast.unparse(node.returns) if node.returns and hasattr(ast, 'unparse') else (str(node.returns) if node.returns else None),
+            "parent_class": parent_class,
+        }
+        # Parameters
+        for arg in node.args.args:
+            param_info = {
+                "name": arg.arg,
+                "type": ast.unparse(arg.annotation) if arg.annotation and hasattr(ast, 'unparse') else (str(arg.annotation) if arg.annotation else None),
+            }
+            func_info["parameters"].append(param_info)
+        # Local variables and function calls
+        for subnode in ast.walk(node):
+            # Local variable assignments
+            if isinstance(subnode, ast.Assign):
+                for target in subnode.targets:
+                    if isinstance(target, ast.Name):
+                        var_info = {
+                            "name": target.id,
+                            "start_line": subnode.lineno,
+                            "end_line": getattr(subnode, "end_lineno", subnode.lineno),
+                            "type": ast.unparse(subnode.value) if hasattr(ast, 'unparse') else type(subnode.value).__name__,
+                        }
+                        func_info["variables"].append(var_info)
+            elif isinstance(subnode, ast.AnnAssign):
+                if isinstance(subnode.target, ast.Name):
+                    var_info = {
+                        "name": subnode.target.id,
+                        "start_line": subnode.lineno,
+                        "end_line": getattr(subnode, "end_lineno", subnode.lineno),
+                        "type": ast.unparse(subnode.annotation) if hasattr(ast, 'unparse') else str(subnode.annotation),
+                    }
+                    func_info["variables"].append(var_info)
+            # Function calls
+            elif isinstance(subnode, ast.Call):
+                if isinstance(subnode.func, ast.Name):
+                    call_name = subnode.func.id
+                elif isinstance(subnode.func, ast.Attribute):
+                    call_name = ast.unparse(subnode.func) if hasattr(ast, 'unparse') else ''
+                else:
+                    call_name = ''
+                if call_name:
+                    func_info["calls"].append(call_name)
+        if parent_class:
+            if "methods" not in summary:
+                summary["methods"] = []
+            summary["methods"].append(func_info)
+        else:
+            if "functions" not in summary:
+                summary["functions"] = []
+            summary["functions"].append(func_info)
+        logger.info(f"Extracted function (python): {func_info}")
+    elif isinstance(node, ast.Import):
+        for alias in node.names:
+            if "imports" not in summary:
+                summary["imports"] = []
+            import_info = {"raw": f"import {alias.name}"}
+            summary["imports"].append(import_info)
+            logger.info(f"Extracted import (python): {import_info}")
+    elif isinstance(node, ast.ImportFrom):
+        module = node.module or "."
+        for alias in node.names:
+            if "imports" not in summary:
+                summary["imports"] = []
+            import_info = {"raw": f"from {module} import {alias.name}"}
+            summary["imports"].append(import_info)
+            logger.info(f"Extracted import-from (python): {import_info}")
+    # Recurse into all child nodes
+    for child in ast.iter_child_nodes(node):
+        extract_python_entities(child, summary, parent_class=parent_class)
 
-def parse_directory(directory_path, temp_file_handle, excluded_dirs):
-    """
-    Walks a directory, skipping excluded directories, and analyzes supported files.
-    """
-    logger.info(f"Starting analysis of directory: {directory_path}")
-    logger.info(f"Excluding directories: {', '.join(sorted(list(excluded_dirs)))}")
 
-    for root, dirs, files in os.walk(directory_path):
-        # Modify dirs in-place to prevent os.walk from descending into them.
-        dirs[:] = [d for d in dirs if d not in excluded_dirs]
+# --- Main Processing Logic ---
 
-        for file in files:
-            file_path = os.path.join(root, file)
-            file_extension = os.path.splitext(file)[1]
-            if file_extension in LANGUAGE_MAPPING:
-                language_name = LANGUAGE_MAPPING[file_extension]
-                language_queries = QUERIES.get(language_name)
-                if language_queries:
-                    logger.debug(f"Analyzing: {file_path}")
-                    analyze_and_write(
-                        file_path, language_name, language_queries, temp_file_handle, directory_path)
 
-def compile_final_json(temp_path, final_path):
-    """
-    Reads the temporary JSON Lines file and creates the final, formatted JSON file.
-    """
-    logger.info(f"\nCompiling final JSON file from temporary data...")
-    final_results = {}
-    try:
-        with open(temp_path, 'r', encoding='utf-8') as f_in:
-            for line in f_in:
-                if line.strip():
-                    final_results.update(json.loads(line))
+def main() -> None:
+    """Main function for code extraction."""
+    console = Console()
 
-        with open(final_path, 'w', encoding='utf-8') as f_out:
-            json.dump(final_results, f_out, indent=2, ensure_ascii=False)
-        logger.info(f"Compilation complete. Final results saved to {final_path}")
+    logger.info("Starting code extraction process...")
 
-    except FileNotFoundError:
-        logger.warning("No data was analyzed, so no output file was created.")
-    except Exception as e:
-        logger.error(f"An error occurred during final JSON compilation: {e}")
+    # Load excluded directories
+    excluded_dirs_path = get_excluded_directories_path()
+    with open(excluded_dirs_path, "r") as f:
+        excluded_dirs = set(json.load(f))
 
-def extract_code_entities(file_records, root_dir, tso_path, output_path):
-    """
-    Extracts code entities from files listed in file_records and writes to output_path.
-    Only processes files with supported extensions and type 'code'.
-    """
-    results = {}
-    code_files = [file for file in file_records if file.get('type') == 'code' and file.get('extension') in LANGUAGE_MAPPING]
-    total_code = len(code_files)
-    logger.info(f"Starting code extraction for {total_code} files in {root_dir}")
-    doc_id = 1
+    # Scan input directory directly for supported files
+    supported_files: List[Dict[str, Any]] = []
+    repo_dirs = [
+        d
+        for d in os.listdir(INPUT_DIR)
+        if os.path.isdir(os.path.join(INPUT_DIR, d)) and d not in excluded_dirs
+    ]
+
+    for repo in repo_dirs:
+        repo_path = os.path.join(INPUT_DIR, repo)
+        for dirpath, dirnames, filenames in os.walk(repo_path):
+            # Exclude directories in-place at every level
+            dirnames[:] = [d for d in dirnames if d not in excluded_dirs]
+            for fname in filenames:
+                ext = Path(fname).suffix.lower()
+                if ext in LANGUAGE_MAPPING:
+                    abs_path = os.path.join(dirpath, fname)
+                    rel_path = os.path.relpath(abs_path, repo_path)
+                    supported_files.append(
+                        {
+                            "repository": repo,
+                            "path": rel_path,
+                            "extension": ext,
+                            "abs_path": abs_path,
+                        }
+                    )
+
+    logger.info(
+        f"Found {len(supported_files)} supported files in {len(repo_dirs)} repositories"
+    )
+
+    # Load ontology and cache
+    ontology_cache = get_ontology_cache()
+    prop_cache = ontology_cache.get_property_cache(get_code_extraction_properties())
+    class_cache = ontology_cache.get_class_cache(get_code_extraction_classes())
+
+    g = Graph()
+    if os.path.exists(TTL_PATH):
+        g.parse(TTL_PATH, format="turtle")
+
+    summary_data: Dict[str, Dict[str, Any]] = {}
+
+    progress_columns = [
+        TextColumn("[bold blue]{task.description}"),
+        BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        TimeElapsedColumn(),
+    ]
+
     with Progress(
         TextColumn("[bold blue]{task.description}"),
         BarColumn(),
         "[progress.percentage]{task.percentage:>3.0f}%",
         TimeElapsedColumn(),
-        TimeRemainingColumn(),
         console=console,
     ) as progress:
-        task = progress.add_task("[green]Extracting code...", total=total_code)
-        for file in code_files:
-            ext = file.get('extension')
-            language_name = LANGUAGE_MAPPING[ext]
-            language_queries = QUERIES.get(language_name)
-            abs_path = os.path.join(root_dir, file['path'])
-            file_results = {}
-            try:
-                language = get_language(language_name)
-                parser = get_parser(language_name)
-                with open(abs_path, 'rb') as f:
-                    code = f.read()
-                    tree = parser.parse(code)
-                    root_node = tree.root_node
-                for construct, query_str_or_list in language_queries.items():
-                    query_list = query_str_or_list if isinstance(
-                        query_str_or_list, list) else [query_str_or_list]
-                    all_captures = []
-                    for query_str in query_list:
-                        try:
-                            query = language.query(query_str)
-                            captures = query.captures(root_node)
-                            for node, _ in captures:
-                                capture_info = {"text": node.text.decode(
-                                    'utf-8', errors='ignore').strip(), "line": node.start_point[0] + 1}
-                                if capture_info not in all_captures:
-                                    all_captures.append(capture_info)
-                        except Exception as e:
-                            logger.debug(f"Query failed for {construct} in {abs_path}: {e}")
-                            continue
-                    if all_captures:
-                        all_captures.sort(key=lambda c: c['line'])
-                        file_results[construct] = all_captures
-                if file_results:
-                    results[file['path']] = {
-                        "language": language_name,
-                        "constructs": file_results
-                    }
-                    logger.info(f"Extracted code entities from {abs_path}")
-                    logger.debug(f"Results: {{'language': '{language_name}', 'constructs': {file_results}}}")
-            except Exception as e:
-                logger.error(f"Error processing {abs_path}: {e}")
-            progress.advance(task)
-    with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(results, f, indent=2, ensure_ascii=False)
-    summary = f"Extracted code entities for {len(results)} files. Output written to {output_path}"
-    console.print(f"[bold green]{summary}")
-    logger.info(summary)
-    logger.debug(f"extract_code_entities completed. Total files: {len(results)}")
+        # AST extraction progress
+        extract_task = progress.add_task(
+            "[blue]Extracting AST entities...", total=len(supported_files)
+        )
 
-def main():
-    if os.path.exists(FILES_JSON):
-        with open(FILES_JSON, 'r') as f:
-            file_records = json.load(f)
-        extract_code_entities(file_records, INPUT_DIR, None, CODE_JSON)
-    else:
-        logger.error(
-            f"Error: files.json not found at {FILES_JSON}. Please run extract_files.py first.")
+        for rec in supported_files:
+            repo = rec["repository"]
+            rel_path = rec["path"]
+            abs_path = rec["abs_path"]
+            ext = rec["extension"]
+            lang_name = LANGUAGE_MAPPING.get(ext)
+
+            if not lang_name:
+                progress.advance(extract_task)
+                continue
+
+            try:
+                with open(abs_path, "rb") as f:
+                    code_bytes = f.read()
+            except Exception as e:
+                logger.warning(f"Could not read {abs_path}: {e}")
+                progress.advance(extract_task)
+                continue
+
+            summary_key = f"{repo}/{rel_path}"
+            summary_data[summary_key] = {"errors": []}
+
+            try:
+                if lang_name == "python":
+                    # Use Python's native AST parser
+                    code_str = code_bytes.decode("utf-8", errors="ignore")
+                    tree = ast.parse(code_str)
+                    extract_python_entities(tree, summary_data[summary_key])
+                elif lang_name in QUERIES:
+                    # Use generic tree-sitter parser
+                    parser = get_parser(lang_name)
+                    tree = parser.parse(code_bytes)
+                    extract_tree_sitter_entities(
+                        lang_name,
+                        tree.root_node,
+                        code_bytes,
+                        QUERIES,
+                        summary_data[summary_key],
+                    )
+
+            except Exception as e:
+                summary_data[summary_key]["errors"].append(str(e))
+                logger.warning(f"AST extraction failed for {abs_path}: {e}")
+
+            progress.advance(extract_task)
+
+        logger.info(
+            "AST extraction complete. Writing code structure entities to ontology..."
+        )
+
+        # --- Write code structure entities to TTL & RDF ---
+        ttl_task = progress.add_task("[blue]Writing TTL...", total=len(supported_files))
+
+        for rec in supported_files:
+            repo = rec["repository"]
+            rel_path = rec["path"]
+            file_enc = uri_safe_string(rel_path)
+            repo_enc = uri_safe_string(repo)
+            file_uri = INST[f"{repo_enc}/{file_enc}"]
+            summary_key = f"{repo}/{rel_path}"
+            constructs = summary_data.get(summary_key, {})
+
+            # --- Classes/Structs/Interfaces/Enums ---
+            class_uris = {}
+            for cls in constructs.get("ClassDefinition", []) + constructs.get("classes", []):
+                class_id = cls.get("raw") or cls.get("name")
+                if not class_id:
+                    continue
+                class_uri = URIRef(f"{file_uri}/class/{uri_safe_string(class_id)}")
+                class_uris[class_id] = class_uri
+                g.add((class_uri, RDF.type, class_cache["ClassDefinition"]))
+                g.add((class_uri, prop_cache["isElementOf"], file_uri))
+                g.add((class_uri, prop_cache["hasSimpleName"], Literal(class_id, datatype=XSD.string)))
+                if "start_line" in cls:
+                    g.add((class_uri, prop_cache["startsAtLine"], Literal(cls["start_line"], datatype=XSD.integer)))
+                if "end_line" in cls:
+                    g.add((class_uri, prop_cache["endsAtLine"], Literal(cls["end_line"], datatype=XSD.integer)))
+                # Decorators/annotations
+                for dec in cls.get("decorators", []):
+                    g.add((class_uri, prop_cache.get("hasDecorator", RDFS.seeAlso), Literal(dec, datatype=XSD.string)))
+
+            # --- Inheritance/Extends/Implements ---
+            for ext in constructs.get("extends", []):
+                sub = ext.get("class")
+                sup = ext.get("base")
+                if sub and sup and sub in class_uris:
+                    g.add((class_uris[sub], prop_cache.get("extendsType", RDFS.subClassOf), Literal(sup, datatype=XSD.string)))
+
+            # --- Fields/Attributes ---
+            for field in constructs.get("fields", []):
+                field_id = field.get("raw") or field.get("name")
+                if not field_id:
+                    continue
+                field_uri = URIRef(f"{file_uri}/field/{uri_safe_string(field_id)}")
+                g.add((field_uri, RDF.type, class_cache["AttributeDeclaration"]))
+                g.add((field_uri, prop_cache["isElementOf"], file_uri))
+                g.add((field_uri, prop_cache["hasSimpleName"], Literal(field_id, datatype=XSD.string)))
+                if "type" in field:
+                    g.add((field_uri, prop_cache.get("hasType", RDFS.seeAlso), Literal(field["type"], datatype=XSD.string)))
+                if "start_line" in field:
+                    g.add((field_uri, prop_cache["startsAtLine"], Literal(field["start_line"], datatype=XSD.integer)))
+                if "end_line" in field:
+                    g.add((field_uri, prop_cache["endsAtLine"], Literal(field["end_line"], datatype=XSD.integer)))
+                # Link to class if possible
+                for cls in class_uris.values():
+                    g.add((cls, prop_cache.get("hasField", RDFS.member), field_uri))
+
+            # --- Functions/Methods/Constructors ---
+            func_uris = {}
+            for func in constructs.get("FunctionDefinition", []) + constructs.get("functions", []):
+                func_id = func.get("raw") or func.get("name")
+                if not func_id:
+                    continue
+                func_uri = URIRef(f"{file_uri}/function/{uri_safe_string(func_id)}")
+                func_uris[func_id] = func_uri
+                g.add((func_uri, RDF.type, class_cache["FunctionDefinition"]))
+                g.add((func_uri, prop_cache["isElementOf"], file_uri))
+                g.add((func_uri, prop_cache["hasSimpleName"], Literal(func_id, datatype=XSD.string)))
+                if "start_line" in func:
+                    g.add((func_uri, prop_cache["startsAtLine"], Literal(func["start_line"], datatype=XSD.integer)))
+                if "end_line" in func:
+                    g.add((func_uri, prop_cache["endsAtLine"], Literal(func["end_line"], datatype=XSD.integer)))
+                # Decorators/annotations
+                for dec in func.get("decorators", []):
+                    g.add((func_uri, prop_cache.get("hasDecorator", RDFS.seeAlso), Literal(dec, datatype=XSD.string)))
+                # Return type
+                if "returns" in func and func["returns"]:
+                    g.add((func_uri, prop_cache.get("hasReturnType", RDFS.seeAlso), Literal(func["returns"], datatype=XSD.string)))
+                # Parent class (for methods)
+                if func.get("parent_class") and func["parent_class"] in class_uris:
+                    g.add((class_uris[func["parent_class"]], prop_cache.get("hasMethod", RDFS.member), func_uri))
+
+            # --- Parameters ---
+            for param in constructs.get("parameters", []):
+                param_id = param.get("raw") or param.get("name")
+                if not param_id:
+                    continue
+                param_uri = URIRef(f"{file_uri}/param/{uri_safe_string(param_id)}")
+                g.add((param_uri, RDF.type, class_cache["Parameter"]))
+                g.add((param_uri, prop_cache["isElementOf"], file_uri))
+                g.add((param_uri, prop_cache["hasSimpleName"], Literal(param_id, datatype=XSD.string)))
+                if "type" in param:
+                    g.add((param_uri, prop_cache.get("hasType", RDFS.seeAlso), Literal(param["type"], datatype=XSD.string)))
+                # Link to function if possible
+                for func in func_uris.values():
+                    g.add((func, prop_cache.get("hasParameter", RDFS.member), param_uri))
+
+            # --- Variables ---
+            for var in constructs.get("variables", []):
+                var_id = var.get("raw") or var.get("name")
+                if not var_id:
+                    continue
+                var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(var_id)}")
+                g.add((var_uri, RDF.type, class_cache["VariableDeclaration"]))
+                g.add((var_uri, prop_cache["isElementOf"], file_uri))
+                g.add((var_uri, prop_cache["hasSimpleName"], Literal(var_id, datatype=XSD.string)))
+                if "type" in var:
+                    g.add((var_uri, prop_cache.get("hasType", RDFS.seeAlso), Literal(var["type"], datatype=XSD.string)))
+                # Link to function if possible
+                for func in func_uris.values():
+                    g.add((func, prop_cache.get("declaresVariable", RDFS.member), var_uri))
+
+            # --- Function Calls ---
+            for call in constructs.get("calls", []):
+                call_id = call.get("raw") or call.get("name")
+                if not call_id:
+                    continue
+                call_uri = URIRef(f"{file_uri}/call/{uri_safe_string(call_id)}")
+                g.add((call_uri, RDF.type, class_cache.get("FunctionCallSite", class_cache["FunctionDefinition"])))
+                g.add((call_uri, prop_cache["isElementOf"], file_uri))
+                g.add((call_uri, prop_cache["hasSimpleName"], Literal(call_id, datatype=XSD.string)))
+                # Link to function if possible
+                for func in func_uris.values():
+                    g.add((func, prop_cache.get("invokes", RDFS.seeAlso), call_uri))
+
+            # --- Decorators/Annotations (as standalone if not already linked) ---
+            for dec in constructs.get("decorators", []):
+                dec_id = dec.get("raw") or dec.get("name") or dec
+                if not dec_id:
+                    continue
+                dec_uri = URIRef(f"{file_uri}/decorator/{uri_safe_string(str(dec_id))}")
+                g.add((dec_uri, RDF.type, class_cache.get("Decorator", RDFS.seeAlso)))
+                g.add((dec_uri, prop_cache["isElementOf"], file_uri))
+                g.add((dec_uri, prop_cache["hasSimpleName"], Literal(str(dec_id), datatype=XSD.string)))
+
+            # --- Types/Type Annotations ---
+            for typ in constructs.get("types", []):
+                typ_id = typ.get("raw") or typ.get("name") or typ
+                if not typ_id:
+                    continue
+                typ_uri = URIRef(f"{file_uri}/type/{uri_safe_string(str(typ_id))}")
+                g.add((typ_uri, RDF.type, class_cache.get("Type", RDFS.seeAlso)))
+                g.add((typ_uri, prop_cache["isElementOf"], file_uri))
+                g.add((typ_uri, prop_cache["hasSimpleName"], Literal(str(typ_id), datatype=XSD.string)))
+
+            # --- Imports ---
+            for imp in constructs.get("imports", []):
+                imp_id = imp.get("raw")
+                if not imp_id:
+                    continue
+                imp_uri = URIRef(f"{file_uri}/import/{uri_safe_string(imp_id)}")
+                g.add((imp_uri, RDF.type, class_cache["ImportDeclaration"]))
+                g.add((imp_uri, prop_cache["isElementOf"], file_uri))
+                g.add((imp_uri, prop_cache["hasTextValue"], Literal(imp_id, datatype=XSD.string)))
+
+            progress.advance(ttl_task)
+
+    g.serialize(destination=TTL_PATH, format="turtle")
+
+    logger.info(
+        f"Code extraction complete: {len(supported_files)} files processed and ontology updated"
+    )
+    console.print(
+        f"[bold green]Code extraction complete:[/bold green] {len(supported_files)} files processed"
+    )
+    console.print(
+        f"[bold green]Ontology updated and saved to:[/bold green] [cyan]{TTL_PATH}[/cyan]"
+    )
+
 
 if __name__ == "__main__":
     main()
