@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Web KMS - Knowledge Management Portal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-brain"></i>
+                    <span>Semantic KMS</span>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-view="repositories">
+                    <i class="fas fa-folder"></i>
+                    <span>Repositories</span>
+                </li>
+                <li class="nav-item" data-view="search">
+                    <i class="fas fa-search"></i>
+                    <span>Search</span>
+                </li>
+                <li class="nav-item" data-view="graph">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Knowledge Graph</span>
+                </li>
+                <li class="nav-item" data-view="analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1 id="page-title">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Quick search..." id="quick-search">
+                    </div>
+                    <div class="user-menu">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Views -->
+            <div class="content-area">
+                <!-- Dashboard View -->
+                <div id="dashboard-view" class="view active">
+                    <div class="dashboard-grid">
+                        <div class="card stats-card">
+                            <div class="card-header">
+                                <h3>Repository Overview</h3>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-number" id="total-repos">0</div>
+                                    <div class="stat-label">Repositories</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" id="total-files">0</div>
+                                    <div class="stat-label">Files Analyzed</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" id="total-entities">0</div>
+                                    <div class="stat-label">Entities</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number" id="total-relationships">0</div>
+                                    <div class="stat-label">Relationships</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card recent-activity">
+                            <div class="card-header">
+                                <h3>Recent Activity</h3>
+                            </div>
+                            <div class="activity-list" id="activity-list">
+                                <div class="activity-item">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <div class="activity-content">
+                                        <div class="activity-title">Repository added</div>
+                                        <div class="activity-desc">semantic-web-kms</div>
+                                        <div class="activity-time">2 hours ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card quick-actions">
+                            <div class="card-header">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary" onclick="showView('repositories')">
+                                    <i class="fas fa-plus"></i>
+                                    Add Repository
+                                </button>
+                                <button class="btn btn-secondary" onclick="showView('search')">
+                                    <i class="fas fa-search"></i>
+                                    Search Knowledge
+                                </button>
+                                <button class="btn btn-secondary" onclick="showView('graph')">
+                                    <i class="fas fa-project-diagram"></i>
+                                    View Graph
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Repositories View -->
+                <div id="repositories-view" class="view">
+                    <div class="view-header">
+                        <h2>Repository Management</h2>
+                        <button class="btn btn-primary" onclick="showAddRepoModal()">
+                            <i class="fas fa-plus"></i>
+                            Add Repository
+                        </button>
+                    </div>
+                    
+                    <div class="repositories-grid" id="repositories-grid">
+                        <!-- Repository cards will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Search View -->
+                <div id="search-view" class="view">
+                    <div class="search-container">
+                        <div class="search-header">
+                            <h2>Knowledge Search</h2>
+                            <p>Search through your code, documentation, and semantic relationships</p>
+                        </div>
+                        
+                        <div class="search-form">
+                            <div class="search-input-group">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-query" placeholder="Search for functions, classes, APIs, or concepts...">
+                                <button class="btn btn-primary" onclick="performSearch()">Search</button>
+                            </div>
+                            
+                            <div class="search-filters">
+                                <select id="filter-type">
+                                    <option value="">All Types</option>
+                                    <option value="function">Functions</option>
+                                    <option value="class">Classes</option>
+                                    <option value="api">APIs</option>
+                                    <option value="documentation">Documentation</option>
+                                </select>
+                                <select id="filter-language">
+                                    <option value="">All Languages</option>
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                </select>
+                                <select id="filter-repository">
+                                    <option value="">All Repositories</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="search-results" id="search-results">
+                            <!-- Search results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Knowledge Graph View -->
+                <div id="graph-view" class="view">
+                    <div class="graph-container">
+                        <div class="graph-header">
+                            <h2>Knowledge Graph Visualization</h2>
+                            <div class="graph-controls">
+                                <button class="btn btn-secondary" onclick="resetGraph()">
+                                    <i class="fas fa-home"></i>
+                                    Reset View
+                                </button>
+                                <button class="btn btn-secondary" onclick="exportGraph()">
+                                    <i class="fas fa-download"></i>
+                                    Export
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="graph-canvas" id="graph-canvas">
+                            <div class="graph-placeholder">
+                                <i class="fas fa-project-diagram"></i>
+                                <h3>Knowledge Graph</h3>
+                                <p>Visualize relationships between your code entities and documentation</p>
+                                <button class="btn btn-primary" onclick="loadSampleGraph()">Load Sample Graph</button>
+                            </div>
+                        </div>
+                        
+                        <div class="graph-sidebar" id="graph-sidebar">
+                            <div class="sidebar-section">
+                                <h4>Graph Statistics</h4>
+                                <div class="graph-stats">
+                                    <div class="stat">
+                                        <span class="stat-label">Nodes:</span>
+                                        <span class="stat-value" id="node-count">0</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-label">Edges:</span>
+                                        <span class="stat-value" id="edge-count">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="sidebar-section">
+                                <h4>Node Details</h4>
+                                <div class="node-details" id="node-details">
+                                    <p>Select a node to view details</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics View -->
+                <div id="analytics-view" class="view">
+                    <div class="analytics-container">
+                        <div class="analytics-header">
+                            <h2>Analytics & Insights</h2>
+                        </div>
+                        
+                        <div class="analytics-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Language Distribution</h3>
+                                </div>
+                                <div class="chart-container" id="language-chart">
+                                    <!-- Chart will be rendered here -->
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Entity Types</h3>
+                                </div>
+                                <div class="chart-container" id="entity-chart">
+                                    <!-- Chart will be rendered here -->
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Repository Activity</h3>
+                                </div>
+                                <div class="chart-container" id="activity-chart">
+                                    <!-- Chart will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="add-repo-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Repository</h3>
+                <button class="modal-close" onclick="closeModal('add-repo-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Repository Type</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="repo-type" value="github" checked>
+                            <span>GitHub Repository</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="repo-type" value="local">
+                            <span>Local Directory</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="github-fields">
+                    <label>GitHub Repository URL</label>
+                    <input type="text" id="github-url" placeholder="https://github.com/username/repository">
+                </div>
+                
+                <div class="form-group" id="local-fields" style="display: none;">
+                    <label>Local Directory Path</label>
+                    <input type="text" id="local-path" placeholder="/path/to/your/project">
+                </div>
+                
+                <div class="form-group">
+                    <label>Analysis Options</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="analyze-code" checked>
+                            <span>Analyze Code Structure</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="analyze-docs" checked>
+                            <span>Analyze Documentation</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="generate-ontology" checked>
+                            <span>Generate Ontology</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-repo-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addRepository()">Add Repository</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Details Modal -->
+    <div id="asset-modal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 id="asset-title">Asset Details</h3>
+                <button class="modal-close" onclick="closeModal('asset-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="asset-tabs">
+                    <button class="tab-btn active" data-tab="details">Details</button>
+                    <button class="tab-btn" data-tab="relationships">Relationships</button>
+                    <button class="tab-btn" data-tab="code">Code</button>
+                </div>
+                
+                <div class="tab-content active" id="details-tab">
+                    <div class="asset-info" id="asset-info">
+                        <!-- Asset information will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="relationships-tab">
+                    <div class="relationships-list" id="relationships-list">
+                        <!-- Relationships will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="code-tab">
+                    <div class="code-viewer" id="code-viewer">
+                        <!-- Code content will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
