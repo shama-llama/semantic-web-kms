@@ -1,0 +1,389 @@
+{
+  "APIDocumentation": [
+    "openapi.yaml",
+    "swagger.json",
+    "swagger.yaml"
+  ],
+  "ArchitecturalDecisionRecord": [
+    "adr.md",
+    "adr.txt",
+    "architectural-decision.md"
+  ],
+  "AudioDescription": [
+    ".aac",
+    ".aiff",
+    ".au",
+    ".flac",
+    ".kar",
+    ".mid",
+    ".midi",
+    ".mp3",
+    ".ogg",
+    ".opus",
+    ".ra",
+    ".rm",
+    ".wav",
+    ".wma",
+    ".m4a"
+  ],
+  "BestPracticeGuideline": [
+    "best-practices.md",
+    "coding-standards.md",
+    "style-guide.md"
+  ],
+  "BuildScript": [
+    ".babelrc",
+    ".dockerignore",
+    ".eslintrc",
+    ".gradle",
+    ".prettierrc",
+    "CMakeLists.txt",
+    "Cargo.lock",
+    "Cargo.toml",
+    "Dockerfile",
+    "Gemfile",
+    "Gemfile.lock",
+    "Makefile",
+    "Pipfile",
+    "Podfile",
+    "Podfile.lock",
+    "babel.config.js",
+    "build.gradle",
+    "build.sbt",
+    "build.xml",
+    "cabal.project",
+    "cargo.toml",
+    "composer.json",
+    "composer.lock",
+    "docker-compose.yaml",
+    "docker-compose.yml",
+    "eslint.config.js",
+    "go.mod",
+    "go.sum",
+    "gradle-wrapper.properties",
+    "gradle.properties",
+    "maven.config",
+    "mix.exs",
+    "package-lock.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "poetry.lock",
+    "pom.xml",
+    "prettier.config.js",
+    "pubspec.lock",
+    "pubspec.yaml",
+    "pyproject.toml",
+    "rebar.config",
+    "requirements.txt",
+    "rollup.config.js",
+    "sbt",
+    "setup.py",
+    "stack.yaml",
+    "tsconfig.json",
+    "vite.config.js",
+    "webpack.config.js",
+    "yarn.lock"
+  ],
+  "CSharpCode": [
+    ".cs"
+  ],
+  "CSSCode": [
+    ".css",
+    ".scss",
+    ".sass",
+    ".less",
+    ".styl",
+    ".stylus",
+    ".pcss",
+    ".postcss",
+    ".wxss",
+    ".acss"
+  ],
+  "Changelog": [
+    "CHANGELOG",
+    "CHANGELOG.md",
+    "CHANGELOG.rst",
+    "HISTORY",
+    "HISTORY.md",
+    "changelog",
+    "changelog.md",
+    "history",
+    "history.md"
+  ],
+  "CodeComment": [
+    ".comment",
+    ".docblock"
+  ],
+  "ConfigurationSetting": [
+    ".env",
+    ".properties",
+    ".config",
+    ".ini",
+    ".cfg",
+    ".conf",
+    ".toml",
+    ".yaml",
+    ".yml"
+  ],
+  "ContributionGuide": [
+    "CONTRIBUTING",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.rst",
+    "contributing",
+    "contributing.md"
+  ],
+  "DatabaseSchema": [
+    ".accdb",
+    ".db",
+    ".db-journal",
+    ".db-shm",
+    ".db-wal",
+    ".dbf",
+    ".fdb",
+    ".frm",
+    ".gdb",
+    ".ibd",
+    ".mdb",
+    ".myd",
+    ".odb",
+    ".sqlite",
+    ".sqlite-shm",
+    ".sqlite-wal",
+    ".sqlite3"
+  ],
+  "DockerfileSpecification": [
+    "Dockerfile",
+    ".dockerfile"
+  ],
+  "FontDescription": [
+    ".ttf",
+    ".otf",
+    ".woff",
+    ".woff2",
+    ".eot",
+    ".pfb",
+    ".pfm",
+    ".bdf",
+    ".fnt",
+    ".psf",
+    ".sfd",
+    ".ufo",
+    ".vfb",
+    ".vfl"
+  ],
+  "GoCode": [
+    ".go"
+  ],
+  "GraphQLCode": [
+    ".graphql",
+    ".gql"
+  ],
+  "HTMLCode": [
+    ".html",
+    ".htm",
+    ".xhtml",
+    ".jsp",
+    ".asp",
+    ".aspx"
+  ],
+  "ImageDescription": [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".tiff",
+    ".tif",
+    ".webp",
+    ".ico",
+    ".cur",
+    ".ani",
+    ".psd",
+    ".ai",
+    ".eps",
+    ".raw",
+    ".cr2",
+    ".nef",
+    ".arw",
+    ".dng",
+    ".heic",
+    ".heif",
+    ".avif",
+    ".jxl"
+  ],
+  "JavaCode": [
+    ".java"
+  ],
+  "JavaScriptCode": [
+    ".js",
+    ".mjs",
+    ".jsx"
+  ],
+  "JupyterNotebook": [
+    ".ipynb",
+    ".jupyter"
+  ],
+  "License": [
+    "LICENSE",
+    "LICENSE.txt",
+    "LICENSE.md",
+    "COPYING",
+    "COPYING.txt",
+    "COPYRIGHT",
+    "COPYRIGHT.txt",
+    "license",
+    "license.txt",
+    "license.md",
+    "copying",
+    "copying.txt",
+    "copyright",
+    "copyright.txt"
+  ],
+  "Log": [
+    ".log",
+    ".out",
+    ".err",
+    ".trace",
+    ".debug",
+    ".info",
+    ".warn",
+    ".error",
+    ".access",
+    ".error.log",
+    ".access.log",
+    ".combined.log"
+  ],
+  "Markup": [
+    ".md",
+    ".markdown",
+    ".rst",
+    ".adoc",
+    ".asciidoc",
+    ".tex",
+    ".latex"
+  ],
+  "Notebook": [
+    ".nb",
+    ".rmd",
+    ".qmd"
+  ],
+  "PHPCode": [
+    ".php"
+  ],
+  "PythonCode": [
+    ".py"
+  ],
+  "Readme": [
+    "README",
+    "README.txt",
+    "README.md",
+    "README.rst",
+    "README.adoc",
+    "readme",
+    "readme.txt",
+    "readme.md"
+  ],
+  "RubyCode": [
+    ".rb"
+  ],
+  "RustCode": [
+    ".rs"
+  ],
+  "SQLCode": [
+    ".sql"
+  ],
+  "TypeScriptCode": [
+    ".ts",
+    ".tsx"
+  ],
+  "UserGuide": [
+    "user-guide.md",
+    "manual.md",
+    "docs/user-guide.md"
+  ],
+  "VideoDescription": [
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".wmv",
+    ".flv",
+    ".webm",
+    ".mkv",
+    ".m4v",
+    ".3gp",
+    ".ogv",
+    ".mts",
+    ".m2ts",
+    ".vob",
+    ".asf",
+    ".rmvb"
+  ],
+  "SoftwareCode": [
+    ".bash",
+    ".bat",
+    ".c",
+    ".clj",
+    ".cmd",
+    ".cpp",
+    ".dart",
+    ".fish",
+    ".fs",
+    ".graphql",
+    ".groovy",
+    ".h",
+    ".hpp",
+    ".hs",
+    ".kt",
+    ".lua",
+    ".m",
+    ".ml",
+    ".nim",
+    ".pl",
+    ".ps1",
+    ".ps1e",
+    ".ps1m",
+    ".ps1xml",
+    ".psc1",
+    ".psc2",
+    ".psd1",
+    ".psm1",
+    ".r",
+    ".scala",
+    ".sh",
+    ".swift",
+    ".vbs",
+    ".zig",
+    ".zsh"
+  ],
+  "TestFile": [
+    ".spec.java",
+    ".spec.js",
+    ".spec.py",
+    ".spec.ts",
+    ".test.clj",
+    ".test.go",
+    ".test.hs",
+    ".test.java",
+    ".test.js",
+    ".test.kt",
+    ".test.ml",
+    ".test.php",
+    ".test.py",
+    ".test.rb",
+    ".test.rs",
+    ".test.scala",
+    ".test.swift",
+    ".test.ts",
+    "_test.go",
+    "_test.py"
+  ],
+  "Documentation": [
+    ".chm",
+    ".doc",
+    ".docx",
+    ".odt",
+    ".pdf",
+    ".rtf",
+    ".txt"
+  ]
+}
