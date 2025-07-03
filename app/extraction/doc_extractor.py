@@ -9,20 +9,18 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from markdown_it import MarkdownIt
-from rdflib import Graph, Literal, URIRef
+from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, XSD
 from rich.console import Console
-from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn, SpinnerColumn
+from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
 
 from app.core.ontology_cache import get_doc_extraction_properties, get_ontology_cache
-from app.core.paths import (
-    get_excluded_directories_path,
-    get_input_path,
-    get_log_path,
-    get_output_path,
-    get_web_dev_ontology_path,
-    uri_safe_string,
-)
+from app.core.paths import get_excluded_directories_path  # type: ignore
+from app.core.paths import get_input_path  # type: ignore
+from app.core.paths import get_log_path  # type: ignore
+from app.core.paths import get_output_path  # type: ignore
+from app.core.paths import get_web_dev_ontology_path  # type: ignore
+from app.core.paths import uri_safe_string  # type: ignore
 from app.ontology.wdo import WDOOntology
 
 # Setup logging to file only
@@ -85,6 +83,8 @@ MD_TO_WDO = {
     "table_open": "Table",
     "section_open": "DocumentSection",
 }
+
+WDO = Namespace("http://semantic-web-kms.edu.et/wdo#")
 
 
 def get_doc_type(filename: str) -> str:
@@ -182,7 +182,7 @@ def extract_code_comments(code: str, ext: str) -> List[Dict[str, Any]]:
 
 
 def main() -> None:
-    """Main function for documentation extraction."""
+    """Run the documentation extraction process."""
     console = Console()
     logger.info("Starting documentation extraction process...")
 
@@ -323,6 +323,11 @@ def main() -> None:
                     Literal(fname, datatype=XSD.string),
                 )
             )
+            # Use wdo:hasFile to link repository to file (membership)
+            repo_uri = URIRef(
+                f"http://semantic-web-kms.edu.et/wdo/instances/{repo_enc}"
+            )
+            g.add((repo_uri, WDO.hasFile, file_uri))
             # Parse Markdown
             try:
                 with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -392,7 +397,7 @@ def main() -> None:
                                     )
                                 )
                         # Nesting: link to parent
-                        parent_uri, parent_level = parent_stack[-1]
+                        parent_uri, _ = parent_stack[-1]
                         g.add(
                             (parent_uri, prop_cache["hasDocumentComponent"], elem_uri)
                         )
