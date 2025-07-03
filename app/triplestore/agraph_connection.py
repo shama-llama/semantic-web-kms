@@ -1,12 +1,12 @@
 import os
+
 import requests
 from requests.auth import HTTPBasicAuth
 
+
 class AllegroGraphRESTClient:
-    """
-    A manual REST client for interacting with AllegroGraph, bypassing the
-    hanging issues in the official agraph-python library.
-    """
+    """A manual REST client for interacting with AllegroGraph, bypassing the hanging issues in the official agraph-python library."""
+
     def __init__(self):
         self.repo_url = os.environ.get("AGRAPH_CLOUD_URL")
         self.username = os.environ.get("AGRAPH_USERNAME")
@@ -20,22 +20,22 @@ class AllegroGraphRESTClient:
         print(f"REST client initialized for repository: {self.repo_url}")
 
     def upload_ttl_file(self, file_path):
-        """
-        Uploads a Turtle (TTL) file to the repository's statements endpoint.
-        """
+        """Upload a Turtle (TTL) file to the repository's statements endpoint."""
         if not os.path.exists(file_path):
             print(f"Error: File not found at '{file_path}'")
             return False
 
         repo_url: str = self.repo_url  # type: ignore
-        statements_url = repo_url.rstrip('/') + "/statements"
-        headers = {'Content-Type': 'application/x-turtle'}
+        statements_url = repo_url.rstrip("/") + "/statements"
+        headers = {"Content-Type": "application/x-turtle"}
 
         print(f"Uploading '{os.path.basename(file_path)}' to {statements_url}...")
 
         try:
-            with open(file_path, 'rb') as f:
-                response = self.session.post(statements_url, data=f, headers=headers, timeout=60)
+            with open(file_path, "rb") as f:
+                response = self.session.post(
+                    statements_url, data=f, headers=headers, timeout=60
+                )
             response.raise_for_status()
             print("File uploaded successfully.")
             return True
@@ -49,7 +49,7 @@ class AllegroGraphRESTClient:
 
     def test_connection(self):
         """Test connection to the AllegroGraph statements endpoint."""
-        statements_url = self.repo_url.rstrip('/') + "/statements" # type: ignore
+        statements_url = self.repo_url.rstrip("/") + "/statements"  # type: ignore
         try:
             resp = self.session.get(statements_url, timeout=30, verify=False)
             print(f"GET {statements_url} -> {resp.status_code}")
@@ -66,9 +66,10 @@ class AllegroGraphRESTClient:
 
     def __enter__(self):
         return self
-        
-    def __exit__(self, exc_type, exc_val, exc_tb):
+
+    def __exit__(self, *_):
         self.close()
+
 
 if __name__ == "__main__":
     client = AllegroGraphRESTClient()

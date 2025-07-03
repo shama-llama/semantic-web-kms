@@ -29,7 +29,9 @@ DASHBOARD_QUERIES = {
 
 def run_dashboard_sparql(query: str) -> Any:
     """Run a SPARQL query against the AllegroGraph endpoint and return the JSON result as a dictionary."""
-    agraph_endpoint = f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"  # AllegroGraph REST API endpoint
+    agraph_endpoint = (
+        f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"  # AllegroGraph REST API endpoint
+    )
     headers = {"Accept": "application/sparql-results+json"}
     auth = (AGRAPH_USER, AGRAPH_PASS) if AGRAPH_USER and AGRAPH_PASS else None
     resp = requests.post(
@@ -82,4 +84,4 @@ def sparql_query():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True) 
+    app.run(host="0.0.0.0", port=5000, debug=True)
