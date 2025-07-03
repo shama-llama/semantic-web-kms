@@ -1,21 +1,16 @@
-"""Pipeline script to run extraction, annotation, and upload ontology TTL to Fuseki triplestore."""
+"""Pipeline script to run extraction, annotation, and upload ontology TTL to AllegroGraph triplestore."""
 
 import os
 import subprocess
 import sys
 from typing import List
 
-from app.triplestore.triple_manager import RDFTripleManager
+from app.triplestore.agraph_connection import AllegroGraphRESTClient
 
 # Paths
 EXTRACTION_CMD = [sys.executable, "-m", "app.extraction.main_extractor"]
 ANNOTATION_CMD = [sys.executable, "-m", "app.annotation.semantic_annotator"]
 TTL_PATH = os.path.join("output", "web_development_ontology.ttl")
-
-# Triplestore config
-TRIPLESTORE_URL = "http://localhost:3030"
-DATASET_NAME = "semantic-web-kms"
-TRIPLESTORE_TYPE = "fuseki"
 
 
 def run_cmd(cmd: List[str], desc: str) -> None:
@@ -28,24 +23,22 @@ def run_cmd(cmd: List[str], desc: str) -> None:
     print(f"[OK] {desc} complete.")
 
 
-def upload_ttl_to_fuseki(ttl_path: str) -> None:
-    """Upload the TTL file to the configured Fuseki triplestore."""
-    print("\n[STEP] Uploading TTL to Fuseki...")
-    manager = RDFTripleManager(
-        triplestore_url=TRIPLESTORE_URL, dataset_name=DATASET_NAME
-    )
-    success = manager.upload_ttl_to_fuseki(ttl_path)
+def upload_ttl_to_allegrograph(ttl_path: str) -> None:
+    """Upload the TTL file to the configured AllegroGraph triplestore."""
+    print("\n[STEP] Uploading TTL to AllegroGraph...")
+    with AllegroGraphRESTClient() as client:
+        success = client.upload_ttl_file(ttl_path)
     if not success:
-        print("[ERROR] Upload to Fuseki failed.")
+        print("[ERROR] Upload to AllegroGraph failed.")
         sys.exit(1)
-    print("[OK] TTL uploaded to Fuseki.")
+    print("[OK] TTL uploaded to AllegroGraph.")
 
 
 def main():
     """Run the full extraction, annotation, and upload pipeline."""
     run_cmd(EXTRACTION_CMD, "Run Extraction Pipeline")
     run_cmd(ANNOTATION_CMD, "Run Semantic Annotation")
-    upload_ttl_to_fuseki(TTL_PATH)
+    upload_ttl_to_allegrograph(TTL_PATH)
     print("\n[ALL DONE] Full pipeline complete.")
 
 
