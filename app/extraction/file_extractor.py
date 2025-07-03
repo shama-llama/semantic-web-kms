@@ -40,8 +40,9 @@ INST = Namespace("http://semantic-web-kms.edu.et/wdo/instances/")
 
 
 class OntologyDrivenExtractor:
-    """An ontology-driven approach to file extraction that automatically maps
-    file types to ontology classes based on the ontology structure itself.
+    """Ontology-driven extractor for files.
+
+    Extract file-level metadata and structure for the semantic knowledge graph.
     """
 
     def __init__(self, ontology_path: str):
@@ -68,8 +69,8 @@ class OntologyDrivenExtractor:
         with open(ext_json_path, "r") as f:
             self.class_to_exts = json.load(f)
         # Build reverse mapping: ext -> class
-        self.ext_to_class = {}
-        self.name_to_class = {}
+        self.ext_to_class: Dict[str, str] = {}
+        self.name_to_class: Dict[str, str] = {}
         for class_name, exts in self.class_to_exts.items():
             for ext in exts:
                 ext_l = ext.lower()
@@ -191,8 +192,8 @@ class OntologyDrivenExtractor:
         return file_records
 
 
-def main():
-    """Main function for ontology-driven extraction."""
+def main() -> None:
+    """Run the file extraction process."""
     ontology_path = get_web_dev_ontology_path()
     input_dir = get_input_path("")  # Passes the input directory root
     console = Console()
@@ -205,12 +206,6 @@ def main():
     logger.info(
         "Starting full extraction process (ontology load, mapping, file scan, and RDF output)..."
     )
-    progress_columns = [
-        TextColumn("[bold blue]{task.description}"),
-        BarColumn(),
-        "[progress.percentage]{task.percentage:>3.0f}%",
-        TimeElapsedColumn(),
-    ]
     with Progress(
         TextColumn("[bold blue]{task.description}"),
         BarColumn(),
@@ -270,8 +265,8 @@ def main():
         with open(content_type_path, "r") as f:
             content_type_map = json.load(f)
         # Build reverse mapping for content types
-        ext_to_content_class = {}
-        name_to_content_class = {}
+        ext_to_content_class: Dict[str, str] = {}
+        name_to_content_class: Dict[str, str] = {}
         for class_name, exts in content_type_map.items():
             for ext in exts:
                 ext_l = ext.lower()
@@ -290,7 +285,7 @@ def main():
         g.bind("skos", SKOS)
 
         # Track repositories to avoid duplicates
-        processed_repos = set()
+        processed_repos: set[str] = set()
 
         ttl_task = progress.add_task("[blue]Writing TTL...", total=len(file_records))
         for record in file_records:
@@ -348,8 +343,8 @@ def main():
                     Literal(record["size_bytes"], datatype=XSD.integer),
                 )
             )
-            # Use rdfs:member to link repository to file (membership)
-            g.add((INST[repo_enc], RDFS.member, file_uri))
+            # Use wdo:hasFile to link repository to file (membership)
+            g.add((INST[repo_enc], WDO.hasFile, file_uri))
             g.add(
                 (
                     file_uri,

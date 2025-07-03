@@ -3,8 +3,9 @@ import os
 from typing import Any, Dict, List
 
 from git import InvalidGitRepositoryError, Repo
+from git.objects.commit import Commit
 from rdflib import Graph, Literal, Namespace, URIRef
-from rdflib.namespace import RDF, RDFS, XSD
+from rdflib.namespace import RDF, XSD
 from rich.console import Console
 from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
 
@@ -53,7 +54,7 @@ def get_file_uri(repo_name: str, rel_path: str) -> URIRef:
 
 
 def main() -> None:
-    """Main function for Git extraction."""
+    """Run the git extraction process."""
     console = Console()
 
     logger.info("Starting Git extraction process...")
@@ -90,13 +91,6 @@ def main() -> None:
         f"Found {total_repos} Git repositories with {total_commits} total commits"
     )
 
-    progress_columns = [
-        TextColumn("[bold blue]{task.description}"),
-        BarColumn(),
-        "[progress.percentage]{task.percentage:>3.0f}%",
-        TimeElapsedColumn(),
-    ]
-
     # Store all commit data for TTL writing
     all_commit_data: List[Dict[str, Any]] = []
     repo_count = 0
@@ -119,8 +113,9 @@ def main() -> None:
             repo_path = os.path.join(INPUT_DIR, repo_name)
 
             for commit in commits:
+                commit: Commit
                 commit_hash = commit.hexsha
-                commit_data: dict = {
+                commit_data: Dict[str, Any] = {
                     "repo_name": repo_name,
                     "commit_hash": commit_hash,
                     "commit_message": commit.message.strip(),
@@ -158,10 +153,10 @@ def main() -> None:
         ttl_task = progress.add_task("[blue]Writing TTL...", total=len(all_commit_data))
 
         # Track repositories to avoid duplicates
-        processed_repos = set()
+        processed_repos: set[str] = set()
 
         for commit_data in all_commit_data:
-            repo_name = commit_data["repo_name"]
+            repo_name: str = commit_data["repo_name"]
             repo_uri = get_repo_uri(repo_name)
 
             # Define repository entity if not already processed
@@ -203,7 +198,15 @@ def main() -> None:
             commit_msg_uri = INST[
                 f"{uri_safe_string(repo_name)}/commit/{commit_data['commit_hash']}_msg"
             ]
-            g.add((commit_msg_uri, RDF.type, class_cache.get("CommitMessage", class_cache["InformationContentEntity"])))
+            g.add(
+                (
+                    commit_msg_uri,
+                    RDF.type,
+                    class_cache.get(
+                        "CommitMessage", class_cache["InformationContentEntity"]
+                    ),
+                )
+            )
             g.add(
                 (
                     commit_msg_uri,
@@ -217,9 +220,10 @@ def main() -> None:
 
             # Add file modifications
             for file_path in commit_data["modified_files"]:
-                file_uri = get_file_uri(repo_name, file_path)
+                file_path_str: str = str(file_path)
+                file_uri = get_file_uri(repo_name, file_path_str)
                 g.add((commit_uri, prop_cache["modifies"], file_uri))
-                g.add((repo_uri, RDFS.member, file_uri))
+                g.add((repo_uri, WDO.hasFile, file_uri))
 
             progress.advance(ttl_task)
 

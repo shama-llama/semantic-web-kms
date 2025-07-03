@@ -1,13 +1,19 @@
-from rdflib import Graph, Namespace, URIRef, RDFS, OWL, RDF
 import os
+
+from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
+
 from app.core.paths import get_basic_formal_ontology_path
 
+
 class BFOOntology:
+    """Wrapper for the Basic Formal Ontology (BFO) using rdflib."""
+
     BFO_NAMESPACE = "http://purl.obolibrary.org/obo/"
     BFO_OWL_PATH = get_basic_formal_ontology_path()
     ENTITY_URI = URIRef(f"{BFO_NAMESPACE}BFO_0000001")
 
     def __init__(self, owl_path=None):
+        """Initialize the BFO ontology, parsing the OWL file."""
         self.ontology_path = owl_path or os.path.abspath(self.BFO_OWL_PATH)
         self.graph = Graph()
         self.graph.parse(self.ontology_path)
@@ -29,4 +35,4 @@ class BFOOntology:
             if (s, RDF.type, OWL.Class) in self.graph:
                 label = self.get_label(s)
                 top_level.append((str(s), label))
-        return top_level 
+        return top_level
