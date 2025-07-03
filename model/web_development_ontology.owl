@@ -2528,6 +2528,14 @@
         <skos:definition xml:lang="en">A relation linking a Commit process to its associated CommitMessage entity. Use this instead of bearerOfInformation for commit messages.</skos:definition>
     </owl:ObjectProperty>
     <!-- NOTE: Do NOT use bearerOfInformation between Commit and CommitMessage. -->
+
+    <!-- http://semantic-web-kms.edu.et/wdo#hasFile -->
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#hasFile">
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#Repository"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#DigitalInformationCarrier"/>
+        <rdfs:label xml:lang="en">has file</rdfs:label>
+        <skos:definition xml:lang="en">A relation linking a repository to the digital information carriers (files) it contains.</skos:definition>
+    </owl:ObjectProperty>
 </rdf:RDF>
 
 
