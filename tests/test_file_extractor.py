@@ -1,9 +1,14 @@
+import sys
 import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import tempfile
 import json
 import pytest
 from app.extraction.file_extractor import OntologyDrivenExtractor
 from app.core.paths import get_web_dev_ontology_path
+import types
+from unittest import mock
+import app.extraction.file_extractor as fe
 
 def extractor():
     ontology_path = get_web_dev_ontology_path()
@@ -74,4 +79,35 @@ def test_categorize_license_file():
 def test_categorize_unknown_file():
     result = extractor().categorize_file('/tmp/fake.unknown', 'fake.unknown')
     assert result["ontology_class"] == "DigitalInformationCarrier"
-    assert result["confidence"] == "low" 
+    assert result["confidence"] == "low"
+
+def make_extractor():
+    # Patch WDOOntology and config file reads
+    with mock.patch('app.extraction.file_extractor.WDOOntology') as MockOnt, \
+         mock.patch('app.extraction.file_extractor.get_file_extensions_path', return_value='dummy.json'), \
+         mock.patch('app.extraction.file_extractor.get_excluded_directories_path', return_value='dummy2.json'), \
+         mock.patch('app.extraction.file_extractor.get_ontology_cache') as MockCache, \
+         mock.patch('builtins.open', mock.mock_open(read_data='{"TestFile": [".test"], "ReadmeFile": ["readme.md"]}')):
+        MockOnt.return_value.get_class.return_value = 'http://example.org/TestFile'
+        MockOnt.return_value.get_subclasses.return_value = ['http://example.org/TestFile']
+        MockCache.return_value.get_property_cache.return_value = {}
+        extractor = fe.OntologyDrivenExtractor('dummy.owl')
+        return extractor
+
+def test_categorize_file_exact_name():
+    extractor = make_extractor()
+    result = extractor.categorize_file('some/path/readme.md', 'readme.md')
+    assert result['ontology_class'] == 'ReadmeFile'
+    assert result['confidence'] == 'high'
+
+def test_categorize_file_extension():
+    extractor = make_extractor()
+    result = extractor.categorize_file('some/path/file.test', 'file.test')
+    assert result['ontology_class'] == 'TestFile'
+    assert result['confidence'] == 'high'
+
+def test_categorize_file_fallback():
+    extractor = make_extractor()
+    result = extractor.categorize_file('some/path/file.unknown', 'file.unknown')
+    assert result['ontology_class'] == 'DigitalInformationCarrier'
+    assert result['confidence'] == 'low' 
