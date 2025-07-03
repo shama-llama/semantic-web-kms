@@ -6,11 +6,11 @@ from flask import Flask, jsonify, request
 from flask_caching import Cache
 from flask_cors import CORS
 
-# Configurations
-FUSEKI_URL = os.environ.get("FUSEKI_URL", "http://localhost:3030")
-FUSEKI_DATASET = os.environ.get("FUSEKI_DATASET", "semantic-web-kms")
-FUSEKI_USER = os.environ.get("FUSEKI_USER")
-FUSEKI_PASS = os.environ.get("FUSEKI_PASS")
+# Configurations for AllegroGraph
+AGRAPH_URL = os.environ.get("AGRAPH_SERVER_URL")
+AGRAPH_REPO = os.environ.get("AGRAPH_REPO")
+AGRAPH_USER = os.environ.get("AGRAPH_USERNAME")
+AGRAPH_PASS = os.environ.get("AGRAPH_PASSWORD")
 
 app = Flask(__name__)
 CORS(app)
@@ -28,19 +28,15 @@ DASHBOARD_QUERIES = {
 
 
 def run_dashboard_sparql(query: str) -> Any:
-    """Run a SPARQL query against the Fuseki endpoint and return the JSON result as a dictionary.
-
-    Args:
-        query (str): The SPARQL query string to execute.
-
-    Returns:
-        Any: The JSON response from the Fuseki endpoint as a dictionary.
-    """
-    fuseki_endpoint = f"{FUSEKI_URL}/{FUSEKI_DATASET}/query"
+    """Run a SPARQL query against the AllegroGraph endpoint and return the JSON result as a dictionary."""
+    agraph_endpoint = f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"  # AllegroGraph REST API endpoint
     headers = {"Accept": "application/sparql-results+json"}
-    auth = (FUSEKI_USER, FUSEKI_PASS) if FUSEKI_USER and FUSEKI_PASS else None
+    auth = (AGRAPH_USER, AGRAPH_PASS) if AGRAPH_USER and AGRAPH_PASS else None
     resp = requests.post(
-        fuseki_endpoint, data={"query": query}, headers=headers, auth=auth
+        agraph_endpoint,
+        data={"query": query},
+        headers=headers,
+        auth=auth,
     )
     resp.raise_for_status()
     return resp.json()
@@ -73,11 +69,11 @@ def sparql_query():
     query = data.get("query")
     if not query:
         return jsonify({"error": "Missing query"}), 400
-    fuseki_endpoint = f"{FUSEKI_URL}/{FUSEKI_DATASET}/query"
+    agraph_endpoint = f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"
     headers = {"Accept": "application/sparql-results+json"}
-    auth = (FUSEKI_USER, FUSEKI_PASS) if FUSEKI_USER and FUSEKI_PASS else None
+    auth = (AGRAPH_USER, AGRAPH_PASS) if AGRAPH_USER and AGRAPH_PASS else None
     resp = requests.post(
-        fuseki_endpoint, data={"query": query}, headers=headers, auth=auth
+        agraph_endpoint, data={"query": query}, headers=headers, auth=auth
     )
     if resp.status_code == 200:
         return jsonify(resp.json())
@@ -86,4 +82,4 @@ def sparql_query():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True) 
