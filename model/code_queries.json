@@ -1,130 +1,132 @@
 {
   "python": {
-    "Imports": "(import_statement name: (dotted_name) @name)",
-    "Classes": "(class_definition name: (identifier) @name)",
-    "Functions": "(function_definition name: (identifier) @name)",
-    "Comments": "(comment) @comment"
+    "FunctionDefinition": ["(function_definition name: (identifier) @name) @function"],
+    "Parameter": ["(parameters (identifier) @param)"],
+    "ClassDefinition": ["(class_definition name: (identifier) @name) @class"],
+    "Attribute": ["(assignment left: (attribute) @attr)"],
+    "FunctionCall": ["(call function: (identifier) @func)"],
+    "ImportDeclaration": ["(import_statement) @import","(import_from_statement) @import"],
+    "CodeComment": ["(comment) @comment"]
   },
   "javascript": {
-    "Imports": "(import_statement source: (string) @name)",
-    "Classes": "(class_declaration name: (identifier) @name)",
-    "Functions": ["(function_declaration name: (identifier) @name)", "(arrow_function) @name"],
-    "Variables": ["(lexical_declaration (variable_declarator name: (identifier) @name))", "(variable_declaration (variable_declarator name: (identifier) @name))"],
-    "Comments": "(comment) @comment"
+    "FunctionDefinition": [
+      "(function_declaration name: (identifier) @name) @function",
+      "(arrow_function) @function",
+      "(method_definition name: (property_identifier) @name) @method"
+    ],
+    "Parameter": ["(formal_parameters (identifier) @param)"],
+    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
+    "Attribute": ["(public_field_definition name: (property_identifier) @attr)"],
+    "FunctionCall": ["(call_expression function: (identifier) @func)"],
+    "ImportDeclaration": ["(import_statement) @import"],
+    "CodeComment": ["(comment) @comment"]
   },
   "typescript": {
-    "Imports": "(import_statement source: (string) @name)",
-    "Classes": "(class_declaration name: (type_identifier) @name)",
-    "Interfaces": "(interface_declaration name: (type_identifier) @name)",
-    "Functions": "(function_declaration name: (identifier) @name)",
-    "Types": "(type_alias_declaration name: (type_identifier) @name)",
-    "Comments": "(comment) @comment"
-  },
-  "tsx": {
-    "Imports": "(import_statement source: (string) @name)",
-    "Classes": "(class_declaration name: (type_identifier) @name)",
-    "Interfaces": "(interface_declaration name: (type_identifier) @name)",
-    "Functions": "(function_declaration name: (identifier) @name)",
-    "Components": "(jsx_opening_element name: (identifier) @name)",
-    "Comments": "(comment) @comment"
+    "FunctionDefinition": [
+      "(function_declaration name: (identifier) @name) @function",
+      "(arrow_function) @function"
+    ],
+    "Parameter": ["(formal_parameters (identifier) @param)"],
+    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
+    "Attribute": ["(public_field_definition name: (property_identifier) @attr)"],
+    "FunctionCall": ["(call_expression function: (identifier) @func)"],
+    "ImportDeclaration": ["(import_statement) @import"],
+    "CodeComment": ["(comment) @comment"]
   },
   "java": {
-    "Imports": "(import_declaration) @name",
-    "Classes": "(class_declaration name: (identifier) @name)",
-    "Interfaces": "(interface_declaration name: (identifier) @name)",
-    "Methods": "(method_declaration name: (identifier) @name)",
-    "Comments": "(comment) @comment"
-  },
-  "go": {
-    "Imports": "(import_spec path: (interpreted_string_literal) @name)",
-    "Structs": "(type_spec name: (type_identifier) @name)",
-    "Interfaces": "(interface_type) @name",
-    "Functions": "(function_declaration name: (identifier) @name)",
-    "Comments": "(comment) @comment"
-  },
-  "rust": {
-    "Imports": "(use_declaration) @name",
-    "Structs": "(struct_item name: (type_identifier) @name)",
-    "Traits": "(trait_item name: (type_identifier) @name)",
-    "Functions": "(function_item name: (identifier) @name)",
-    "Comments": ["(line_comment) @comment", "(block_comment) @comment"]
-  },
-  "ruby": {
-    "Requires": "(call method: (identifier) @call (#eq? @call \"require\"))",
-    "Classes": "(class name: (constant) @name)",
-    "Modules": "(module name: (constant) @name)",
-    "Methods": "(method name: (identifier) @name)",
-    "Comments": "(comment) @comment"
-  },
-  "php": {
-    "Imports": "(namespace_use_clause) @name",
-    "Classes": "(class_declaration name: (name) @name)",
-    "Traits": "(trait_declaration name: (name) @name)",
-    "Functions": "(function_definition name: (name) @name)",
-    "Comments": ["(comment) @comment"]
-  },
-  "c": {
-    "Includes": "(preproc_include path: (_) @name)",
-    "Structs": "(struct_specifier name: (type_identifier) @name)",
-    "Functions": "(function_declarator declarator: (identifier) @name)",
-    "Comments": "(comment) @comment"
-  },
-  "cpp": {
-    "Includes": "(preproc_include path: (_) @name)",
-    "Classes": "(class_specifier name: (type_identifier) @name)",
-    "Structs": "(struct_specifier name: (type_identifier) @name)",
-    "Functions": "(function_declarator declarator: (identifier) @name)",
-    "Comments": "(comment) @comment"
+    "FunctionDefinition": ["(method_declaration name: (identifier) @name) @method"],
+    "Parameter": ["(formal_parameter name: (identifier) @param)"],
+    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
+    "Attribute": ["(field_declaration declarator: (variable_declarator name: (identifier) @attr))"],
+    "FunctionCall": ["(method_invocation name: (identifier) @func)"],
+    "ImportDeclaration": ["(import_declaration) @import"],
+    "CodeComment": ["(comment) @comment"]
   },
   "c_sharp": {
-    "Imports": "(using_directive) @name",
-    "Classes": "(class_declaration name: (identifier) @name)",
-    "Interfaces": "(interface_declaration name: (identifier) @name)",
-    "Methods": "(method_declaration name: (identifier) @name)",
-    "Comments": "(comment) @comment"
+    "FunctionDefinition": ["(method_declaration name: (identifier) @name) @method"],
+    "Parameter": ["(parameter name: (identifier) @param)"],
+    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
+    "Attribute": ["(field_declaration declarator: (variable_declarator name: (identifier) @attr))"],
+    "FunctionCall": ["(invocation_expression function: (identifier) @func)"],
+    "ImportDeclaration": ["(using_directive) @import"],
+    "CodeComment": ["(comment) @comment"]
   },
-  "swift": {
-    "Imports": "(import_declaration) @name",
-    "Classes": "(class_declaration name: (identifier) @name)",
-    "Structs": "(struct_declaration name: (identifier) @name)",
-    "Functions": "(function_declaration name: (identifier) @name)",
-    "Comments": "(comment) @comment"
+  "go": {
+    "FunctionDefinition": ["(function_declaration name: (identifier) @name) @function"],
+    "Parameter": ["(parameter_declaration name: (identifier) @param)"],
+    "ClassDefinition": ["(type_spec name: (type_identifier) @name) @type"],
+    "Attribute": ["(field_declaration name: (identifier) @attr)"],
+    "FunctionCall": ["(call_expression function: (identifier) @func)"],
+    "ImportDeclaration": ["(import_spec) @import"],
+    "CodeComment": ["(comment) @comment"]
+  },
+  "ruby": {
+    "FunctionDefinition": ["(method name: (identifier) @name) @method"],
+    "Parameter": ["(parameters (identifier) @param)"],
+    "ClassDefinition": ["(class name: (constant) @name) @class"],
+    "Attribute": ["(assignment left: (identifier) @attr)"],
+    "FunctionCall": ["(call method: (identifier) @func)"],
+    "ImportDeclaration": ["(require_statement) @import"],
+    "CodeComment": ["(comment) @comment"]
+  },
+  "php": {
+    "FunctionDefinition": [
+      "(function_definition name: (name) @name) @function",
+      "(anonymous_function_creation_expression) @function"
+    ],
+    "Parameter": ["(formal_parameters (parameter name: (variable_name) @param))"],
+    "ClassDefinition": ["(class_declaration name: (name) @name) @class"],
+    "Attribute": ["(property_element name: (variable_name) @attr)"],
+    "FunctionCall": ["(function_call_expression function: (name) @func)"],
+    "ImportDeclaration": ["(namespace_use_declaration) @import"],
+    "CodeComment": ["(comment) @comment"]
+  },
+  "rust": {
+    "FunctionDefinition": ["(function_item name: (identifier) @name) @function"],
+    "Parameter": ["(parameter_pattern name: (identifier) @param)"],
+    "ClassDefinition": ["(struct_item name: (type_identifier) @name) @struct"],
+    "Attribute": ["(struct_field name: (identifier) @attr)"],
+    "FunctionCall": ["(call_expression function: (identifier) @func)"],
+    "ImportDeclaration": ["(use_declaration) @import"],
+    "CodeComment": ["(comment) @comment"]
   },
   "html": {
-    "Tags": "(tag_name) @name",
-    "Classes": "(class_name) @name",
-    "IDs": "(attribute_value) @name",
-    "Scripts": "(script_element) @name",
-    "Comments": "(comment) @comment"
+    "CodeComment": ["(comment) @comment"]
   },
   "css": {
-    "Selectors": ["(class_selector) @name", "(id_selector) @name", "(tag_name) @name"],
-    "Variables": "(declaration property: (custom_property_name) @name)",
-    "Comments": "(comment) @comment"
+    "CodeComment": ["(comment) @comment"]
   },
   "scss": {
-    "Imports": "(import_statement) @name",
-    "Selectors": ["(class_selector) @name", "(id_selector) @name", "(tag_name) @name"],
-    "Variables": "(variable_declaration name: (variable_name) @name)",
-    "Mixins": "(mixin_statement name: (identifier) @name)",
-    "Functions": "(function_statement name: (identifier) @name)",
-    "Comments": "(comment) @comment"
+    "CodeComment": ["(comment) @comment"]
   },
   "bash": {
-    "Functions": "(function_definition name: (word) @name)",
-    "Variables": "(variable_assignment name: (variable_name) @name)",
-    "Comments": "(comment) @comment"
+    "FunctionDefinition": ["(function_definition name: (word) @name) @function"],
+    "CodeComment": ["(comment) @comment"]
   },
-  "lua": {
-    "Functions": "(function_declaration name: (identifier) @name)",
-    "Variables": "(variable_declaration name: (identifier) @name)",
-    "Comments": "(comment) @comment"
+  "swift": {
+    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
+    "FunctionDefinition": ["(function_declaration name: (identifier) @name) @function"],
+    "Parameter": ["(parameter_clause (parameter name: (identifier) @param))"],
+    "Attribute": ["(variable_declaration name: (identifier) @attr)"],
+    "FunctionCall": ["(function_call_expression function: (identifier) @func)"],
+    "ImportDeclaration": ["(import_declaration) @import"],
+    "CodeComment": ["(comment) @comment"]
   },
   "scala": {
-    "Imports": "(import_clause) @name",
-    "Classes": "(class_definition name: (identifier) @name)",
-    "Objects": "(object_definition name: (identifier) @name)",
-    "Methods": "(function_definition name: (identifier) @name)",
-    "Comments": "(comment) @comment"
+    "ClassDefinition": [
+      "(class_definition name: (identifier) @name) @class",
+      "(trait_definition name: (identifier) @name) @class"
+    ],
+    "FunctionDefinition": ["(function_definition name: (identifier) @name) @function"],
+    "Parameter": ["(parameters (identifier) @param)"],
+    "Attribute": ["(val_declaration name: (identifier) @attr)", "(var_declaration name: (identifier) @attr)"],
+    "FunctionCall": ["(function_application function: (identifier) @func)"],
+    "ImportDeclaration": ["(import_declaration) @import"],
+    "CodeComment": ["(comment) @comment"]
+  },
+  "lua": {
+    "FunctionDefinition": ["(function_declaration name: (identifier) @name) @function"],
+    "Parameter": ["(parameters (identifier) @param)"],
+    "CodeComment": ["(comment) @comment"]
   }
 } 
