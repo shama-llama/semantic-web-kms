@@ -58,4 +58,4 @@ model/*.bak
 *.tmp
 
 # Project-specific
-catalog*.xml
+scripts/
