@@ -80,12 +80,12 @@ class OntologyDrivenExtractor:
                     self.name_to_class[ext_l] = class_name
 
     def categorize_file(self, file_path: str, filename: str) -> Dict[str, Any]:
-        """Categorize a file based on its extension and filename."""
+        """Categorize a file based on its extension and filename, prioritizing the most specific ontology entity."""
         ext = Path(filename).suffix.lower()
         filename_lower = filename.lower()
-        # Try exact filename match for special files (e.g., LICENSE, README)
+        # 1. Try exact filename match for special files (e.g., LICENSE, README, Dockerfile, etc.)
         for key, class_name in self.name_to_class.items():
-            if key in filename_lower:
+            if key == filename_lower:
                 try:
                     class_uri = str(self.ontology.get_class(class_name))
                 except Exception:
@@ -98,20 +98,64 @@ class OntologyDrivenExtractor:
                     "description": f"A file of type {class_name}",
                     "confidence": "high",
                 }
-        # Try extension match for granular class
-        if ext in self.ext_to_class:
-            class_name = self.ext_to_class[ext]
-            try:
-                class_uri = str(self.ontology.get_class(class_name))
-            except Exception:
-                class_uri = str(self.ontology.get_class("DigitalInformationCarrier"))
-            return {
-                "ontology_class": class_name,
-                "class_uri": class_uri,
-                "description": f"A file of type {class_name}",
-                "confidence": "high",
-            }
-        # Fallback: try to find any subclass with a matching extension in its label
+        # 2. Try most specific extension matches in order of specificity
+        specificity_order = [
+            "TestFile",
+            "LicenseFile",
+            "ReadmeFile",
+            "Dockerfile",
+            "BuildFile",
+            "DatabaseSchemaFile",
+            "NotebookFile",
+            "LogFile",
+            "TemplateFile",
+            "StylesheetFile",
+            "MarkupFile",
+            "DocumentationFile",
+            "ScriptFile",
+            "SourceCodeFile",
+            "ConfigurationFile",
+            "ArchiveFile",
+            "ImageFile",
+            "AudioFile",
+            "VideoFile",
+            "FontFile",
+            "ThreeDimensionalModelFile",
+            "UserInterfaceDesignFile",
+            "MiscellaneousFile",
+        ]
+        for class_name in specificity_order:
+            exts = self.class_to_exts.get(class_name, [])
+            for ext_or_name in exts:
+                if ext_or_name.startswith("."):
+                    if filename_lower.endswith(ext_or_name):
+                        try:
+                            class_uri = str(self.ontology.get_class(class_name))
+                        except Exception:
+                            class_uri = str(
+                                self.ontology.get_class("DigitalInformationCarrier")
+                            )
+                        return {
+                            "ontology_class": class_name,
+                            "class_uri": class_uri,
+                            "description": f"A file of type {class_name}",
+                            "confidence": "high",
+                        }
+                else:
+                    if ext_or_name == filename_lower:
+                        try:
+                            class_uri = str(self.ontology.get_class(class_name))
+                        except Exception:
+                            class_uri = str(
+                                self.ontology.get_class("DigitalInformationCarrier")
+                            )
+                        return {
+                            "ontology_class": class_name,
+                            "class_uri": class_uri,
+                            "description": f"A file of type {class_name}",
+                            "confidence": "high",
+                        }
+        # 3. Fallback: try to find any subclass with a matching extension in its label
         digital_info_carrier_uri = str(
             self.ontology.get_class("DigitalInformationCarrier")
         )
@@ -131,7 +175,7 @@ class OntologyDrivenExtractor:
                     "description": f"A file of type {class_name}",
                     "confidence": "medium",
                 }
-        # Fallback to DigitalInformationCarrier
+        # 4. Fallback to DigitalInformationCarrier
         return {
             "ontology_class": "DigitalInformationCarrier",
             "class_uri": digital_info_carrier_uri,
