@@ -1,93 +1,89 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from elasticsearch import Elasticsearch
-import requests
 import os
-from rdflib import Graph
+from typing import Any, Dict, List, cast
 
-# Import services using absolute imports if needed, e.g.:
-# Import services using absolute imports if needed, e.g.:
-# from app.services.rdf_triple_manager import RDFTripleManager
-# from app.services.semantic_annotation import SemanticAnnotator
-# from app.services.extract_code import ...
-# from app.services.extract_docs import ...
-# from app.services.detect_files import ...
-# from app.ingest.ingest import ...
+import requests
+from flask import Flask, jsonify, request
+from flask_caching import Cache
+from flask_cors import CORS
 
-# Configurations (customize as needed)
-FUSEKI_URL = os.environ.get('FUSEKI_URL', 'http://localhost:3030')
-FUSEKI_DATASET = os.environ.get('FUSEKI_DATASET', 'semantic-web-kms')
-FUSEKI_USER = os.environ.get('FUSEKI_USER')
-FUSEKI_PASS = os.environ.get('FUSEKI_PASS')
-ELASTIC_URL = os.environ.get('ELASTIC_URL', 'http://localhost:9200')
-ELASTIC_INDEX = os.environ.get('ELASTIC_INDEX', 'assets')
+# Configurations
+FUSEKI_URL = os.environ.get("FUSEKI_URL", "http://localhost:3030")
+FUSEKI_DATASET = os.environ.get("FUSEKI_DATASET", "semantic-web-kms")
+FUSEKI_USER = os.environ.get("FUSEKI_USER")
+FUSEKI_PASS = os.environ.get("FUSEKI_PASS")
 
 app = Flask(__name__)
 CORS(app)
-es = Elasticsearch([ELASTIC_URL])
+
+# Initialize Flask-Caching
+cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 300})
+
+# Optimized dashboard stats queries
+DASHBOARD_QUERIES = {
+    "totalRepos": "SELECT (COUNT(DISTINCT ?repo) AS ?totalRepos) WHERE { ?repo a <http://semantic-web-kms.edu.et/wdo#Repository> . }",
+    "totalFiles": "SELECT (COUNT(DISTINCT ?file) AS ?totalFiles) WHERE { ?repo a <http://semantic-web-kms.edu.et/wdo#Repository> . ?repo <http://www.w3.org/2000/01/rdf-schema#member> ?file . }",
+    "totalEntities": """SELECT (COUNT(DISTINCT ?entity) AS ?totalEntities) WHERE {\n    ?entity a ?entityType .\n    FILTER(?entityType IN (\n        <http://semantic-web-kms.edu.et/wdo#SoftwareCode>,\n        <http://semantic-web-kms.edu.et/wdo#FunctionDefinition>,\n        <http://semantic-web-kms.edu.et/wdo#ClassDefinition>\n    ))\n}""",
+    "totalRelationships": """SELECT (COUNT(*) AS ?totalRelationships) WHERE {\n    ?s ?relPred ?o .\n    FILTER(?relPred IN (\n        <http://semantic-web-kms.edu.et/wdo#invokes>,\n        <http://semantic-web-kms.edu.et/wdo#callsFunction>,\n        <http://semantic-web-kms.edu.et/wdo#extendsType>,\n        <http://semantic-web-kms.edu.et/wdo#implementsInterface>,\n        <http://semantic-web-kms.edu.et/wdo#declaresCode>,\n        <http://semantic-web-kms.edu.et/wdo#hasField>,\n        <http://semantic-web-kms.edu.et/wdo#hasMethod>,\n        <http://semantic-web-kms.edu.et/wdo#isRelatedTo>,\n        <http://semantic-web-kms.edu.et/wdo#usesFramework>,\n        <http://semantic-web-kms.edu.et/wdo#tests>,\n        <http://semantic-web-kms.edu.et/wdo#documentsEntity>,\n        <http://semantic-web-kms.edu.et/wdo#modifies>,\n        <http://semantic-web-kms.edu.et/wdo#imports>,\n        <http://semantic-web-kms.edu.et/wdo#isImportedBy>,\n        <http://semantic-web-kms.edu.et/wdo#conformsToGuideline>,\n        <http://semantic-web-kms.edu.et/wdo#copiesFrom>,\n        <http://semantic-web-kms.edu.et/wdo#embedsCode>,\n        <http://semantic-web-kms.edu.et/wdo#generates>,\n        <http://semantic-web-kms.edu.et/wdo#hasArgument>,\n        <http://semantic-web-kms.edu.et/wdo#hasResource>,\n        <http://semantic-web-kms.edu.et/wdo#isAbout>,\n        <http://semantic-web-kms.edu.et/wdo#isAboutCode>,\n        <http://semantic-web-kms.edu.et/wdo#isDependencyOf>,\n        <http://semantic-web-kms.edu.et/wdo#specifiesDependency>,\n        <http://semantic-web-kms.edu.et/wdo#styles>\n    ))\n}""",
+}
 
 
-@app.route('/api/sparql', methods=['POST'])
-def sparql_query():
-    data = request.get_json()
-    query = data.get('query')
-    if not query:
-        return jsonify({'error': 'Missing query'}), 400
+def run_dashboard_sparql(query: str) -> Any:
+    """Run a SPARQL query against the Fuseki endpoint and return the JSON result as a dictionary.
+
+    Args:
+        query (str): The SPARQL query string to execute.
+
+    Returns:
+        Any: The JSON response from the Fuseki endpoint as a dictionary.
+    """
     fuseki_endpoint = f"{FUSEKI_URL}/{FUSEKI_DATASET}/query"
-    headers = {'Accept': 'application/sparql-results+json'}
+    headers = {"Accept": "application/sparql-results+json"}
     auth = (FUSEKI_USER, FUSEKI_PASS) if FUSEKI_USER and FUSEKI_PASS else None
     resp = requests.post(
-        fuseki_endpoint,
-        data={
-            'query': query},
-        headers=headers,
-        auth=auth)
+        fuseki_endpoint, data={"query": query}, headers=headers, auth=auth
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+@app.route("/api/dashboard_stats", methods=["GET"])
+@cache.cached()
+def dashboard_stats() -> Any:
+    """Return dashboard statistics by running predefined SPARQL queries and aggregating the results."""
+    results: Dict[str, int] = {}
+    for key, query in DASHBOARD_QUERIES.items():
+        data: Dict[str, Any] = run_dashboard_sparql(query)
+        bindings: List[Dict[str, Any]] = cast(
+            List[Dict[str, Any]], data["results"]["bindings"]
+        )
+        if bindings:
+            first_binding: Dict[str, Any] = bindings[0]
+            value_dict: Dict[str, Any] = next(iter(first_binding.values()))
+            value: str = value_dict["value"]
+            results[key] = int(value)
+        else:
+            results[key] = 0
+    return jsonify(results)
+
+
+@app.route("/api/sparql", methods=["POST"])
+def sparql_query():
+    """Handle a POST request to execute a SPARQL query and return the results as JSON."""
+    data = request.get_json()
+    query = data.get("query")
+    if not query:
+        return jsonify({"error": "Missing query"}), 400
+    fuseki_endpoint = f"{FUSEKI_URL}/{FUSEKI_DATASET}/query"
+    headers = {"Accept": "application/sparql-results+json"}
+    auth = (FUSEKI_USER, FUSEKI_PASS) if FUSEKI_USER and FUSEKI_PASS else None
+    resp = requests.post(
+        fuseki_endpoint, data={"query": query}, headers=headers, auth=auth
+    )
     if resp.status_code == 200:
         return jsonify(resp.json())
     else:
-        return jsonify({'error': resp.text}), resp.status_code
+        return jsonify({"error": resp.text}), resp.status_code
 
 
-@app.route('/api/search', methods=['GET'])
-def search():
-    q = request.args.get('q', '')
-    page = int(request.args.get('page', 1))
-    size = int(request.args.get('size', 10))
-    # Elasticsearch query
-    es_query = {
-        'query': {
-            'multi_match': {
-                'query': q,
-                'fields': ['label^3', 'doc_text', 'code_comments', 'language']
-            }
-        },
-        'from': (page - 1) * size,
-        'size': size
-    }
-    es_results = es.search(index=ELASTIC_INDEX, body=es_query)
-    # TODO: Optionally merge with SPARQL results for structured filters
-    return jsonify(es_results)
-
-# --- Indexing logic ---
-
-
-def index_rdf_assets(ttl_path, index_name=ELASTIC_INDEX):
-    g = Graph()
-    g.parse(ttl_path, format='turtle')
-    docs = []
-    for s, p, o in g:
-        # Only index assets (customize as needed)
-        if str(p).endswith('label'):
-            doc = {'uri': str(s), 'label': str(o)}
-            # Optionally add more fields by querying the graph
-            docs.append(doc)
-    # Bulk index
-    actions = [
-        {'_op_type': 'index', '_index': index_name, '_id': d['uri'], '_source': d}
-        for d in docs
-    ]
-    from elasticsearch.helpers import bulk
-    bulk(es, actions)
-    print(
-        f"Indexed {
-            len(docs)} assets into Elasticsearch index '{index_name}'")
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
