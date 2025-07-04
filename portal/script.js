@@ -38,55 +38,67 @@ async function fetchRepositories() {
     const query = `
         SELECT ?repository ?name
           (COUNT(DISTINCT ?file) AS ?fileCount)
-          (COUNT(DISTINCT ?entity) AS ?entityCount)
-          (COUNT(DISTINCT ?relationship) AS ?relationshipCount)
+          (COALESCE(?entityCountSub, 0) AS ?entityCount)
+          (COALESCE(?relationshipCountSub, 0) AS ?relationshipCount)
         WHERE {
           ?repository a <http://semantic-web-kms.edu.et/wdo#Repository> .
           OPTIONAL { ?repository <http://semantic-web-kms.edu.et/wdo#hasSimpleName> ?name }
-          OPTIONAL { ?repository <http://www.w3.org/2000/01/rdf-schema#member> ?file }
+          OPTIONAL { ?repository <http://semantic-web-kms.edu.et/wdo#hasFile> ?file }
           OPTIONAL {
-            ?repository <http://www.w3.org/2000/01/rdf-schema#member> ?entity .
-            ?entity a ?entityType .
-            FILTER(?entityType IN (
-              <http://semantic-web-kms.edu.et/wdo#SoftwareCode>,
-              <http://semantic-web-kms.edu.et/wdo#FunctionDefinition>,
-              <http://semantic-web-kms.edu.et/wdo#ClassDefinition>
-            ))
+            SELECT ?repository (COUNT(DISTINCT ?entity) AS ?entityCountSub)
+            WHERE {
+              ?repository <http://semantic-web-kms.edu.et/wdo#hasFile> ?file2 .
+              ?entity <http://semantic-web-kms.edu.et/wdo#isElementOf> ?file2 .
+              ?entity a ?entityType .
+              FILTER(?entityType IN (
+                <http://semantic-web-kms.edu.et/wdo#SoftwareCode>,
+                <http://semantic-web-kms.edu.et/wdo#FunctionDefinition>,
+                <http://semantic-web-kms.edu.et/wdo#ClassDefinition>
+              ))
+            }
+            GROUP BY ?repository
           }
           OPTIONAL {
-            ?repository <http://www.w3.org/2000/01/rdf-schema#member> ?entity2 .
-            ?entity2 ?relPred ?o .
-            FILTER(?relPred IN (
-              <http://semantic-web-kms.edu.et/wdo#invokes>,
-              <http://semantic-web-kms.edu.et/wdo#callsFunction>,
-              <http://semantic-web-kms.edu.et/wdo#extendsType>,
-              <http://semantic-web-kms.edu.et/wdo#implementsInterface>,
-              <http://semantic-web-kms.edu.et/wdo#declaresCode>,
-              <http://semantic-web-kms.edu.et/wdo#hasField>,
-              <http://semantic-web-kms.edu.et/wdo#hasMethod>,
-              <http://semantic-web-kms.edu.et/wdo#isRelatedTo>,
-              <http://semantic-web-kms.edu.et/wdo#usesFramework>,
-              <http://semantic-web-kms.edu.et/wdo#tests>,
-              <http://semantic-web-kms.edu.et/wdo#documentsEntity>,
-              <http://semantic-web-kms.edu.et/wdo#modifies>,
-              <http://semantic-web-kms.edu.et/wdo#imports>,
-              <http://semantic-web-kms.edu.et/wdo#isImportedBy>,
-              <http://semantic-web-kms.edu.et/wdo#conformsToGuideline>,
-              <http://semantic-web-kms.edu.et/wdo#copiesFrom>,
-              <http://semantic-web-kms.edu.et/wdo#embedsCode>,
-              <http://semantic-web-kms.edu.et/wdo#generates>,
-              <http://semantic-web-kms.edu.et/wdo#hasArgument>,
-              <http://semantic-web-kms.edu.et/wdo#hasResource>,
-              <http://semantic-web-kms.edu.et/wdo#isAbout>,
-              <http://semantic-web-kms.edu.et/wdo#isAboutCode>,
-              <http://semantic-web-kms.edu.et/wdo#isDependencyOf>,
-              <http://semantic-web-kms.edu.et/wdo#specifiesDependency>,
-              <http://semantic-web-kms.edu.et/wdo#styles>
-            ))
-            BIND(CONCAT(STR(?entity2), STR(?relPred), STR(?o)) AS ?relationship)
+            SELECT ?repository (COUNT(DISTINCT ?relationship) AS ?relationshipCountSub)
+            WHERE {
+              ?repository <http://semantic-web-kms.edu.et/wdo#hasFile> ?file3 .
+              ?entityA <http://semantic-web-kms.edu.et/wdo#isElementOf> ?file3 .
+              ?entityB <http://semantic-web-kms.edu.et/wdo#isElementOf> ?file3 .
+              FILTER(?entityA != ?entityB)
+              ?entityA ?relPred ?entityB .
+              FILTER(?relPred IN (
+                <http://semantic-web-kms.edu.et/wdo#invokes>,
+                <http://semantic-web-kms.edu.et/wdo#callsFunction>,
+                <http://semantic-web-kms.edu.et/wdo#extendsType>,
+                <http://semantic-web-kms.edu.et/wdo#implementsInterface>,
+                <http://semantic-web-kms.edu.et/wdo#declaresCode>,
+                <http://semantic-web-kms.edu.et/wdo#hasField>,
+                <http://semantic-web-kms.edu.et/wdo#hasMethod>,
+                <http://semantic-web-kms.edu.et/wdo#isRelatedTo>,
+                <http://semantic-web-kms.edu.et/wdo#usesFramework>,
+                <http://semantic-web-kms.edu.et/wdo#tests>,
+                <http://semantic-web-kms.edu.et/wdo#documentsEntity>,
+                <http://semantic-web-kms.edu.et/wdo#modifies>,
+                <http://semantic-web-kms.edu.et/wdo#imports>,
+                <http://semantic-web-kms.edu.et/wdo#isImportedBy>,
+                <http://semantic-web-kms.edu.et/wdo#conformsToGuideline>,
+                <http://semantic-web-kms.edu.et/wdo#copiesFrom>,
+                <http://semantic-web-kms.edu.et/wdo#embedsCode>,
+                <http://semantic-web-kms.edu.et/wdo#generates>,
+                <http://semantic-web-kms.edu.et/wdo#hasArgument>,
+                <http://semantic-web-kms.edu.et/wdo#hasResource>,
+                <http://semantic-web-kms.edu.et/wdo#isAbout>,
+                <http://semantic-web-kms.edu.et/wdo#isAboutCode>,
+                <http://semantic-web-kms.edu.et/wdo#isDependencyOf>,
+                <http://semantic-web-kms.edu.et/wdo#specifiesDependency>,
+                <http://semantic-web-kms.edu.et/wdo#styles>
+              ))
+              BIND(CONCAT(STR(?entityA), STR(?relPred), STR(?entityB)) AS ?relationship)
+            }
+            GROUP BY ?repository
           }
         }
-        GROUP BY ?repository ?name
+        GROUP BY ?repository ?name ?entityCountSub ?relationshipCountSub
     `;
     try {
         const data = await sparqlQuery(query);
@@ -151,6 +163,7 @@ function renderRepositories() {
         `;
         grid.appendChild(card);
     });
+    addGraphButton();
 }
 
 function updateRepositoryFilter() {
@@ -271,298 +284,667 @@ async function showAssetDetails(assetUri) {
     }
 }
 
-// --- Graph View ---
-async function initializeGraph() {
+// --- Knowledge Graph Implementation ---
+let network = null;
+let currentGraphData = { nodes: [], edges: [] };
+let selectedNode = null;
+let currentRepo = null;
+
+// Enhanced knowledge graph loading with analytics
+async function loadKnowledgeGraph(repoUri) {
+    currentRepo = repoUri;
     const canvas = document.getElementById('graph-canvas');
-    canvas.innerHTML = `<div style="padding:2rem;text-align:center;color:#64748b;">Loading graph...</div>`;
-    const query = `SELECT ?source ?target ?label WHERE { ?source <http://semantic-web-kms.edu.et/wdo#isRelatedTo> ?target . OPTIONAL { ?source <http://www.w3.org/2000/01/rdf-schema#label> ?label } } LIMIT 100`;
-    try {
-        const data = await sparqlQuery(query);
-        if (data && data.results && data.results.bindings) {
-            // For demo: just show JSON, but you can render a real graph here
-            canvas.innerHTML = `<pre>${JSON.stringify(data.results.bindings, null, 2)}</pre>`;
-            document.getElementById('node-count').textContent = data.results.bindings.length;
-            document.getElementById('edge-count').textContent = data.results.bindings.length;
-        } else {
-            canvas.innerHTML = `<div style="padding:2rem;text-align:center;color:#64748b;">No graph data found.</div>`;
-            document.getElementById('node-count').textContent = 0;
-            document.getElementById('edge-count').textContent = 0;
-        }
-    } catch (e) {
-        canvas.innerHTML = `<div style="padding:2rem;text-align:center;color:#64748b;">Failed to load graph data.</div>`;
-        document.getElementById('node-count').textContent = 0;
-        document.getElementById('edge-count').textContent = 0;
-    }
-}
-function resetGraph() { initializeGraph(); }
-function exportGraph() { alert('Graph export functionality would be implemented here'); }
-
-// --- Analytics ---
-async function loadAnalytics() {
-    // Language Distribution (use wdo:programmingLanguage)
-    const langQuery = `SELECT ?language (COUNT(?entity) AS ?count) WHERE { ?entity <http://semantic-web-kms.edu.et/wdo#programmingLanguage> ?language . } GROUP BY ?language`;
-    // Entity Types (only WDO types)
-    const typeQuery = `SELECT ?type (COUNT(?entity) AS ?count) WHERE { ?entity a ?type . FILTER(STRSTARTS(STR(?type), "http://semantic-web-kms.edu.et/wdo#")) } GROUP BY ?type`;
-    // Repository Activity (commits per repo)
-    const repoQuery = `SELECT ?repository (COUNT(?commit) AS ?commitCount) WHERE { ?commit a <http://semantic-web-kms.edu.et/wdo#Commit> . ?commit <http://semantic-web-kms.edu.et/wdo#hasRepository> ?repository . } GROUP BY ?repository`;
-    // Recently added repositories (fallback if no commit activity)
-    const recentRepoQuery = `SELECT ?repo ?name ?created WHERE { ?repo a <http://semantic-web-kms.edu.et/wdo#Repository> . OPTIONAL { ?repo <http://semantic-web-kms.edu.et/wdo#hasSimpleName> ?name } OPTIONAL { ?repo <http://semantic-web-kms.edu.et/wdo#hasCreationTimestamp> ?created } } ORDER BY DESC(?created) LIMIT 5`;
-    const [langData, typeData, repoData, recentRepoData] = await Promise.all([
-        sparqlQuery(langQuery),
-        sparqlQuery(typeQuery),
-        sparqlQuery(repoQuery),
-        sparqlQuery(recentRepoQuery)
-    ]);
-    // Render file distribution (was language distribution)
-    const fileDistList = document.getElementById('file-distribution-list');
-    if (langData.results?.bindings?.length) {
-        fileDistList.innerHTML = langData.results.bindings.map(l => `
-            <div class="activity-item">
-                <i class="fas fa-file-code" style="color:#6366f1"></i>
-                <div class="activity-content">
-                    <div class="activity-title">${l.language.value}</div>
-                    <div class="activity-desc">Files: ${l.count.value}</div>
-                </div>
-            </div>
-        `).join('');
-    } else {
-        fileDistList.innerHTML = '<div style="color:#64748b;text-align:center;">No data</div>';
-    }
-    // Render entity types
-    const entityTypesList = document.getElementById('entity-types-list');
-    if (typeData.results?.bindings?.length) {
-        const filtered = typeData.results.bindings.filter(t => t.type.value.startsWith('http://semantic-web-kms.edu.et/wdo#'));
-        entityTypesList.innerHTML = filtered.length
-            ? filtered.map(t => `
-                <div class="activity-item">
-                    <i class="fas fa-cubes" style="color:#10b981"></i>
-                    <div class="activity-content">
-                        <div class="activity-title">${t.type.value.split('#').pop()}</div>
-                        <div class="activity-desc">Count: ${t.count.value}</div>
-                    </div>
-                </div>
-            `).join('')
-            : '<div style="color:#64748b;text-align:center;">No data</div>';
-    } else {
-        entityTypesList.innerHTML = '<div style="color:#64748b;text-align:center;">No data</div>';
-    }
-    // Render repo activity
-    const repoActivityList = document.getElementById('repo-activity-list');
-    if (repoData.results?.bindings?.length) {
-        repoActivityList.innerHTML = repoData.results.bindings.map(r => `
-            <div class="activity-item">
-                <i class="fas fa-database" style="color:#f59e42"></i>
-                <div class="activity-content">
-                    <div class="activity-title">${r.repository.value.split('/').pop()}</div>
-                    <div class="activity-desc">Commits: ${r.commitCount.value}</div>
-                </div>
-            </div>
-        `).join('');
-    } else if (recentRepoData.results?.bindings?.length) {
-        repoActivityList.innerHTML = recentRepoData.results.bindings.map(r => `
-            <div class="activity-item">
-                <i class="fas fa-plus-circle" style="color:#10b981"></i>
-                <div class="activity-content">
-                    <div class="activity-title">${r.name ? r.name.value : r.repo.value.split('/').pop()}</div>
-                    <div class="activity-desc">Added ${r.created ? new Date(r.created.value).toLocaleDateString() : 'unknown'}</div>
-                </div>
-            </div>
-        `).join('');
-    } else {
-        repoActivityList.innerHTML = '<div style="color:#64748b;text-align:center;">No data</div>';
-    }
-}
-
-// --- Navigation, Tabs, and Modal Management ---
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-    fetchRepositories();
-});
-
-function initializeApp() {
-    // Navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const view = this.dataset.view;
-            showView(view);
-        });
-    });
-    // Quick search
-    document.getElementById('quick-search').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            showView('search');
-            document.getElementById('search-query').value = this.value;
-            performSearch();
-        }
-    });
-    // Repository type toggle
-    document.querySelectorAll('input[name="repo-type"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const githubFields = document.getElementById('github-fields');
-            const localFields = document.getElementById('local-fields');
-            if (this.value === 'github') {
-                githubFields.style.display = 'block';
-                localFields.style.display = 'none';
-            } else {
-                githubFields.style.display = 'none';
-                localFields.style.display = 'block';
-            }
-        });
-    });
-    // Tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tabName = this.dataset.tab;
-            switchTab(tabName);
-        });
-    });
-}
-
-// --- Recent Activity (Dashboard) ---
-async function fetchRecentActivity() {
-    // Get recent commits
-    const commitQuery = `
-        SELECT ?type ?repo ?date ?desc WHERE {
-          ?event a ?type .
-          FILTER(?type IN (
-            <http://semantic-web-kms.edu.et/wdo#Commit>,
-            <http://semantic-web-kms.edu.et/wdo#Repository>
-          ))
-          OPTIONAL { ?event <http://semantic-web-kms.edu.et/wdo#hasRepository> ?repo }
-          OPTIONAL { ?event <http://semantic-web-kms.edu.et/wdo#hasCreationTimestamp> ?date }
-          OPTIONAL { ?event <http://purl.org/dc/terms/date> ?date }
-          OPTIONAL { ?event <http://semantic-web-kms.edu.et/wdo#hasCommitMessage> ?desc }
-          OPTIONAL { ?event <http://semantic-web-kms.edu.et/wdo#hasSimpleName> ?desc }
-        }
-        ORDER BY DESC(?date)
-        LIMIT 8
+    const sidebar = document.getElementById('graph-sidebar');
+    
+    // Show loading state
+    canvas.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#64748b;">
+            <div class="loading-spinner"></div>
+            <div style="margin-top:1rem;">Loading knowledge graph...</div>
+        </div>
     `;
-    const data = await sparqlQuery(commitQuery);
-    const list = document.getElementById('activity-list');
-    list.innerHTML = '';
-    if (data.results?.bindings?.length) {
-        // Track seen repository additions to avoid duplicates
-        const seenRepos = new Set();
-        data.results.bindings.forEach(item => {
-            const type = item.type ? item.type.value.split('#').pop() : '';
-            const repo = item.repo ? item.repo.value.split('/').pop() : '';
-            const date = item.date ? new Date(item.date.value).toLocaleString() : '';
-            let icon = 'fa-plus-circle', color = '#10b981', title = '', desc = '', time = date;
-            if (type === 'Commit') {
-                icon = 'fa-code-branch';
-                color = '#6366f1';
-                title = 'Commit';
-                desc = item.desc ? item.desc.value : repo;
-            } else if (type === 'Repository') {
-                // Prefer item.desc (hasSimpleName), then extract from item.repo URI
-                let repoName = (item.desc && item.desc.value)
-                    ? item.desc.value
-                    : (item.repo && item.repo.value ? item.repo.value.split('/').pop() : null);
-                if (!repoName) return; // skip if no name at all
-                if (seenRepos.has(repoName)) return; // skip duplicate
-                seenRepos.add(repoName);
-                icon = 'fa-plus-circle';
-                color = '#10b981';
-                title = `Repository added ${repoName}`;
-                desc = repoName;
+    
+    try {
+        // Load graph data
+        const graphResponse = await fetch(`/api/graph?repo=${encodeURIComponent(repoUri)}`);
+        const graphData = await graphResponse.json();
+        
+        // Load analytics
+        const analyticsResponse = await fetch(`/api/graph/analytics?repo=${encodeURIComponent(repoUri)}`);
+        const analyticsData = await analyticsResponse.json();
+        
+        // Process and display graph
+        displayGraph(graphData, analyticsData);
+        
+        // Update sidebar with analytics
+        updateGraphSidebar(analyticsData);
+        
+    } catch (e) {
+        console.error('Failed to load knowledge graph:', e);
+        canvas.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#ff6b6b;">
+                <i class="fas fa-exclamation-triangle" style="font-size:3rem;margin-bottom:1rem;"></i>
+                <div>Failed to load knowledge graph</div>
+                <div style="font-size:0.9rem;margin-top:0.5rem;">${e.message}</div>
+            </div>
+        `;
+    }
+}
+
+function displayGraph(graphData, analyticsData) {
+    const canvas = document.getElementById('graph-canvas');
+    canvas.innerHTML = '';
+    
+    // Store current data
+    currentGraphData = graphData;
+    
+    // Create color mapping for node types
+    const colorMap = createColorMap(analyticsData.node_types);
+    
+    // Prepare nodes with colors and sizes based on centrality
+    const nodes = new vis.DataSet(graphData.nodes.map(node => {
+        const centrality = analyticsData.centrality.find(c => c.entity === node.id);
+        const size = centrality ? Math.min(30, Math.max(16, centrality.degree * 2)) : 16;
+        
+        return {
+            ...node,
+            color: colorMap[node.group] || '#666',
+            size: size,
+            font: { size: Math.max(12, size * 0.6) },
+            title: `${node.label}\nType: ${node.group}\nDegree: ${centrality ? centrality.degree : 0}`
+        };
+    }));
+    
+    // Prepare edges with colors and labels
+    const edges = new vis.DataSet(graphData.edges.map(edge => ({
+        ...edge,
+        arrows: 'to',
+        color: { color: '#999', opacity: 0.6 },
+        font: { size: 10, align: 'middle' },
+        smooth: { type: 'curvedCW', roundness: 0.2 }
+    })));
+    
+    // Network options
+    const options = {
+        nodes: {
+            shape: 'dot',
+            borderWidth: 2,
+            shadow: true,
+            font: {
+                face: 'Inter',
+                size: 14,
+                color: '#333'
             }
-            // Only add to list if not a duplicate repo addition
-            if (type !== 'Repository' || (type === 'Repository' && desc && !seenRepos.has(desc))) {
-                list.innerHTML += `
-                    <div class="activity-item">
-                        <i class="fas ${icon}" style="color:${color}"></i>
-                        <div class="activity-content">
-                            <div class="activity-title">${title}</div>
-                            <div class="activity-desc">${desc}</div>
-                            <div class="activity-time">${time}</div>
+        },
+        edges: {
+            width: 1,
+            shadow: true,
+            smooth: {
+                type: 'curvedCW',
+                roundness: 0.2
+            }
+        },
+        physics: {
+            enabled: true,
+            barnesHut: {
+                gravitationalConstant: -2000,
+                springConstant: 0.04,
+                springLength: 200
+            },
+            stabilization: {
+                enabled: true,
+                iterations: 1000,
+                updateInterval: 100
+            }
+        },
+        interaction: {
+            hover: true,
+            tooltipDelay: 200,
+            zoomView: true,
+            dragView: true
+        },
+        layout: {
+            improvedLayout: true,
+            hierarchical: {
+                enabled: false
+            }
+        }
+    };
+    
+    // Create network
+    network = new vis.Network(canvas, { nodes, edges }, options);
+    
+    // Event handlers
+    network.on('click', function(params) {
+        if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            showNodeDetails(nodeId);
+        } else {
+            hideNodeDetails();
+        }
+    });
+    
+    network.on('hoverNode', function(params) {
+        canvas.style.cursor = 'pointer';
+    });
+    
+    network.on('blurNode', function(params) {
+        canvas.style.cursor = 'default';
+    });
+    
+    // Update statistics
+    document.getElementById('node-count').textContent = graphData.nodes.length;
+    document.getElementById('edge-count').textContent = graphData.edges.length;
+}
+
+function createColorMap(nodeTypes) {
+    const colors = [
+        '#4299e1', '#48bb78', '#ed8936', '#f56565', '#9f7aea',
+        '#38b2ac', '#ed64a6', '#667eea', '#f09383', '#4fd1c7'
+    ];
+    
+    const colorMap = {};
+    nodeTypes.forEach((type, index) => {
+        colorMap[type.type] = colors[index % colors.length];
+    });
+    
+    return colorMap;
+}
+
+function updateGraphSidebar(analyticsData) {
+    const sidebar = document.getElementById('graph-sidebar');
+    
+    // Add analytics sections
+    const analyticsHtml = `
+        <div class="sidebar-section">
+            <h4>Graph Analytics</h4>
+            <div class="analytics-summary">
+                <div class="analytics-item">
+                    <span class="analytics-label">Node Types:</span>
+                    <span class="analytics-value">${analyticsData.node_types.length}</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-label">Relationship Types:</span>
+                    <span class="analytics-value">${analyticsData.relationship_types.length}</span>
+                </div>
+                <div class="analytics-item">
+                    <span class="analytics-label">Most Connected:</span>
+                    <span class="analytics-value">${analyticsData.centrality[0]?.degree || 0}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <h4>Top Node Types</h4>
+            <div class="node-types-list">
+                ${analyticsData.node_types.slice(0, 5).map(type => `
+                    <div class="type-item">
+                        <span class="type-name">${type.type}</span>
+                        <span class="type-count">${type.count}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <h4>Top Relationships</h4>
+            <div class="relationship-types-list">
+                ${analyticsData.relationship_types.slice(0, 5).map(rel => `
+                    <div class="rel-item">
+                        <span class="rel-name">${rel.type}</span>
+                        <span class="rel-count">${rel.count}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div class="sidebar-section">
+            <h4>Most Central Entities</h4>
+            <div class="centrality-list">
+                ${analyticsData.centrality.slice(0, 5).map(entity => `
+                    <div class="centrality-item" onclick="focusOnNode('${entity.entity}')">
+                        <span class="entity-name">${entity.label}</span>
+                        <span class="entity-degree">${entity.degree}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Insert analytics before existing content
+    const existingContent = sidebar.innerHTML;
+    sidebar.innerHTML = analyticsHtml + existingContent;
+}
+
+async function showNodeDetails(nodeId) {
+    selectedNode = nodeId;
+    const detailsContainer = document.getElementById('node-details');
+    
+    try {
+        const response = await fetch(`/api/graph/entity/${encodeURIComponent(nodeId)}`);
+        const data = await response.json();
+        
+        const details = data.details;
+        const incoming = data.incoming;
+        const outgoing = data.outgoing;
+        
+        detailsContainer.innerHTML = `
+            <div class="node-details-content">
+                <div class="node-header">
+                    <h5>${details.label || 'Unknown Entity'}</h5>
+                    <span class="node-type">${details.type}</span>
+                </div>
+                
+                ${details.description ? `
+                    <div class="node-description">
+                        <p>${details.description}</p>
+                    </div>
+                ` : ''}
+                
+                ${details.file ? `
+                    <div class="node-file">
+                        <strong>File:</strong> ${details.file.split('/').pop()}
+                        ${details.startLine ? ` (Lines ${details.startLine}-${details.endLine})` : ''}
+                    </div>
+                ` : ''}
+                
+                <div class="node-relationships">
+                    <div class="rel-section">
+                        <h6>Incoming (${incoming.length})</h6>
+                        <div class="rel-list">
+                            ${incoming.slice(0, 5).map(rel => `
+                                <div class="rel-item" onclick="focusOnNode('${rel.source}')">
+                                    <span class="rel-source">${rel.sourceLabel}</span>
+                                    <span class="rel-type">${rel.relType}</span>
+                                </div>
+                            `).join('')}
+                            ${incoming.length > 5 ? `<div class="rel-more">+${incoming.length - 5} more</div>` : ''}
                         </div>
                     </div>
-                `;
-            }
+                    
+                    <div class="rel-section">
+                        <h6>Outgoing (${outgoing.length})</h6>
+                        <div class="rel-list">
+                            ${outgoing.slice(0, 5).map(rel => `
+                                <div class="rel-item" onclick="focusOnNode('${rel.target}')">
+                                    <span class="rel-target">${rel.targetLabel}</span>
+                                    <span class="rel-type">${rel.relType}</span>
+                                </div>
+                            `).join('')}
+                            ${outgoing.length > 5 ? `<div class="rel-more">+${outgoing.length - 5} more</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="node-actions">
+                    <button class="btn btn-sm btn-primary" onclick="showNeighborhood('${nodeId}')">
+                        <i class="fas fa-expand"></i>
+                        Show Neighborhood
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="highlightConnections('${nodeId}')">
+                        <i class="fas fa-link"></i>
+                        Highlight Connections
+                    </button>
+                </div>
+            </div>
+        `;
+        
+    } catch (e) {
+        detailsContainer.innerHTML = `
+            <div class="node-details-content">
+                <p>Failed to load node details</p>
+            </div>
+        `;
+    }
+}
+
+function hideNodeDetails() {
+    selectedNode = null;
+    document.getElementById('node-details').innerHTML = '<p>Select a node to view details</p>';
+}
+
+function focusOnNode(nodeId) {
+    if (network) {
+        network.focus(nodeId, { scale: 1.5, animation: { duration: 1000, easingFunction: 'easeInOutQuad' } });
+        showNodeDetails(nodeId);
+    }
+}
+
+async function showNeighborhood(nodeId) {
+    try {
+        const response = await fetch(`/api/graph/neighborhood/${encodeURIComponent(nodeId)}?depth=2`);
+        const data = await response.json();
+        
+        // Update graph with neighborhood data
+        displayGraph(data, { node_types: [], centrality: [] });
+        
+        // Focus on the center node
+        if (network) {
+            network.focus(nodeId, { scale: 1.2 });
+        }
+        
+    } catch (e) {
+        console.error('Failed to load neighborhood:', e);
+        alert('Failed to load neighborhood data');
+    }
+}
+
+function highlightConnections(nodeId) {
+    if (!network) return;
+    
+    // Reset all nodes and edges
+    const nodes = network.body.data.nodes;
+    const edges = network.body.data.edges;
+    
+    nodes.forEach(node => {
+        nodes.update({ id: node.id, color: { background: '#ddd', border: '#999' } });
+    });
+    
+    edges.forEach(edge => {
+        edges.update({ id: edge.id, color: { color: '#999', opacity: 0.3 } });
+    });
+    
+    // Highlight the selected node
+    nodes.update({ id: nodeId, color: { background: '#f56565', border: '#e53e3e' } });
+    
+    // Highlight connected nodes and edges
+    const connectedEdges = edges.get().filter(edge => 
+        edge.from === nodeId || edge.to === nodeId
+    );
+    
+    connectedEdges.forEach(edge => {
+        edges.update({ 
+            id: edge.id, 
+            color: { color: '#f56565', opacity: 0.8 },
+            width: 3
+        });
+        
+        const connectedNodeId = edge.from === nodeId ? edge.to : edge.from;
+        nodes.update({ 
+            id: connectedNodeId, 
+            color: { background: '#4299e1', border: '#3182ce' } 
+        });
+    });
+}
+
+// Graph search functionality
+async function searchInGraph() {
+    const searchInput = document.getElementById('graph-search-input');
+    const query = searchInput.value.trim();
+    
+    if (!query) return;
+    
+    try {
+        const response = await fetch(`/api/graph/search?q=${encodeURIComponent(query)}&repo=${encodeURIComponent(currentRepo)}`);
+        const data = await response.json();
+        
+        displaySearchResults(data.results);
+        
+    } catch (e) {
+        console.error('Graph search failed:', e);
+    }
+}
+
+function displaySearchResults(results) {
+    const resultsContainer = document.getElementById('graph-search-results');
+    
+    if (results.length === 0) {
+        resultsContainer.innerHTML = '<p>No results found</p>';
+        return;
+    }
+    
+    resultsContainer.innerHTML = results.map(result => `
+        <div class="search-result-item" onclick="focusOnNode('${result.entity}')">
+            <div class="result-header">
+                <span class="result-label">${result.label}</span>
+                <span class="result-type">${result.type}</span>
+            </div>
+            ${result.description ? `<div class="result-description">${result.description}</div>` : ''}
+            ${result.file ? `<div class="result-file">${result.file.split('/').pop()}</div>` : ''}
+        </div>
+    `).join('');
+}
+
+// Graph filtering
+function filterGraphByType(type) {
+    if (!network) return;
+    
+    const nodes = network.body.data.nodes;
+    const edges = network.body.data.edges;
+    
+    if (type === 'all') {
+        // Show all nodes and edges
+        nodes.forEach(node => {
+            nodes.update({ id: node.id, hidden: false });
+        });
+        edges.forEach(edge => {
+            edges.update({ id: edge.id, hidden: false });
         });
     } else {
-        list.innerHTML = '<div style="color:#64748b;text-align:center;">No recent activity found.</div>';
+        // Hide nodes that don't match the type
+        nodes.forEach(node => {
+            const shouldShow = node.group === type;
+            nodes.update({ id: node.id, hidden: !shouldShow });
+        });
+        
+        // Hide edges where both nodes are hidden
+        edges.forEach(edge => {
+            const fromNode = nodes.get(edge.from);
+            const toNode = nodes.get(edge.to);
+            const shouldShow = !fromNode.hidden && !toNode.hidden;
+            edges.update({ id: edge.id, hidden: !shouldShow });
+        });
+    }
+}
+
+// Graph export functionality
+function exportGraph() {
+    if (!currentGraphData) return;
+    
+    const dataStr = JSON.stringify(currentGraphData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `knowledge-graph-${Date.now()}.json`;
+    link.click();
+}
+
+// Graph reset functionality
+function resetGraph() {
+    if (network) {
+        network.fit({ animation: { duration: 1000, easingFunction: 'easeInOutQuad' } });
+        hideNodeDetails();
+    }
+}
+
+// Enhanced graph loading with repository selection
+function addGraphButton() {
+    const grid = document.getElementById('repositories-grid');
+    if (!grid) return;
+    
+    let btn = document.getElementById('show-graph-btn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'show-graph-btn';
+        btn.className = 'btn btn-primary';
+        btn.innerHTML = '<i class="fas fa-project-diagram"></i> Show Knowledge Graph';
+        btn.style = 'margin-bottom: 1rem;';
+        btn.onclick = () => {
+            const select = document.getElementById('filter-repository');
+            const repoUri = select && select.value ? select.value : (repositories[0]?.uri || '');
+            if (repoUri) {
+                showView('graph');
+                loadKnowledgeGraph(repoUri);
+            } else {
+                alert('Please select a repository first');
+            }
+        };
+        grid.parentNode.insertBefore(btn, grid);
     }
 }
 
 function showView(viewName) {
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
-    const titles = {
-        'dashboard': 'Dashboard',
-        'repositories': 'Repositories',
-        'search': 'Search',
-        'graph': 'Knowledge Graph',
-        'analytics': 'Analytics'
-    };
-    document.getElementById('page-title').textContent = titles[viewName];
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-    });
-    document.getElementById(`${viewName}-view`).classList.add('active');
-    switch(viewName) {
-        case 'dashboard':
-            updateDashboardStats();
-            fetchRecentActivity();
-            break;
-        case 'repositories':
-            fetchRepositories();
-            break;
-        case 'search':
-            break;
-        case 'graph':
-            initializeGraph();
-            break;
-        case 'analytics':
-            loadAnalytics();
-            break;
+    // Hide all views
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    // Show the selected view
+    const view = document.getElementById(viewName + '-view');
+    if (view) view.classList.add('active');
+
+    // Fetch data for the view
+    if (viewName === 'dashboard') {
+        updateDashboardStats();
+        updateRecentActivity();
     }
+    if (viewName === 'repositories') fetchRepositories();
+    if (viewName === 'analytics') updateAnalytics();
+    if (viewName === 'graph') loadKnowledgeGraph(currentRepo);
+    // Add more as needed for other views
 }
 
-function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
+// --- Sidebar Navigation Handler ---
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+        // Remove active from all
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        // Show the corresponding view
+        const viewName = this.getAttribute('data-view');
+        if (viewName) showView(viewName);
     });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.getElementById(`${tabName}-tab`).classList.add('active');
+});
+
+// --- Ensure data is loaded on page load ---
+document.addEventListener('DOMContentLoaded', function() {
+    showView('dashboard');
+});
+
+// --- MISSING GLOBAL FUNCTIONS FOR BUTTONS ---
+function showAddRepoModal() {
+    const modal = document.getElementById('add-repo-modal');
+    if (modal) modal.classList.add('active');
+}
+
+function addRepository() {
+    // Placeholder: You should implement actual repository addition logic here
+    alert('Add Repository functionality not implemented yet.');
+    closeModal('add-repo-modal');
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('active');
 }
 
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal')) {
-        e.target.classList.remove('active');
-    }
-});
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        document.querySelectorAll('.modal.active').forEach(modal => {
-            modal.classList.remove('active');
-        });
-    }
-});
+function resetGraph() {
+    // Placeholder: You should implement actual graph reset logic here
+    alert('Reset Graph functionality not implemented yet.');
+}
 
-// --- Repo Details and Search in Repo ---
+function exportGraph() {
+    // Placeholder: You should implement actual graph export logic here
+    alert('Export Graph functionality not implemented yet.');
+}
+
 function viewRepoDetails(repoUri) {
-    alert(`Repository details for ${repoUri} would be displayed here`);
+    // Placeholder: You should implement actual repository details logic here
+    alert('View details for: ' + repoUri);
 }
+
 function searchInRepo(repoUri) {
+    // Switch to search view and filter by repo
     showView('search');
-    document.getElementById('filter-repository').value = repoUri;
-    document.getElementById('search-query').focus();
+    const select = document.getElementById('filter-repository');
+    if (select) select.value = repoUri;
 }
-// --- Add Repo Modal (simulated, not persisted) ---
-function showAddRepoModal() {
-    document.getElementById('add-repo-modal').classList.add('active');
+
+// Call addGraphButton after repositories are rendered
+const origRenderRepositories = renderRepositories;
+renderRepositories = function() {
+    origRenderRepositories.apply(this, arguments);
+    addGraphButton();
+};
+
+// --- Recent Activity ---
+async function updateRecentActivity() {
+    const container = document.getElementById('activity-list');
+    container.innerHTML = '<div style="padding:1rem;color:#64748b;">Loading...</div>';
+    try {
+        const response = await fetch('/api/recent_activity');
+        const data = await response.json();
+        if (!data.length) {
+            container.innerHTML = '<div style="padding:1rem;color:#64748b;">No recent activity.</div>';
+            return;
+        }
+        container.innerHTML = data.map(item => `
+            <div class="activity-item">
+                <i class="fas fa-${item.type === 'add' ? 'plus-circle' : item.type === 'update' ? 'edit' : 'trash-alt'}" style="color:${item.type === 'add' ? '#10b981' : item.type === 'update' ? '#667eea' : '#ff6b6b'};"></i>
+                <div class="activity-content">
+                    <div class="activity-title">${item.title}</div>
+                    <div class="activity-desc">${item.desc}</div>
+                    <div class="activity-time">${item.time}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<div style="padding:1rem;color:#ff6b6b;">Failed to load activity.</div>';
+    }
 }
-function addRepository() {
-    alert('Repository addition is not implemented in this demo.');
-    closeModal('add-repo-modal');
+
+// --- Analytics ---
+async function updateAnalytics() {
+    // File Distribution
+    const fileDist = document.getElementById('file-distribution-list');
+    fileDist.innerHTML = '<div style="padding:1rem;color:#64748b;">Loading...</div>';
+    try {
+        const resp = await fetch('/api/analytics/file_distribution');
+        const data = await resp.json();
+        fileDist.innerHTML = data.map(item => `
+            <div class="activity-item">
+                <i class="fas fa-file-code" style="color:#667eea;"></i>
+                <div class="activity-content">
+                    <div class="activity-title">${item.label}</div>
+                    <div class="activity-desc">${item.count} files</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        fileDist.innerHTML = '<div style="padding:1rem;color:#ff6b6b;">Failed to load file distribution.</div>';
+    }
+    // Entity Types
+    const entityTypes = document.getElementById('entity-types-list');
+    entityTypes.innerHTML = '<div style="padding:1rem;color:#64748b;">Loading...</div>';
+    try {
+        const resp = await fetch('/api/analytics/entity_types');
+        const data = await resp.json();
+        entityTypes.innerHTML = data.map(item => `
+            <div class="activity-item">
+                <i class="fas fa-cube" style="color:#764ba2;"></i>
+                <div class="activity-content">
+                    <div class="activity-title">${item.label}</div>
+                    <div class="activity-desc">${item.count} entities</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        entityTypes.innerHTML = '<div style="padding:1rem;color:#ff6b6b;">Failed to load entity types.</div>';
+    }
+    // Repo Activity
+    const repoActivity = document.getElementById('repo-activity-list');
+    repoActivity.innerHTML = '<div style="padding:1rem;color:#64748b;">Loading...</div>';
+    try {
+        const resp = await fetch('/api/analytics/repo_activity');
+        const data = await resp.json();
+        repoActivity.innerHTML = data.map(item => `
+            <div class="activity-item">
+                <i class="fas fa-chart-line" style="color:#48bb78;"></i>
+                <div class="activity-content">
+                    <div class="activity-title">${item.repo}</div>
+                    <div class="activity-desc">${item.activity} activities</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        repoActivity.innerHTML = '<div style="padding:1rem;color:#ff6b6b;">Failed to load repo activity.</div>';
+    }
 }

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -193,6 +194,21 @@
                         <div class="graph-header">
                             <h2>Knowledge Graph Visualization</h2>
                             <div class="graph-controls">
+                                <div class="graph-search">
+                                    <input type="text" id="graph-search-input" placeholder="Search entities...">
+                                    <button class="btn btn-sm btn-primary" onclick="searchInGraph()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <select id="graph-filter" onchange="filterGraphByType(this.value)">
+                                    <option value="all">All Types</option>
+                                    <option value="FunctionDefinition">Functions</option>
+                                    <option value="ClassDefinition">Classes</option>
+                                    <option value="InterfaceDefinition">Interfaces</option>
+                                    <option value="AttributeDeclaration">Attributes</option>
+                                    <option value="VariableDeclaration">Variables</option>
+                                    <option value="ImportDeclaration">Imports</option>
+                                </select>
                                 <button class="btn btn-secondary" onclick="resetGraph()">
                                     <i class="fas fa-home"></i>
                                     Reset View
@@ -204,29 +220,38 @@
                             </div>
                         </div>
                         
-                        <div class="graph-canvas" id="graph-canvas">
-                            <!-- Graph visualization will be rendered here by JS -->
-                        </div>
-                        
-                        <div class="graph-sidebar" id="graph-sidebar">
-                            <div class="sidebar-section">
-                                <h4>Graph Statistics</h4>
-                                <div class="graph-stats">
-                                    <div class="stat">
-                                        <span class="stat-label">Nodes:</span>
-                                        <span class="stat-value" id="node-count">0</span>
-                                    </div>
-                                    <div class="stat">
-                                        <span class="stat-label">Edges:</span>
-                                        <span class="stat-value" id="edge-count">0</span>
-                                    </div>
-                                </div>
+                        <div class="graph-main">
+                            <div class="graph-canvas" id="graph-canvas">
+                                <!-- Graph visualization will be rendered here by JS -->
                             </div>
                             
-                            <div class="sidebar-section">
-                                <h4>Node Details</h4>
-                                <div class="node-details" id="node-details">
-                                    <p>Select a node to view details</p>
+                            <div class="graph-sidebar" id="graph-sidebar">
+                                <div class="sidebar-section">
+                                    <h4>Graph Statistics</h4>
+                                    <div class="graph-stats">
+                                        <div class="stat">
+                                            <span class="stat-label">Nodes:</span>
+                                            <span class="stat-value" id="node-count">0</span>
+                                        </div>
+                                        <div class="stat">
+                                            <span class="stat-label">Edges:</span>
+                                            <span class="stat-value" id="edge-count">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="sidebar-section">
+                                    <h4>Search Results</h4>
+                                    <div class="search-results" id="graph-search-results">
+                                        <p>Search for entities to see results here</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="sidebar-section">
+                                    <h4>Node Details</h4>
+                                    <div class="node-details" id="node-details">
+                                        <p>Select a node to view details</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
