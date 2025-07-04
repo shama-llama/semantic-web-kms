@@ -6,6 +6,7 @@ __pycache__/
 *.so
 *.egg-info/
 .eggs/
+.mypy_cache/
 
 # Virtual environments
 .venv/
@@ -46,6 +47,7 @@ dist/
 .coverage
 htmlcov/
 .tox/
+.pytest_cache/
 pytest_cache/
 
 # Model/data
