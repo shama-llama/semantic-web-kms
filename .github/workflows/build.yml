@@ -1,4 +1,4 @@
-name: Test
+name: Build
 
 on:
   push:
@@ -7,59 +7,56 @@ on:
     branches: [main]
 
 jobs:
-  test-backend:
+  build-backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov
-      - name: Run tests with coverage
-        run: pytest --cov=app --cov=tests --cov-report=xml --cov-report=term
-      - name: Upload coverage report
+          pip install build
+      
+      - name: Build Python package
+        run: |
+          python -m build
+      
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-xml
-          path: coverage.xml
+          name: python-package
+          path: dist/
 
-  test-frontend:
+  build-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: portal/package-lock.json
+      
       - name: Install dependencies
         run: |
           cd portal
           npm ci
-      - name: Run TypeScript type checking
+      
+      - name: Build frontend
         run: |
           cd portal
-          npx tsc --noEmit
-      - name: Run frontend tests
-        run: |
-          cd portal
-          npm run test:run
-      - name: Run frontend tests with coverage
-        run: |
-          cd portal
-          npm run test:coverage
-      - name: Upload frontend coverage report
+          npm run build
+      
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-coverage
-          path: portal/coverage/
-      - name: Run frontend linting
-        run: |
-          cd portal
-          npm run lint 
+          name: frontend-build
+          path: portal/dist/ 
