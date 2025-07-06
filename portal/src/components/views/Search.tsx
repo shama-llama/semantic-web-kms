@@ -1,6 +1,79 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import AssetDetailsModal from '../AssetDetailsModal'
 
+// Type definitions
+interface SearchResult {
+  id: number
+  entity: string
+  title: string
+  type: string
+  language: string
+  repository: string
+  path: string
+  snippet: string
+  canonicalName: string
+  startLine: string
+  endLine: string
+  description: string
+  relevance: number
+}
+
+interface Suggestion {
+  title: string
+  type: string
+}
+
+interface Repository {
+  uri: string
+  name: string
+}
+
+interface Pagination {
+  page: number
+  total: number
+  limit: number
+}
+
+interface SparqlBinding {
+  value: string
+  type: string
+}
+
+interface SparqlResult {
+  repository: SparqlBinding
+  name?: SparqlBinding
+}
+
+interface SparqlResponse {
+  results?: {
+    bindings: SparqlResult[]
+  }
+}
+
+interface SearchApiItem {
+  entity?: string
+  title?: string
+  type?: string
+  language?: string
+  repository?: string
+  path?: string
+  snippet?: string
+  canonicalName?: string
+  startLine?: string
+  endLine?: string
+  description?: string
+  relevance?: number
+}
+
+interface SearchResponse {
+  results?: SearchApiItem[]
+  total?: number
+}
+
+interface SuggestionsResponse {
+  suggestions?: Suggestion[]
+}
+
 /**
  * Enhanced Search component for knowledge search with advanced features
  */
@@ -9,16 +82,16 @@ function Search() {
   const [typeFilter, setTypeFilter] = useState('')
   const [languageFilter, setLanguageFilter] = useState('')
   const [repositoryFilter, setRepositoryFilter] = useState('')
-  const [searchResults, setSearchResults] = useState([])
-  const [repositories, setRepositories] = useState([])
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [repositories, setRepositories] = useState<Repository[]>([])
   const [loading, setLoading] = useState(false)
   const [showAssetModal, setShowAssetModal] = useState(false)
-  const [selectedAsset, setSelectedAsset] = useState(null)
-  const [suggestions, setSuggestions] = useState([])
+  const [selectedAsset, setSelectedAsset] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [searchMode, setSearchMode] = useState('basic') // basic, advanced
-  const [pagination, setPagination] = useState({ page: 1, total: 0, limit: 20 })
-  const [recentSearches, setRecentSearches] = useState([])
+  const [pagination, setPagination] = useState<Pagination>({ page: 1, total: 0, limit: 20 })
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
 
   useEffect(() => {
     fetchRepositories()
@@ -40,7 +113,7 @@ function Search() {
     }, 300) // 300ms debounce
 
     return () => clearTimeout(timer)
-  }, [searchQuery])
+  }, [searchQuery]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Load recent searches from localStorage
@@ -57,10 +130,10 @@ function Search() {
   /**
    * Save search to recent searches
    */
-  const saveSearchToHistory = (query) => {
+  const saveSearchToHistory = (query: string) => {
     try {
       const recent = JSON.parse(localStorage.getItem('recentSearches') || '[]')
-      const updated = [query, ...recent.filter(q => q !== query)].slice(0, 10)
+      const updated = [query, ...recent.filter((q: string) => q !== query)].slice(0, 10)
       localStorage.setItem('recentSearches', JSON.stringify(updated))
       setRecentSearches(updated.slice(0, 5))
     } catch (error) {
@@ -71,10 +144,10 @@ function Search() {
   /**
    * Fetch search suggestions with improved relevance
    */
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = useCallback(async () => {
     try {
       const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(searchQuery)}`)
-      const data = await response.json()
+      const data: SuggestionsResponse = await response.json()
       
       if (data.suggestions) {
         setSuggestions(data.suggestions)
@@ -85,7 +158,7 @@ function Search() {
       setSuggestions([])
       setShowSuggestions(false)
     }
-  }
+  }, [searchQuery])
 
   /**
    * Fetch repositories for the filter dropdown
@@ -106,11 +179,11 @@ function Search() {
         body: JSON.stringify({ query })
       })
       
-      const data = await response.json()
+      const data: SparqlResponse = await response.json()
       
-      const repos = (data.results?.bindings || []).map(item => ({
+      const repos = (data.results?.bindings || []).map((item: SparqlResult) => ({
         uri: item.repository.value,
-        name: item.name ? item.name.value : item.repository.value.split('/').pop()
+        name: item.name ? item.name.value : item.repository.value.split('/').pop() || ''
       }))
       
       setRepositories(repos)
@@ -149,10 +222,10 @@ function Search() {
         body: JSON.stringify(searchData)
       })
       
-      const data = await response.json()
+      const data: SearchResponse = await response.json()
       
       if (data.results) {
-        const results = data.results.map((item, idx) => ({
+        const results: SearchResult[] = data.results.map((item: SearchApiItem, idx: number) => ({
           id: idx + 1,
           entity: item.entity || '',
           title: item.title || '',
@@ -217,10 +290,10 @@ function Search() {
         body: JSON.stringify(searchData)
       })
       
-      const data = await response.json()
+      const data: SearchResponse = await response.json()
       
       if (data.results) {
-        const results = data.results.map((item, idx) => ({
+        const results: SearchResult[] = data.results.map((item: SearchApiItem, idx: number) => ({
           id: idx + 1,
           entity: item.entity || '',
           title: item.title || '',
@@ -229,7 +302,11 @@ function Search() {
           repository: item.repository || '',
           path: item.path || '',
           snippet: item.snippet || '',
-          description: item.description || ''
+          description: item.description || '',
+          canonicalName: item.canonicalName || '',
+          startLine: item.startLine || '',
+          endLine: item.endLine || '',
+          relevance: item.relevance || 0
         }))
         
         setSearchResults(results)
@@ -248,7 +325,7 @@ function Search() {
   /**
    * Perform real-time search for better UX
    */
-  const performRealTimeSearch = async () => {
+  const performRealTimeSearch = useCallback(async () => {
     if (!searchQuery.trim() || searchQuery.length < 3) return
     
     try {
@@ -269,10 +346,10 @@ function Search() {
         body: JSON.stringify(searchData)
       })
       
-      const data = await response.json()
+      const data: SearchResponse = await response.json()
       
       if (data.results) {
-        const results = data.results.map((item, idx) => ({
+        const results: SearchResult[] = data.results.map((item: SearchApiItem, idx: number) => ({
           id: idx + 1,
           entity: item.entity || '',
           title: item.title || '',
@@ -298,9 +375,9 @@ function Search() {
     } catch (error) {
       console.error('Error performing real-time search:', error)
     }
-  }
+  }, [searchQuery, typeFilter, languageFilter, repositoryFilter])
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setPagination(prev => ({ ...prev, page: 1 }))
     if (searchMode === 'advanced') {
@@ -310,14 +387,14 @@ function Search() {
     }
   }
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault()
       handleSearch(e)
     }
   }
 
-  const handleSuggestionClick = (suggestion) => {
+  const handleSuggestionClick = (suggestion: Suggestion) => {
     setSearchQuery(suggestion.title)
     setShowSuggestions(false)
     // Auto-search when suggestion is clicked
@@ -327,13 +404,13 @@ function Search() {
     }, 100)
   }
 
-  const handleRecentSearchClick = (query) => {
+  const handleRecentSearchClick = (query: string) => {
     setSearchQuery(query)
     setPagination(prev => ({ ...prev, page: 1 }))
     performSearch(1)
   }
 
-  const showAssetDetails = (assetUri) => {
+  const showAssetDetails = (assetUri: string) => {
     setSelectedAsset(assetUri)
     setShowAssetModal(true)
   }
@@ -352,7 +429,7 @@ function Search() {
   /**
    * Highlight search terms in text
    */
-  const highlightSearchTerms = (text, query) => {
+  const highlightSearchTerms = (text: string, query: string): string => {
     if (!text || !query) return text
     
     const regex = new RegExp(`(${query})`, 'gi')
@@ -364,7 +441,6 @@ function Search() {
       <div className="search-header">
         <div className="search-header-content">
           <h2>Knowledge Search</h2>
-          <p>Search through your code, documentation, and semantic relationships</p>
         </div>
         {/* Search Mode Toggle */}
         <div className="search-mode-toggle">
@@ -409,7 +485,6 @@ function Search() {
               </>
             ) : (
               <>
-                <i className="fas fa-search"></i>
                 Search
               </>
             )}
@@ -590,7 +665,7 @@ function Search() {
         ) : searchQuery && !loading ? (
           <div className="no-results">
             <i className="fas fa-search"></i>
-            <h3>No results found for "{searchQuery}"</h3>
+            <h3>No results found for &quot;{searchQuery}&quot;</h3>
             <p>Try:</p>
             <ul>
               <li>Using different keywords</li>

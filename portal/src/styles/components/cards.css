@@ -1,0 +1,351 @@
+/* ===== COMPONENTS: CARDS ===== */
+/* Card component styles */
+
+/* Base card styles */
+.card, .repo-card, .analytics-card, .knowledge-card {
+  background: var(--gray-100);
+  color: var(--gray-900);
+  border: 1.5px solid var(--gray-200);
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal), background var(--transition-fast);
+  overflow: hidden;
+}
+
+.card:hover, .repo-card:hover, .analytics-card:hover, .knowledge-card:hover {
+  box-shadow: 0 4px 12px 0 rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  background: var(--gray-50);
+}
+
+/* Card header */
+.card-header, .repo-header, .analytics-header, .knowledge-card-header {
+  background: var(--gray-200);
+  color: var(--gray-900);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--gray-300);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header h3, .repo-header .repo-name, .analytics-header h3, .knowledge-card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card-header h3 i, .repo-header .repo-name i, .analytics-header h3 i, .knowledge-card-header h3 i {
+  font-size: 1.2em;
+  color: var(--primary-500);
+  margin-right: var(--space-2);
+}
+
+/* Card content */
+.card-content, .card-scrollable {
+  padding: var(--space-6);
+  color: var(--gray-700);
+  line-height: 1.6;
+}
+
+.card-scrollable {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.card-scrollable:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: -2px;
+}
+
+/* Repository cards */
+.repo-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.repo-header {
+  flex-shrink: 0;
+}
+
+.repo-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: var(--space-1);
+}
+
+.repo-name i {
+  margin-right: var(--space-2);
+  color: var(--primary-500);
+}
+
+.repo-url {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  word-break: break-all;
+}
+
+.repo-stats {
+  display: flex;
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--gray-200);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.repo-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.repo-stat-number {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-600);
+  line-height: 1;
+}
+
+.repo-stat-label {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: var(--space-1);
+}
+
+.repo-actions {
+  margin-top: auto;
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Knowledge cards */
+.knowledge-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.knowledge-card-header {
+  flex-shrink: 0;
+}
+
+.knowledge-card-content {
+  flex: 1;
+  padding: var(--space-6);
+}
+
+.knowledge-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.knowledge-tag {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Stats cards */
+.stat-item {
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--gray-100) 100%);
+  color: var(--gray-900);
+  border: 1.5px solid var(--primary-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast), background var(--transition-fast);
+  margin-bottom: var(--space-2);
+}
+
+.stat-item:hover {
+  box-shadow: 0 4px 12px 0 rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  background: var(--primary-50);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary-700);
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.02em;
+  transition: color var(--transition-fast), font-size var(--transition-fast);
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+/* Activity cards */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  background: var(--gray-50);
+  box-shadow: 0 1px 4px 0 rgba(0,0,0,0.03);
+  margin-bottom: var(--space-1);
+}
+
+.activity-item:hover {
+  background: var(--primary-50);
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.06);
+}
+
+.activity-item i {
+  color: var(--primary-500);
+  font-size: 1.25rem;
+  margin-top: var(--space-1);
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-800);
+  margin-bottom: var(--space-1);
+}
+
+.activity-desc {
+  color: var(--gray-700);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-1);
+}
+
+.activity-time {
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+
+/* Responsive cards */
+@media (max-width: 768px) {
+  .card-content, .card-scrollable {
+    padding: var(--space-4);
+  }
+  
+  .card-header, .repo-header, .analytics-header, .knowledge-card-header {
+    padding: var(--space-3) var(--space-4);
+  }
+  
+  .repo-stats {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .repo-actions {
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+/* Dark theme overrides */
+.theme-dark .card,
+.theme-dark .repo-card,
+.theme-dark .analytics-card,
+.theme-dark .knowledge-card {
+  background: var(--gray-100);
+  color: var(--gray-900);
+  border-color: var(--gray-300);
+}
+
+.theme-dark .card-header,
+.theme-dark .repo-header,
+.theme-dark .analytics-header,
+.theme-dark .knowledge-card-header {
+  background: var(--gray-200);
+  color: var(--gray-900);
+  border-bottom-color: var(--gray-300);
+}
+
+.theme-dark .card-header h3,
+.theme-dark .repo-header .repo-name,
+.theme-dark .analytics-header h3,
+.theme-dark .knowledge-card-header h3 {
+  color: var(--gray-900);
+}
+
+.theme-dark .card-header h3 i,
+.theme-dark .repo-header .repo-name i,
+.theme-dark .analytics-header h3 i,
+.theme-dark .knowledge-card-header h3 i {
+  color: var(--primary-500);
+}
+
+.theme-dark .card-content,
+.theme-dark .card-scrollable {
+  color: var(--gray-700);
+}
+
+.theme-dark .stat-item {
+  background: var(--gray-100);
+  color: var(--gray-900);
+  border-color: var(--gray-300);
+}
+
+.theme-dark .stat-number {
+  color: var(--primary-600);
+}
+
+.theme-dark .stat-label {
+  color: var(--gray-600);
+}
+
+.theme-dark .activity-item:hover {
+  background: var(--gray-200);
+}
+
+.theme-dark .activity-title {
+  color: var(--gray-900);
+}
+
+.theme-dark .activity-desc {
+  color: var(--gray-600);
+}
+
+.theme-dark .activity-time {
+  color: var(--gray-500);
+}
+
+.theme-dark .knowledge-tag {
+  background: var(--primary-100);
+  color: var(--primary-700);
+}
+
+.card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+} 

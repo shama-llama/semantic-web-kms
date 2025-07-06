@@ -1,18 +1,40 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+// Type definitions for dashboard data
+interface DashboardStats {
+  totalRepos: number
+  totalFiles: number
+  totalEntities: number
+  totalRelationships: number
+}
+
+interface ActivityItem {
+  id: number
+  type: string
+  title: string
+  description: string
+  time: string
+  icon: string
+  status: 'success' | 'warning' | 'error' | 'info'
+}
+
+type QuickAction = 'add-repository' | 'search' | 'graph' | 'analytics'
 
 /**
  * Dashboard component with overview stats, recent activity, and quick actions
- * @param {function} onViewChange - Function to change view
  */
-function Dashboard({ onViewChange }) {
-  const [stats, setStats] = useState({
+function Dashboard(): React.JSX.Element {
+  const navigate = useNavigate()
+  
+  const [stats, setStats] = useState<DashboardStats>({
     totalRepos: 0,
     totalFiles: 0,
     totalEntities: 0,
     totalRelationships: 0
   })
-  const [recentActivity, setRecentActivity] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
     updateDashboardStats()
@@ -22,7 +44,7 @@ function Dashboard({ onViewChange }) {
   /**
    * Fetch and update dashboard statistics from the API
    */
-  const updateDashboardStats = async () => {
+  const updateDashboardStats = async (): Promise<void> => {
     try {
       const response = await fetch('/api/dashboard_stats')
       if (!response.ok) throw new Error('Failed to fetch dashboard stats')
@@ -49,11 +71,11 @@ function Dashboard({ onViewChange }) {
   /**
    * Fetch recent activity data
    */
-  const updateRecentActivity = async () => {
+  const updateRecentActivity = async (): Promise<void> => {
     try {
       // TODO: Implement actual activity API
       // For now, using mock data
-      const mockActivity = [
+      const mockActivity: ActivityItem[] = [
         {
           id: 1,
           type: 'repository_added',
@@ -98,23 +120,26 @@ function Dashboard({ onViewChange }) {
     }
   }
 
-  const handleQuickAction = (action) => {
+  const handleQuickAction = (action: QuickAction): void => {
     switch (action) {
       case 'add-repository':
-        onViewChange('repositories')
+        navigate('/repositories')
         break
       case 'search':
-        onViewChange('search')
+        navigate('/search')
         break
       case 'graph':
-        onViewChange('graph')
+        navigate('/graph')
+        break
+      case 'analytics':
+        navigate('/analytics')
         break
       default:
         break
     }
   }
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: ActivityItem['status']): string => {
     switch (status) {
       case 'success':
         return 'var(--success-500)'
@@ -127,7 +152,7 @@ function Dashboard({ onViewChange }) {
     }
   }
 
-  const getStatusBg = (status) => {
+  const getStatusBg = (status: ActivityItem['status']): string => {
     switch (status) {
       case 'success':
         return 'var(--success-50)'
@@ -152,46 +177,48 @@ function Dashboard({ onViewChange }) {
               System Overview
             </h3>
           </div>
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-number">
-                {loading ? (
-                  <div className="loading-skeleton" style={{ height: '2rem', width: '60%' }}></div>
-                ) : (
-                  stats.totalRepos
-                )}
+          <div className="card-content">
+            <div className="stats-grid">
+              <div className="stat-item">
+                <div className="stat-number">
+                  {loading ? (
+                    <div className="loading-skeleton" style={{ height: '2rem', width: '60%' }}></div>
+                  ) : (
+                    stats.totalRepos
+                  )}
+                </div>
+                <div className="stat-label">Repositories</div>
               </div>
-              <div className="stat-label">Repositories</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">
-                {loading ? (
-                  <div className="loading-skeleton" style={{ height: '2rem', width: '70%' }}></div>
-                ) : (
-                  stats.totalFiles
-                )}
+              <div className="stat-item">
+                <div className="stat-number">
+                  {loading ? (
+                    <div className="loading-skeleton" style={{ height: '2rem', width: '70%' }}></div>
+                  ) : (
+                    stats.totalFiles
+                  )}
+                </div>
+                <div className="stat-label">Files Analyzed</div>
               </div>
-              <div className="stat-label">Files Analyzed</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">
-                {loading ? (
-                  <div className="loading-skeleton" style={{ height: '2rem', width: '50%' }}></div>
-                ) : (
-                  stats.totalEntities
-                )}
+              <div className="stat-item">
+                <div className="stat-number">
+                  {loading ? (
+                    <div className="loading-skeleton" style={{ height: '2rem', width: '50%' }}></div>
+                  ) : (
+                    stats.totalEntities
+                  )}
+                </div>
+                <div className="stat-label">Entities</div>
               </div>
-              <div className="stat-label">Entities</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">
-                {loading ? (
-                  <div className="loading-skeleton" style={{ height: '2rem', width: '80%' }}></div>
-                ) : (
-                  stats.totalRelationships
-                )}
+              <div className="stat-item">
+                <div className="stat-number">
+                  {loading ? (
+                    <div className="loading-skeleton" style={{ height: '2rem', width: '80%' }}></div>
+                  ) : (
+                    stats.totalRelationships
+                  )}
+                </div>
+                <div className="stat-label">Relationships</div>
               </div>
-              <div className="stat-label">Relationships</div>
             </div>
           </div>
         </div>
@@ -205,10 +232,10 @@ function Dashboard({ onViewChange }) {
                 Recent Activity
               </h3>
             </div>
-            <div className="card-scrollable">
+            <div className="card-scrollable" tabIndex={0} role="region" aria-label="Recent activity list">
               <div className="activity-list">
                 {recentActivity.length > 0 ? (
-                  recentActivity.map((activity) => (
+                  recentActivity.map((activity: ActivityItem) => (
                     <div key={activity.id} className="activity-item">
                       <div 
                         className="activity-icon"
@@ -245,35 +272,37 @@ function Dashboard({ onViewChange }) {
                 Quick Actions
               </h3>
             </div>
-            <div className="action-buttons action-buttons-grid">
-              <button 
-                className="btn btn-primary"
-                onClick={() => handleQuickAction('add-repository')}
-              >
-                <i className="fas fa-plus"></i>
-                Add Repository
-              </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => handleQuickAction('search')}
-              >
-                <i className="fas fa-search"></i>
-                Search Knowledge
-              </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => handleQuickAction('graph')}
-              >
-                <i className="fas fa-project-diagram"></i>
-                View Graph
-              </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => onViewChange('analytics')}
-              >
-                <i className="fas fa-chart-bar"></i>
-                View Analytics
-              </button>
+            <div className="card-content">
+              <div className="action-buttons action-buttons-grid">
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => handleQuickAction('add-repository')}
+                >
+                  <i className="fas fa-plus"></i>
+                  Add Repository
+                </button>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => handleQuickAction('search')}
+                >
+                  <i className="fas fa-search"></i>
+                  Search Knowledge
+                </button>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => handleQuickAction('graph')}
+                >
+                  <i className="fas fa-project-diagram"></i>
+                  View Graph
+                </button>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => handleQuickAction('analytics')}
+                >
+                  <i className="fas fa-chart-bar"></i>
+                  View Analytics
+                </button>
+              </div>
             </div>
           </div>
 

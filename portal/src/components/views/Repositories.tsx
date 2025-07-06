@@ -1,13 +1,40 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import AddRepositoryModal from '../AddRepositoryModal'
+
+// Type definitions
+interface Repository {
+  uri: string
+  name: string
+  fileCount: number
+  entityCount: number
+  relationshipCount: number
+}
+
+interface SparqlBinding {
+  repository: { value: string }
+  name?: { value: string }
+  fileCount?: { value: string }
+  entityCount?: { value: string }
+  relationshipCount?: { value: string }
+}
+
+interface RepositoryData {
+  type: 'github' | 'local'
+  url: string
+  analysisOptions: {
+    analyzeCode: boolean
+    analyzeDocs: boolean
+    generateOntology: boolean
+  }
+}
 
 /**
  * Repositories component for managing and viewing repositories
  */
 function Repositories() {
-  const [repositories, setRepositories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
+  const [repositories, setRepositories] = useState<Repository[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [showAddModal, setShowAddModal] = useState<boolean>(false)
 
   useEffect(() => {
     fetchRepositories()
@@ -91,7 +118,7 @@ function Repositories() {
       })
       const data = await response.json()
       
-      const repos = (data.results?.bindings || []).map(item => ({
+      const repos = (data.results?.bindings || []).map((item: SparqlBinding) => ({
         uri: item.repository.value,
         name: item.name ? item.name.value : item.repository.value.split('/').pop(),
         fileCount: item.fileCount ? parseInt(item.fileCount.value) : 0,
@@ -111,7 +138,7 @@ function Repositories() {
   /**
    * Handle adding a new repository
    */
-  const handleAddRepository = async (repoData) => {
+  const handleAddRepository = async (repoData: RepositoryData) => {
     try {
       // TODO: Implement actual API call to add repository
       console.log('Adding repository:', repoData)
@@ -127,12 +154,12 @@ function Repositories() {
     }
   }
 
-  const viewRepoDetails = (repoUri) => {
+  const viewRepoDetails = (repoUri: string) => {
     // TODO: Implement repository details view
     alert(`View details for ${repoUri}`)
   }
 
-  const searchInRepo = (repoUri) => {
+  const searchInRepo = (repoUri: string) => {
     // TODO: Implement search in repository
     alert(`Search in ${repoUri}`)
   }
