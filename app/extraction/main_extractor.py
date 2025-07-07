@@ -1,6 +1,13 @@
+"""
+Main orchestrator for the extraction pipeline in the Semantic Web Knowledge Management System.
+
+Runs all extractors in sequence, logs results, and provides a summary for diagnostics and user feedback.
+"""
+
 import logging
 import os
 import sys
+from dataclasses import dataclass
 from typing import Any, List, Optional
 
 from rich.console import Console
@@ -10,12 +17,13 @@ from rich.table import Table
 from app.core.paths import get_log_path, get_output_path
 from app.extraction import (
     code_extractor,
+    content_extractor,
     doc_extractor,
     file_extractor,
     git_extractor,
 )
 
-# Setup logging
+# Set up logging to file for pipeline diagnostics and debugging
 log_path = get_log_path("main_extractor.log")
 os.makedirs(os.path.dirname(log_path), exist_ok=True)
 LOGFORMAT_FILE = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -27,29 +35,41 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main_extractor")
 
-# Output file path
+# Output file path for the generated ontology
 TTL_PATH = get_output_path("web_development_ontology.ttl")
 
 
+@dataclass
 class ExtractionResult:
-    """Represent the result of an extraction step."""
+    """Represents the result of an extraction step for summary and error reporting."""
 
-    def __init__(self, name: str, success: bool, error: Optional[str] = None):
-        """Initialize ExtractionResult with name, success, and optional error message."""
-        self.name = name
-        self.success = success
-        self.error = error
+    name: str
+    success: bool
+    error: Optional[str] = None
+
+    def __repr__(self) -> str:
+        """Return a developer-friendly string representation of the ExtractionResult."""
+        return f"ExtractionResult(name={self.name!r}, success={self.success!r}, error={self.error!r})"
+
+    def __str__(self) -> str:
+        """Return a user-friendly string representation of the ExtractionResult."""
+        status = "PASSED" if self.success else "FAILED"
+        details = self.error if self.error else "Completed successfully"
+        return f"{self.name}: {status} ({details})"
 
 
 def run_extractor(
     extractor_name: str, extractor_module: Any, console: Console
 ) -> ExtractionResult:
-    """Run a single extractor and return the result."""
+    """
+    Run a single extractor and return the result.
+
+    Why: Centralizes error handling and logging for each extractor, so the pipeline can continue and report all failures.
+    """
     try:
         logger.info(f"Starting {extractor_name}...")
         console.print(f"[bold blue]Running {extractor_name}...[/bold blue]")
 
-        # Ensure the extractor module has a main() method
         if not hasattr(extractor_module, "main"):
             raise AttributeError(
                 f"Extractor module '{extractor_name}' does not have a main() method."
@@ -60,15 +80,25 @@ def run_extractor(
         console.print(f"[bold green]✓ {extractor_name} completed[/bold green]")
         return ExtractionResult(extractor_name, True)
 
-    except Exception as e:
-        error_msg = f"Error in {extractor_name}: {str(e)}"
+    except AttributeError as e:
+        error_msg = f"Error in {extractor_name}: {e}"
         logger.error(error_msg, exc_info=True)
-        console.print(f"[bold red]✗ {extractor_name} failed: {str(e)}[/bold red]")
+        console.print(f"[bold red]✗ {extractor_name} failed: {e}[/bold red]")
+        return ExtractionResult(extractor_name, False, str(e))
+    except Exception as e:
+        # Catch all other exceptions to allow pipeline to continue
+        error_msg = f"Error in {extractor_name}: {e}"
+        logger.error(error_msg, exc_info=True)
+        console.print(f"[bold red]✗ {extractor_name} failed: {e}[/bold red]")
         return ExtractionResult(extractor_name, False, str(e))
 
 
 def display_summary(results: List[ExtractionResult], console: Console) -> None:
-    """Display a summary of all extraction results."""
+    """
+    Display a summary of all extraction results in a table and a final status panel.
+
+    Why: Provides a clear, user-friendly summary of pipeline status and next steps.
+    """
     table = Table(title="Extraction Pipeline Summary")
     table.add_column("Extractor", style="cyan", no_wrap=True)
     table.add_column("Status", style="bold")
@@ -81,8 +111,7 @@ def display_summary(results: List[ExtractionResult], console: Console) -> None:
 
     console.print(table)
 
-    # Overall status
-    passed = sum(1 for r in results if r.success)
+    passed = sum(result.success for result in results)
     total = len(results)
 
     if passed == total:
@@ -107,10 +136,13 @@ def display_summary(results: List[ExtractionResult], console: Console) -> None:
 
 
 def main() -> None:
-    """Run the extraction pipeline orchestrator."""
+    """
+    Orchestrate the extraction pipeline: run all extractors, summarize results, and exit with appropriate code.
+
+    Why: Keeps orchestration logic in one place for clarity and maintainability.
+    """
     console = Console()
 
-    # Welcome message
     console.print(
         Panel(
             "[bold blue]Semantic Web Knowledge Management System[/bold blue]\n"
@@ -122,32 +154,22 @@ def main() -> None:
 
     logger.info("Starting extraction pipeline orchestration")
 
-    # Define the extraction sequence
     extractors = [
         ("File Extractor", file_extractor),
+        ("Content Extractor", content_extractor),
         ("Code Extractor", code_extractor),
         ("Documentation Extractor", doc_extractor),
         ("Git Extractor", git_extractor),
     ]
 
-    results: List[ExtractionResult] = []
+    results: List[ExtractionResult] = [
+        run_extractor(name, module, console) for name, module in extractors
+    ]
 
-    # Run each extractor in sequence
-    for extractor_name, extractor_module in extractors:
-        result = run_extractor(extractor_name, extractor_module, console)
-        results.append(result)
-
-        # If an extractor fails, we can choose to continue or stop
-        # For now, we'll continue to see all results
-        if not result.success:
-            console.print("[yellow]Continuing with remaining extractors...[/yellow]")
-
-    # Display final summary
     console.print("\n" + "=" * 60)
     display_summary(results, console)
 
-    # Exit with appropriate code
-    all_success = all(r.success for r in results)
+    all_success = all(result.success for result in results)
     sys.exit(0 if all_success else 1)
 
 
