@@ -1,0 +1,914 @@
+import logging
+from pathlib import Path
+from typing import Any, Callable, Dict
+
+from rdflib import Graph, Literal, Namespace, URIRef
+from rdflib.namespace import RDF, RDFS, XSD
+
+from app.extraction.code_analysis_utils import (
+    calculate_cyclomatic_complexity,
+    extract_access_modifier,
+    extract_boolean_modifiers,
+    generate_canonical_name,
+)
+from app.extraction.string_utils import (
+    calculate_line_count,
+    calculate_token_count,
+)
+
+
+def write_classes(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    """Write class entities to the ontology, strictly enforcing WDO domain/range."""
+    class_uris = {}
+    class_methods = {}
+    for cls in constructs.get("ClassDefinition", []) + constructs.get("classes", []):
+        class_id = cls.get("name")
+        if not class_id:
+            continue
+        class_uri = URIRef(f"{file_uri}/class/{uri_safe_string(class_id)}")
+        class_uris[class_id] = class_uri
+        _add_class_basic_triples(g, class_uri, class_id, class_cache, prop_cache)
+        _add_class_optional_properties(g, class_uri, cls, prop_cache)
+        methods = _collect_class_methods(cls)
+        if methods:
+            class_methods[class_id] = methods
+    _add_class_method_relationships(
+        g, class_uris, class_methods, file_uri, prop_cache, uri_safe_string
+    )
+    return class_uris
+
+
+def write_enums(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    """Write enum entities to the ontology."""
+    enum_uris = {}
+    for enum in (
+        constructs.get("EnumDefinition", [])
+        + constructs.get("EnumDeclaration", [])
+        + constructs.get("enums", [])
+    ):
+        enum_id = enum.get("name")
+        if not enum_id:
+            continue
+        enum_uri = URIRef(f"{file_uri}/enum/{uri_safe_string(enum_id)}")
+        enum_uris[enum_id] = enum_uri
+        enum_class = class_cache.get(
+            "EnumDefinition", class_cache.get("ClassDefinition", RDFS.seeAlso)
+        )
+        g.add((enum_uri, RDF.type, enum_class))
+        g.add((enum_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (
+                enum_uri,
+                prop_cache["hasSimpleName"],
+                Literal(enum_id, datatype=XSD.string),
+            )
+        )
+        if "raw" in enum and enum["raw"]:
+            g.add(
+                (
+                    enum_uri,
+                    prop_cache.get("hasSourceCodeSnippet", RDFS.seeAlso),
+                    Literal(enum["raw"], datatype=XSD.string),
+                )
+            )
+        if "start_line" in enum:
+            g.add(
+                (
+                    enum_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(enum["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in enum:
+            g.add(
+                (
+                    enum_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(enum["end_line"], datatype=XSD.integer),
+                )
+            )
+        for dec in enum.get("decorators", []):
+            g.add(
+                (
+                    enum_uri,
+                    prop_cache.get("hasTextValue", RDFS.seeAlso),
+                    Literal(dec, datatype=XSD.string),
+                )
+            )
+    return enum_uris
+
+
+def write_interfaces(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    """Write interface entities to the ontology."""
+    interface_uris = {}
+    for interface in constructs.get("InterfaceDefinition", []):
+        interface_id = interface.get("name")
+        if not interface_id:
+            continue
+        interface_uri = URIRef(f"{file_uri}/interface/{uri_safe_string(interface_id)}")
+        interface_uris[interface_id] = interface_uri
+        interface_class = class_cache.get(
+            "InterfaceDefinition", class_cache.get("ClassDefinition", RDFS.seeAlso)
+        )
+        g.add((interface_uri, RDF.type, interface_class))
+        g.add((interface_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (
+                interface_uri,
+                prop_cache["hasSimpleName"],
+                Literal(interface_id, datatype=XSD.string),
+            )
+        )
+        if "raw" in interface and interface["raw"]:
+            g.add(
+                (
+                    interface_uri,
+                    prop_cache.get("hasSourceCodeSnippet", RDFS.seeAlso),
+                    Literal(interface["raw"], datatype=XSD.string),
+                )
+            )
+        if "start_line" in interface:
+            g.add(
+                (
+                    interface_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(interface["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in interface:
+            g.add(
+                (
+                    interface_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(interface["end_line"], datatype=XSD.integer),
+                )
+            )
+        for dec in interface.get("decorators", []):
+            g.add(
+                (
+                    interface_uri,
+                    prop_cache.get("hasTextValue", RDFS.seeAlso),
+                    Literal(dec, datatype=XSD.string),
+                )
+            )
+    return interface_uris
+
+
+def write_structs(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    """Write struct entities to the ontology."""
+    struct_uris = {}
+    for struct in constructs.get("StructDefinition", []):
+        struct_id = struct.get("name")
+        if not struct_id:
+            continue
+        struct_uri = URIRef(f"{file_uri}/struct/{uri_safe_string(struct_id)}")
+        struct_uris[struct_id] = struct_uri
+        g.add(
+            (
+                struct_uri,
+                RDF.type,
+                class_cache.get("StructDefinition", class_cache["ClassDefinition"]),
+            )
+        )
+        g.add((struct_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (
+                struct_uri,
+                prop_cache["hasSimpleName"],
+                Literal(struct_id, datatype=XSD.string),
+            )
+        )
+        if "raw" in struct and struct["raw"]:
+            g.add(
+                (
+                    struct_uri,
+                    prop_cache.get("hasSourceCodeSnippet", RDFS.seeAlso),
+                    Literal(struct["raw"], datatype=XSD.string),
+                )
+            )
+        if "start_line" in struct:
+            g.add(
+                (
+                    struct_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(struct["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in struct:
+            g.add(
+                (
+                    struct_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(struct["end_line"], datatype=XSD.integer),
+                )
+            )
+        for dec in struct.get("decorators", []):
+            g.add(
+                (
+                    struct_uri,
+                    prop_cache.get("hasTextValue", RDFS.seeAlso),
+                    Literal(dec, datatype=XSD.string),
+                )
+            )
+    return struct_uris
+
+
+def write_traits(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    """Write trait entities to the ontology."""
+    trait_uris = {}
+    for trait in constructs.get("TraitDefinition", []):
+        trait_id = trait.get("name")
+        if not trait_id:
+            continue
+        trait_uri = URIRef(f"{file_uri}/trait/{uri_safe_string(trait_id)}")
+        trait_uris[trait_id] = trait_uri
+        g.add(
+            (
+                trait_uri,
+                RDF.type,
+                class_cache.get(
+                    "TraitDefinition",
+                    class_cache.get(
+                        "InterfaceDefinition", class_cache["ClassDefinition"]
+                    ),
+                ),
+            )
+        )
+        g.add((trait_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (
+                trait_uri,
+                prop_cache["hasSimpleName"],
+                Literal(trait_id, datatype=XSD.string),
+            )
+        )
+        if "raw" in trait and trait["raw"]:
+            g.add(
+                (
+                    trait_uri,
+                    prop_cache.get("hasSourceCodeSnippet", RDFS.seeAlso),
+                    Literal(trait["raw"], datatype=XSD.string),
+                )
+            )
+        if "start_line" in trait:
+            g.add(
+                (
+                    trait_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(trait["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in trait:
+            g.add(
+                (
+                    trait_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(trait["end_line"], datatype=XSD.integer),
+                )
+            )
+        for dec in trait.get("decorators", []):
+            g.add(
+                (
+                    trait_uri,
+                    prop_cache.get("hasTextValue", RDFS.seeAlso),
+                    Literal(dec, datatype=XSD.string),
+                )
+            )
+    return trait_uris
+
+
+def write_modules(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    """Write module entities to the ontology."""
+    module_uris = {}
+    for module in constructs.get("PackageDeclaration", []):
+        module_id = module.get("name")
+        if not module_id:
+            continue
+        module_uri = URIRef(f"{file_uri}/module/{uri_safe_string(module_id)}")
+        module_uris[module_id] = module_uri
+        g.add(
+            (
+                module_uri,
+                RDF.type,
+                class_cache.get("PackageDeclaration", RDFS.seeAlso),
+            )
+        )
+        g.add((module_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (
+                module_uri,
+                prop_cache["hasSimpleName"],
+                Literal(module_id, datatype=XSD.string),
+            )
+        )
+        if "raw" in module and module["raw"]:
+            g.add(
+                (
+                    module_uri,
+                    prop_cache.get("hasSourceCodeSnippet", RDFS.seeAlso),
+                    Literal(module["raw"], datatype=XSD.string),
+                )
+            )
+        if "start_line" in module:
+            g.add(
+                (
+                    module_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(module["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in module:
+            g.add(
+                (
+                    module_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(module["end_line"], datatype=XSD.integer),
+                )
+            )
+    return module_uris
+
+
+def write_comments(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    """Write comment entities to the ontology."""
+    comment_uris = {}
+    for comment in constructs.get("CodeComment", []):
+        comment_id = comment.get("raw") or comment.get("name") or str(len(comment_uris))
+        comment_uri = URIRef(f"{file_uri}/comment/{uri_safe_string(str(comment_id))}")
+        comment_uris[comment_id] = comment_uri
+        comment_class = class_cache.get("CodeComment", RDFS.seeAlso)
+        g.add((comment_uri, RDF.type, comment_class))
+        g.add((comment_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (
+                comment_uri,
+                prop_cache["hasTextValue"],
+                Literal(str(comment_id), datatype=XSD.string),
+            )
+        )
+        if "start_line" in comment:
+            g.add(
+                (
+                    comment_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(comment["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in comment:
+            g.add(
+                (
+                    comment_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(comment["end_line"], datatype=XSD.integer),
+                )
+            )
+    return comment_uris
+
+
+def write_functions(
+    g,
+    constructs,
+    file_uri,
+    class_cache,
+    prop_cache,
+    uri_safe_string,
+    class_uris,
+    type_uris,
+    language=None,
+):
+    """Write function entities to the ontology, strictly enforcing WDO domain/range."""
+    func_uris = {}
+    for func in constructs.get("FunctionDefinition", []) + constructs.get(
+        "functions", []
+    ):
+        func_id = func.get("name")
+        if not func_id:
+            continue
+        func_uri = URIRef(f"{file_uri}/function/{uri_safe_string(func_id)}")
+        func_uris[func_id] = func_uri
+        _add_function_basic_triples(g, func_uri, func_id, class_cache, prop_cache)
+        _add_function_optional_properties(g, func_uri, func, prop_cache)
+        _add_function_return_type(g, func_uri, func, type_uris, prop_cache)
+        _add_function_method_of(g, func_uri, func, class_uris, prop_cache)
+        _add_function_language(g, func_uri, language, prop_cache)
+    return func_uris
+
+
+def write_parameters(
+    g,
+    constructs,
+    file_uri,
+    class_cache,
+    prop_cache,
+    uri_safe_string,
+    func_uris,
+    type_uris,
+):
+    """Write parameter entities to the ontology, strictly enforcing WDO domain/range."""
+    for param in constructs.get("Parameter", []) + constructs.get("parameters", []):
+        param_id = param.get("name")
+        if not param_id:
+            continue
+        param_uri = URIRef(f"{file_uri}/param/{uri_safe_string(param_id)}")
+        g.add((param_uri, RDF.type, class_cache["Parameter"]))
+        g.add(
+            (
+                param_uri,
+                prop_cache["hasSimpleName"],
+                Literal(param_id, datatype=XSD.string),
+            )
+        )
+        if "raw" in param and param["raw"]:
+            g.add(
+                (
+                    param_uri,
+                    prop_cache["hasSourceCodeSnippet"],
+                    Literal(param["raw"], datatype=XSD.string),
+                )
+            )
+        if "type" in param:
+            param_type = param["type"].strip().lower()
+            if param_type in type_uris:
+                g.add((param_uri, prop_cache["hasType"], type_uris[param_type]))
+        if "start_line" in param:
+            g.add(
+                (
+                    param_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(param["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in param:
+            g.add(
+                (
+                    param_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(param["end_line"], datatype=XSD.integer),
+                )
+            )
+        parent_func = param.get("parent_function")
+        if parent_func and parent_func in func_uris:
+            g.add((param_uri, prop_cache["isParameterOf"], func_uris[parent_func]))
+            g.add((func_uris[parent_func], prop_cache["hasParameter"], param_uri))
+
+
+def write_variables(
+    g,
+    constructs,
+    file_uri,
+    class_cache,
+    prop_cache,
+    uri_safe_string,
+    func_uris,
+    type_uris,
+):
+    """Write variable entities to the ontology, strictly enforcing WDO domain/range."""
+    for var in constructs.get("VariableDeclaration", []) + constructs.get(
+        "variables", []
+    ):
+        var_id = var.get("name")
+        if not var_id:
+            continue
+        var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(var_id)}")
+        g.add((var_uri, RDF.type, class_cache["VariableDeclaration"]))
+        g.add(
+            (var_uri, prop_cache["hasSimpleName"], Literal(var_id, datatype=XSD.string))
+        )
+        if "raw" in var and var["raw"]:
+            g.add(
+                (
+                    var_uri,
+                    prop_cache["hasSourceCodeSnippet"],
+                    Literal(var["raw"], datatype=XSD.string),
+                )
+            )
+        if "type" in var:
+            var_type = var["type"].strip().lower()
+            if var_type in type_uris:
+                g.add((var_uri, prop_cache["hasType"], type_uris[var_type]))
+        if "start_line" in var:
+            g.add(
+                (
+                    var_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(var["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in var:
+            g.add(
+                (
+                    var_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(var["end_line"], datatype=XSD.integer),
+                )
+            )
+
+
+def write_calls(
+    g,
+    constructs,
+    file_uri,
+    class_cache,
+    prop_cache,
+    uri_safe_string,
+    func_uris,
+    type_uris,
+):
+    """Write function call entities to the ontology, strictly enforcing WDO domain/range."""
+    for call in constructs.get("FunctionCallSite", []) + constructs.get("calls", []):
+        call_id = call.get("name")
+        if not call_id:
+            continue
+        call_uri = URIRef(f"{file_uri}/call/{uri_safe_string(call_id)}")
+        g.add((call_uri, RDF.type, class_cache["FunctionCallSite"]))
+        g.add(
+            (
+                call_uri,
+                prop_cache["hasSimpleName"],
+                Literal(call_id, datatype=XSD.string),
+            )
+        )
+        if "raw" in call and call["raw"]:
+            g.add(
+                (
+                    call_uri,
+                    prop_cache["hasSourceCodeSnippet"],
+                    Literal(call["raw"], datatype=XSD.string),
+                )
+            )
+        if "start_line" in call:
+            g.add(
+                (
+                    call_uri,
+                    prop_cache["startsAtLine"],
+                    Literal(call["start_line"], datatype=XSD.integer),
+                )
+            )
+        if "end_line" in call:
+            g.add(
+                (
+                    call_uri,
+                    prop_cache["endsAtLine"],
+                    Literal(call["end_line"], datatype=XSD.integer),
+                )
+            )
+        for arg in call.get("arguments", []):
+            if isinstance(arg, dict):
+                arg_id = arg.get("name")
+            else:
+                arg_id = arg
+            if not arg_id:
+                continue
+            arg_uri = URIRef(f"{call_uri}/arg/{uri_safe_string(arg_id)}")
+            g.add((call_uri, prop_cache["hasArgument"], arg_uri))
+            g.add((arg_uri, prop_cache["isArgumentIn"], call_uri))
+        if "calls" in call:
+            for callee in call["calls"]:
+                if callee in func_uris:
+                    g.add((call_uri, prop_cache["callsFunction"], func_uris[callee]))
+                    g.add(
+                        (
+                            func_uris[callee],
+                            prop_cache["isCalledByFunctionAt"],
+                            call_uri,
+                        )
+                    )
+
+
+def write_decorators(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    for dec in constructs.get("decorators", []):
+        dec_id = dec.get("raw") or dec.get("name") or dec
+        if not dec_id:
+            continue
+        dec_uri = URIRef(f"{file_uri}/decorator/{uri_safe_string(str(dec_id))}")
+        decorator_class = class_cache.get("Decorator", RDFS.seeAlso)
+        g.add((dec_uri, RDF.type, decorator_class))
+        g.add((dec_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (
+                dec_uri,
+                prop_cache["hasSimpleName"],
+                Literal(str(dec_id), datatype=XSD.string),
+            )
+        )
+        if "raw" in dec and dec["raw"]:
+            g.add(
+                (
+                    dec_uri,
+                    prop_cache.get("hasSourceCodeSnippet", RDFS.seeAlso),
+                    Literal(dec["raw"], datatype=XSD.string),
+                )
+            )
+
+
+def write_types(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    for typ in constructs.get("types", []):
+        typ_id = typ.get("raw") or typ.get("name") or typ
+        if not typ_id:
+            continue
+        primitive_types = [
+            "int",
+            "float",
+            "str",
+            "bool",
+            "char",
+            "double",
+            "long",
+            "short",
+            "byte",
+            "void",
+            "null",
+            "undefined",
+            "number",
+            "string",
+            "boolean",
+        ]
+        is_primitive = any(primitive in typ_id.lower() for primitive in primitive_types)
+        if is_primitive:
+            typ_uri = URIRef(f"{file_uri}/types/{uri_safe_string(typ_id.lower())}")
+            if not (typ_uri, RDF.type, None) in g:
+                type_class = class_cache.get(
+                    "PrimitiveType", class_cache.get("Type", RDFS.seeAlso)
+                )
+                g.add((typ_uri, RDF.type, type_class))
+                g.add(
+                    (
+                        typ_uri,
+                        prop_cache.get("hasSimpleName", RDFS.seeAlso),
+                        Literal(typ_id.lower(), datatype=XSD.string),
+                    )
+                )
+        else:
+            typ_uri = URIRef(f"{file_uri}/type/{uri_safe_string(str(typ_id))}")
+            type_class = class_cache.get("Type", RDFS.seeAlso)
+            g.add((typ_uri, RDF.type, type_class))
+            g.add(
+                (
+                    typ_uri,
+                    prop_cache.get("isElementOf", RDFS.seeAlso),
+                    file_uri,
+                )
+            )
+            g.add(
+                (
+                    typ_uri,
+                    prop_cache.get("hasSimpleName", RDFS.seeAlso),
+                    Literal(str(typ_id), datatype=XSD.string),
+                )
+            )
+            if "raw" in typ and typ["raw"]:
+                g.add(
+                    (
+                        typ_uri,
+                        prop_cache.get("hasSourceCodeSnippet", RDFS.seeAlso),
+                        Literal(typ["raw"], datatype=XSD.string),
+                    )
+                )
+
+
+def write_imports(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+    imports = constructs.get("ImportDeclaration", []) + constructs.get("imports", [])
+    for imp in imports:
+        imp_id = imp.get("raw") or imp.get("name") or imp
+        if not imp_id:
+            continue
+        imp_uri = URIRef(f"{file_uri}/import/{uri_safe_string(imp_id)}")
+        import_class = class_cache.get("ImportDeclaration", RDFS.seeAlso)
+        g.add((imp_uri, RDF.type, import_class))
+        g.add((imp_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (imp_uri, prop_cache["hasTextValue"], Literal(imp_id, datatype=XSD.string))
+        )
+
+
+def write_repo_file_link(g, repo_enc, WDO, INST, file_uri):
+    g.add((INST[repo_enc], WDO.hasFile, file_uri))
+
+
+def write_database_schemas(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+):
+    """Stub: No-op for database schema extraction. Returns empty dict."""
+    return {}
+
+
+# Helper functions for entity writing (add as needed)
+def _add_class_basic_triples(g, class_uri, class_id, class_cache, prop_cache):
+    g.add((class_uri, RDF.type, class_cache["ClassDefinition"]))
+    g.add((class_uri, RDFS.label, Literal(class_id, datatype=XSD.string)))
+    g.add(
+        (class_uri, prop_cache["hasSimpleName"], Literal(class_id, datatype=XSD.string))
+    )
+
+
+def _add_class_optional_properties(g, class_uri, cls, prop_cache):
+    canonical_name = generate_canonical_name(cls)
+    if canonical_name:
+        g.add(
+            (
+                class_uri,
+                prop_cache["hasCanonicalName"],
+                Literal(canonical_name, datatype=XSD.string),
+            )
+        )
+    if "raw" in cls and cls["raw"]:
+        g.add(
+            (
+                class_uri,
+                prop_cache["hasSourceCodeSnippet"],
+                Literal(cls["raw"], datatype=XSD.string),
+            )
+        )
+        access_modifier = extract_access_modifier(cls, cls["raw"])
+        if access_modifier:
+            g.add(
+                (
+                    class_uri,
+                    prop_cache["hasAccessModifier"],
+                    Literal(access_modifier, datatype=XSD.string),
+                )
+            )
+        token_count = calculate_token_count(cls["raw"])
+        g.add(
+            (
+                class_uri,
+                prop_cache["hasTokenCount"],
+                Literal(token_count, datatype=XSD.nonNegativeInteger),
+            )
+        )
+        line_count = calculate_line_count(cls["raw"])
+        g.add(
+            (
+                class_uri,
+                prop_cache["hasLineCount"],
+                Literal(line_count, datatype=XSD.nonNegativeInteger),
+            )
+        )
+        boolean_modifiers = extract_boolean_modifiers(cls, cls["raw"])
+        for modifier_name, modifier_value in boolean_modifiers.items():
+            if modifier_value and modifier_name in prop_cache:
+                g.add(
+                    (
+                        class_uri,
+                        prop_cache[modifier_name],
+                        Literal(modifier_value, datatype=XSD.boolean),
+                    )
+                )
+    if "start_line" in cls:
+        g.add(
+            (
+                class_uri,
+                prop_cache["startsAtLine"],
+                Literal(cls["start_line"], datatype=XSD.integer),
+            )
+        )
+    if "end_line" in cls:
+        g.add(
+            (
+                class_uri,
+                prop_cache["endsAtLine"],
+                Literal(cls["end_line"], datatype=XSD.integer),
+            )
+        )
+    for dec in cls.get("decorators", []):
+        g.add(
+            (class_uri, prop_cache["hasTextValue"], Literal(dec, datatype=XSD.string))
+        )
+
+
+def _add_class_method_relationships(
+    g, class_uris, class_methods, file_uri, prop_cache, uri_safe_string
+):
+    for class_id, method_names in class_methods.items():
+        class_uri = class_uris[class_id]
+        for method_name in method_names:
+            method_uri = URIRef(f"{file_uri}/function/{uri_safe_string(method_name)}")
+            g.add((class_uri, prop_cache["hasMethod"], method_uri))
+            g.add((method_uri, prop_cache["isMethodOf"], class_uri))
+
+
+def _add_function_basic_triples(g, func_uri, func_id, class_cache, prop_cache):
+    g.add((func_uri, RDF.type, class_cache["FunctionDefinition"]))
+    g.add((func_uri, RDFS.label, Literal(func_id, datatype=XSD.string)))
+    g.add(
+        (func_uri, prop_cache["hasSimpleName"], Literal(func_id, datatype=XSD.string))
+    )
+
+
+def _add_function_optional_properties(g, func_uri, func, prop_cache):
+    parent_class = func.get("parent_class")
+    canonical_name = generate_canonical_name(func, parent_context=parent_class)
+    if canonical_name:
+        g.add(
+            (
+                func_uri,
+                prop_cache["hasCanonicalName"],
+                Literal(canonical_name, datatype=XSD.string),
+            )
+        )
+    if "raw" in func and func["raw"]:
+        g.add(
+            (
+                func_uri,
+                prop_cache["hasSourceCodeSnippet"],
+                Literal(func["raw"], datatype=XSD.string),
+            )
+        )
+        access_modifier = extract_access_modifier(func, func["raw"])
+        if access_modifier:
+            g.add(
+                (
+                    func_uri,
+                    prop_cache["hasAccessModifier"],
+                    Literal(access_modifier, datatype=XSD.string),
+                )
+            )
+        token_count = calculate_token_count(func["raw"])
+        g.add(
+            (
+                func_uri,
+                prop_cache["hasTokenCount"],
+                Literal(token_count, datatype=XSD.nonNegativeInteger),
+            )
+        )
+        line_count = calculate_line_count(func["raw"])
+        g.add(
+            (
+                func_uri,
+                prop_cache["hasLineCount"],
+                Literal(line_count, datatype=XSD.nonNegativeInteger),
+            )
+        )
+        boolean_modifiers = extract_boolean_modifiers(func, func["raw"])
+        for modifier_name, modifier_value in boolean_modifiers.items():
+            if modifier_value and modifier_name in prop_cache:
+                g.add(
+                    (
+                        func_uri,
+                        prop_cache[modifier_name],
+                        Literal(modifier_value, datatype=XSD.boolean),
+                    )
+                )
+        if "hasCyclomaticComplexity" in prop_cache:
+            complexity = calculate_cyclomatic_complexity(func["raw"])
+            g.add(
+                (
+                    func_uri,
+                    prop_cache["hasCyclomaticComplexity"],
+                    Literal(complexity, datatype=XSD.integer),
+                )
+            )
+    if "start_line" in func:
+        g.add(
+            (
+                func_uri,
+                prop_cache["startsAtLine"],
+                Literal(func["start_line"], datatype=XSD.integer),
+            )
+        )
+    if "end_line" in func:
+        g.add(
+            (
+                func_uri,
+                prop_cache["endsAtLine"],
+                Literal(func["end_line"], datatype=XSD.integer),
+            )
+        )
+
+
+def _add_function_return_type(g, func_uri, func, type_uris, prop_cache):
+    return_type = func.get("returns", "")
+    if return_type:
+        type_uri = type_uris.get(return_type.strip().lower())
+        if type_uri:
+            g.add((func_uri, prop_cache["hasReturnType"], type_uri))
+            g.add((type_uri, prop_cache["isReturnTypeOf"], func_uri))
+
+
+def _add_function_method_of(g, func_uri, func, class_uris, prop_cache):
+    parent_class = func.get("parent_class")
+    if parent_class and parent_class in class_uris:
+        class_uri = class_uris[parent_class]
+        g.add((func_uri, prop_cache["isMethodOf"], class_uri))
+        g.add((class_uri, prop_cache["hasMethod"], func_uri))
+
+
+def _add_function_language(g, func_uri, language, prop_cache):
+    if language and "programmingLanguage" in prop_cache:
+        g.add(
+            (
+                func_uri,
+                prop_cache["programmingLanguage"],
+                Literal(language, datatype=XSD.string),
+            )
+        )
+
+
+def _collect_class_methods(cls):
+    if "methods" in cls and isinstance(cls["methods"], list):
+        return [m.get("name") for m in cls["methods"] if m.get("name")]
+    return []
+
+
+def create_canonical_type_individuals(g, class_cache, prop_cache, uri_safe_string):
+    """Stub: No-op for canonical type individuals. Returns empty dict."""
+    return {}
