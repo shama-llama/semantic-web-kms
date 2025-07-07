@@ -1,132 +1,424 @@
 {
   "python": {
-    "FunctionDefinition": ["(function_definition name: (identifier) @name) @function"],
-    "Parameter": ["(parameters (identifier) @param)"],
-    "ClassDefinition": ["(class_definition name: (identifier) @name) @class"],
-    "Attribute": ["(assignment left: (attribute) @attr)"],
-    "FunctionCall": ["(call function: (identifier) @func)"],
-    "ImportDeclaration": ["(import_statement) @import","(import_from_statement) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "[(function_definition name: (identifier) @name) (decorated_definition definition: (function_definition name: (identifier) @name)) @function]"
+    ],
+    "Parameter": [
+      "(parameters . (parameter name: (identifier) @name) @param)"
+    ],
+    "ClassDefinition": [
+      "[(class_definition name: (identifier) @name) (decorated_definition definition: (class_definition name: (identifier) @name)) @class]"
+    ],
+    "EnumDefinition": [
+      "(class_definition name: (identifier) @name superclasses: (argument_list (identifier) @sc (#eq? @sc \"Enum\"))) @enum"
+    ],
+    "PackageDeclaration": [
+      "(mod_item name: (identifier) @name) @module"
+    ],
+    "AttributeDeclaration": [
+      "(class_definition body: (block (expression_statement (assignment left: (attribute object: (identifier) @obj attribute: (identifier) @attr) (#eq? @obj \"self\"))))) @attribute"
+    ],
+    "VariableDeclaration": [
+      "(expression_statement (assignment left: (identifier) @name)) @variable",
+      "(expression_statement (assignment left: (typed_parameter (identifier) @name))) @variable"
+    ],
+    "FunctionCall": [
+      "(call function: [(identifier) @func (attribute attribute: (identifier) @func)])"
+    ],
+    "ImportDeclaration": [
+      "(import_statement) @import",
+      "(import_from_statement) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "javascript": {
     "FunctionDefinition": [
       "(function_declaration name: (identifier) @name) @function",
-      "(arrow_function) @function",
+      "(variable_declarator name: (identifier) @name value: (arrow_function)) @function",
       "(method_definition name: (property_identifier) @name) @method"
     ],
-    "Parameter": ["(formal_parameters (identifier) @param)"],
-    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
-    "Attribute": ["(public_field_definition name: (property_identifier) @attr)"],
-    "FunctionCall": ["(call_expression function: (identifier) @func)"],
-    "ImportDeclaration": ["(import_statement) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "Parameter": [
+      "(formal_parameters . [ (identifier) @name (object_pattern) (array_pattern) ] @param)"
+    ],
+    "ClassDefinition": [
+      "(class_declaration name: (identifier) @name) @class"
+    ],
+    "EnumDefinition": [
+      "(enum_declaration name: (identifier) @name) @enum"
+    ],
+    "AttributeDeclaration": [
+      "(field_definition name: (property_identifier) @attr) @attribute"
+    ],
+    "VariableDeclaration": [
+      "[(lexical_declaration (variable_declarator name: (identifier) @name)) (variable_declaration (variable_declarator name: (identifier) @name))] @variable"
+    ],
+    "FunctionCall": [
+      "(call_expression function: [(identifier) @func (member_expression property: (property_identifier) @func)])"
+    ],
+    "ImportDeclaration": [
+      "(import_statement) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "typescript": {
     "FunctionDefinition": [
       "(function_declaration name: (identifier) @name) @function",
-      "(arrow_function) @function"
+      "(variable_declarator name: (identifier) @name value: (arrow_function)) @function",
+      "(method_definition name: (property_identifier) @name) @method"
     ],
-    "Parameter": ["(formal_parameters (identifier) @param)"],
-    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
-    "Attribute": ["(public_field_definition name: (property_identifier) @attr)"],
-    "FunctionCall": ["(call_expression function: (identifier) @func)"],
-    "ImportDeclaration": ["(import_statement) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "Parameter": [
+      "(formal_parameters . [(required_parameter pattern: (identifier) @name) (optional_parameter pattern: (identifier) @name)] @param)"
+    ],
+    "ClassDefinition": [
+      "(class_declaration name: (type_identifier) @name) @class"
+    ],
+    "InterfaceDefinition": [
+      "(interface_declaration name: (type_identifier) @name) @interface"
+    ],
+    "EnumDefinition": [
+      "(enum_declaration name: (identifier) @name) @enum"
+    ],
+    "AttributeDeclaration": [
+      "[(public_field_definition name: (property_identifier) @attr) (property_signature name: (property_identifier) @attr)] @attribute"
+    ],
+    "VariableDeclaration": [
+      "[(lexical_declaration (variable_declarator name: (identifier) @name)) (variable_declaration (variable_declarator name: (identifier) @name))] @variable"
+    ],
+    "FunctionCall": [
+      "(call_expression function: [(identifier) @func (member_expression property: (property_identifier) @func)])"
+    ],
+    "ImportDeclaration": [
+      "(import_statement) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "java": {
-    "FunctionDefinition": ["(method_declaration name: (identifier) @name) @method"],
-    "Parameter": ["(formal_parameter name: (identifier) @param)"],
-    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
-    "Attribute": ["(field_declaration declarator: (variable_declarator name: (identifier) @attr))"],
-    "FunctionCall": ["(method_invocation name: (identifier) @func)"],
-    "ImportDeclaration": ["(import_declaration) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "[(method_declaration name: (identifier) @name) (constructor_declaration name: (identifier) @name)] @method"
+    ],
+    "Parameter": [
+      "(formal_parameters . (formal_parameter name: (identifier) @name) @param)"
+    ],
+    "ClassDefinition": [
+      "(class_declaration name: (identifier) @name) @class"
+    ],
+    "InterfaceDefinition": [
+      "(interface_declaration name: (identifier) @name) @interface"
+    ],
+    "EnumDefinition": [
+      "(enum_declaration name: (identifier) @name) @enum"
+    ],
+    "PackageDeclaration": [
+      "(package_declaration (scoped_identifier) @name) @module"
+    ],
+    "AttributeDeclaration": [
+      "(field_declaration (variable_declarator name: (identifier) @attr)) @attribute"
+    ],
+    "VariableDeclaration": [
+      "(local_variable_declaration (variable_declarator name: (identifier) @name)) @variable"
+    ],
+    "FunctionCall": [
+      "(method_invocation name: (identifier) @func)"
+    ],
+    "ImportDeclaration": [
+      "(import_declaration) @import"
+    ],
+    "CodeComment": [
+      "(line_comment) @comment",
+      "(block_comment) @comment"
+    ]
   },
   "c_sharp": {
-    "FunctionDefinition": ["(method_declaration name: (identifier) @name) @method"],
-    "Parameter": ["(parameter name: (identifier) @param)"],
-    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
-    "Attribute": ["(field_declaration declarator: (variable_declarator name: (identifier) @attr))"],
-    "FunctionCall": ["(invocation_expression function: (identifier) @func)"],
-    "ImportDeclaration": ["(using_directive) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "[(method_declaration name: (identifier) @name) (constructor_declaration name: (identifier) @name)] @method"
+    ],
+    "Parameter": [
+      "(parameter_list . (parameter name: (identifier) @name) @param)"
+    ],
+    "ClassDefinition": [
+      "(class_declaration name: (identifier) @name) @class"
+    ],
+    "StructDefinition": [
+      "(struct_declaration name: (identifier) @name) @struct"
+    ],
+    "InterfaceDefinition": [
+      "(interface_declaration name: (identifier) @name) @interface"
+    ],
+    "EnumDefinition": [
+      "(enum_declaration name: (identifier) @name) @enum"
+    ],
+    "PackageDeclaration": [
+      "(namespace_declaration name: (_) @name) @module"
+    ],
+    "AttributeDeclaration": [
+      "(field_declaration (variable_declaration (variable_declarator (identifier) @attr))) @attribute"
+    ],
+    "VariableDeclaration": [
+      "(local_declaration_statement (variable_declaration (variable_declarator (identifier) @name))) @variable"
+    ],
+    "FunctionCall": [
+      "(invocation_expression expression: [(identifier) @func (member_access_expression name: (identifier) @func)])"
+    ],
+    "ImportDeclaration": [
+      "(using_directive) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "go": {
-    "FunctionDefinition": ["(function_declaration name: (identifier) @name) @function"],
-    "Parameter": ["(parameter_declaration name: (identifier) @param)"],
-    "ClassDefinition": ["(type_spec name: (type_identifier) @name) @type"],
-    "Attribute": ["(field_declaration name: (identifier) @attr)"],
-    "FunctionCall": ["(call_expression function: (identifier) @func)"],
-    "ImportDeclaration": ["(import_spec) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "[(function_declaration name: (identifier) @name) (method_declaration name: (field_identifier) @name)] @function"
+    ],
+    "Parameter": [
+      "(parameter_list . (parameter_declaration name: (identifier) @name) @param)"
+    ],
+    "StructDefinition": [
+      "(type_declaration (type_spec name: (type_identifier) @name type: (struct_type))) @struct"
+    ],
+    "InterfaceDefinition": [
+      "(type_declaration (type_spec name: (type_identifier) @name type: (interface_type))) @interface"
+    ],
+    "PackageDeclaration": [
+      "(package_clause (package_identifier) @name) @module"
+    ],
+    "AttributeDeclaration": [
+      "(struct_type (field_declaration_list (field_declaration name: (field_identifier) @attr))) @attribute"
+    ],
+    "VariableDeclaration": [
+      "[(short_var_declaration left: (expression_list (identifier) @name)) (var_declaration (var_spec name: (identifier) @name))] @variable"
+    ],
+    "FunctionCall": [
+      "(call_expression function: [(identifier) @func (selector_expression field: (field_identifier) @func)])"
+    ],
+    "ImportDeclaration": [
+      "(import_declaration (import_spec_list (import_spec path: (interpreted_string_literal) @path))) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "ruby": {
-    "FunctionDefinition": ["(method name: (identifier) @name) @method"],
-    "Parameter": ["(parameters (identifier) @param)"],
-    "ClassDefinition": ["(class name: (constant) @name) @class"],
-    "Attribute": ["(assignment left: (identifier) @attr)"],
-    "FunctionCall": ["(call method: (identifier) @func)"],
-    "ImportDeclaration": ["(require_statement) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "(method name: (identifier) @name) @method"
+    ],
+    "Parameter": [
+      "(method_parameters . [(identifier) @name] @param)"
+    ],
+    "ClassDefinition": [
+      "(class name: [(constant) @name (scope_resolution (constant) @name)]) @class"
+    ],
+    "TraitDefinition": [
+      "(module name: [(constant) @name (scope_resolution (constant) @name)]) @trait"
+    ],
+    "AttributeDeclaration": [
+      "[(instance_variable) @attr (class_variable) @attr]"
+    ],
+    "VariableDeclaration": [
+      "(assignment left: (identifier) @name) @variable"
+    ],
+    "FunctionCall": [
+      "(call method: (identifier) @func)"
+    ],
+    "ImportDeclaration": [
+      "(call method: (identifier) @id (#eq? @id \"require\")) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "php": {
     "FunctionDefinition": [
       "(function_definition name: (name) @name) @function",
-      "(anonymous_function_creation_expression) @function"
+      "(method_declaration name: (name) @name) @method"
     ],
-    "Parameter": ["(formal_parameters (parameter name: (variable_name) @param))"],
-    "ClassDefinition": ["(class_declaration name: (name) @name) @class"],
-    "Attribute": ["(property_element name: (variable_name) @attr)"],
-    "FunctionCall": ["(function_call_expression function: (name) @func)"],
-    "ImportDeclaration": ["(namespace_use_declaration) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "Parameter": [
+      "(formal_parameters . (simple_parameter name: (variable_name) @name) @param)"
+    ],
+    "ClassDefinition": [
+      "(class_declaration name: (name) @name) @class"
+    ],
+    "InterfaceDefinition": [
+      "(interface_declaration name: (name) @name) @interface"
+    ],
+    "TraitDefinition": [
+      "(trait_declaration name: (name) @name) @trait"
+    ],
+    "PackageDeclaration": [
+      "(namespace_definition name: (qualified_name) @name) @module"
+    ],
+    "AttributeDeclaration": [
+      "(property_declaration (property_element name: (variable_name) @attr)) @attribute"
+    ],
+    "VariableDeclaration": [
+      "(expression_statement (assignment_expression left: (variable_name) @name)) @variable"
+    ],
+    "FunctionCall": [
+      "(function_call_expression function: [(name) @func (qualified_name) @func])"
+    ],
+    "ImportDeclaration": [
+      "(namespace_use_declaration) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "rust": {
-    "FunctionDefinition": ["(function_item name: (identifier) @name) @function"],
-    "Parameter": ["(parameter_pattern name: (identifier) @param)"],
-    "ClassDefinition": ["(struct_item name: (type_identifier) @name) @struct"],
-    "Attribute": ["(struct_field name: (identifier) @attr)"],
-    "FunctionCall": ["(call_expression function: (identifier) @func)"],
-    "ImportDeclaration": ["(use_declaration) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "(function_item (identifier) @name) @function"
+    ],
+    "Parameter": [
+      "(parameters . (parameter pattern: (identifier) @name) @param)"
+    ],
+    "StructDefinition": [
+      "(struct_item (type_identifier) @name) @struct"
+    ],
+    "TraitDefinition": [
+      "(trait_item (type_identifier) @name) @trait"
+    ],
+    "EnumDefinition": [
+      "(enum_item (type_identifier) @name) @enum"
+    ],
+    "PackageDeclaration": [
+      "(mod_item (identifier) @name) @module"
+    ],
+    "AttributeDeclaration": [
+      "(field_declaration_list (field_declaration name: (field_identifier) @attr)) @attribute"
+    ],
+    "VariableDeclaration": [
+      "(let_declaration pattern: (identifier) @name) @variable"
+    ],
+    "FunctionCall": [
+      "(call_expression function: [(identifier) @func (field_expression field: (field_identifier) @func)])"
+    ],
+    "ImportDeclaration": [
+      "(use_declaration) @import"
+    ],
+    "CodeComment": [
+      "(line_comment) @comment",
+      "(block_comment) @comment"
+    ]
   },
   "html": {
-    "CodeComment": ["(comment) @comment"]
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "css": {
-    "CodeComment": ["(comment) @comment"]
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "scss": {
-    "CodeComment": ["(comment) @comment"]
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "bash": {
-    "FunctionDefinition": ["(function_definition name: (word) @name) @function"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "(function_definition name: (word) @name) @function"
+    ],
+    "VariableDeclaration": [
+      "(variable_assignment name: (variable_name) @name) @variable"
+    ],
+    "CodeComment": [
+      "(comment) @comment"
+    ]
   },
   "swift": {
-    "ClassDefinition": ["(class_declaration name: (identifier) @name) @class"],
-    "FunctionDefinition": ["(function_declaration name: (identifier) @name) @function"],
-    "Parameter": ["(parameter_clause (parameter name: (identifier) @param))"],
-    "Attribute": ["(variable_declaration name: (identifier) @attr)"],
-    "FunctionCall": ["(function_call_expression function: (identifier) @func)"],
-    "ImportDeclaration": ["(import_declaration) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "ClassDefinition": [
+      "(class_declaration name: (identifier) @name) @class"
+    ],
+    "StructDefinition": [
+      "(struct_declaration name: (identifier) @name) @struct"
+    ],
+    "ProtocolDefinition": [
+      "(protocol_declaration name: (identifier) @name) @protocol"
+    ],
+    "EnumDefinition": [
+      "(enum_declaration name: (identifier) @name) @enum"
+    ],
+    "FunctionDefinition": [
+      "(function_declaration name: (identifier) @name) @function"
+    ],
+    "Parameter": [
+      "(parameter_clause (parameter name: (identifier) @param))"
+    ],
+    "AttributeDeclaration": [
+      "(variable_declaration name: (identifier) @attr)"
+    ],
+    "VariableDeclaration": [
+      "(variable_declaration name: (identifier) @name) @variable"
+    ],
+    "FunctionCall": [
+      "(function_call_expression function: (identifier) @func)"
+    ],
+    "ImportDeclaration": [
+      "(import_declaration) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment",
+      "(line_comment) @comment",
+      "(block_comment) @comment"
+    ]
   },
   "scala": {
     "ClassDefinition": [
       "(class_definition name: (identifier) @name) @class",
-      "(trait_definition name: (identifier) @name) @class"
+      "(trait_definition name: (identifier) @name) @trait"
     ],
-    "FunctionDefinition": ["(function_definition name: (identifier) @name) @function"],
-    "Parameter": ["(parameters (identifier) @param)"],
-    "Attribute": ["(val_declaration name: (identifier) @attr)", "(var_declaration name: (identifier) @attr)"],
-    "FunctionCall": ["(function_application function: (identifier) @func)"],
-    "ImportDeclaration": ["(import_declaration) @import"],
-    "CodeComment": ["(comment) @comment"]
+    "TraitDefinition": [
+      "(trait_definition name: (identifier) @name) @trait"
+    ],
+    "ObjectDefinition": [
+      "(object_definition name: (identifier) @name) @object"
+    ],
+    "FunctionDefinition": [
+      "(function_definition name: (identifier) @name) @function"
+    ],
+    "Parameter": [
+      "(parameters (identifier) @param)"
+    ],
+    "AttributeDeclaration": [
+      "(val_declaration name: (identifier) @attr)",
+      "(var_declaration name: (identifier) @attr)"
+    ],
+    "VariableDeclaration": [
+      "(val_declaration name: (identifier) @name) @variable",
+      "(var_declaration name: (identifier) @name) @variable"
+    ],
+    "FunctionCall": [
+      "(function_application function: (identifier) @func)"
+    ],
+    "ImportDeclaration": [
+      "(import_declaration) @import"
+    ],
+    "CodeComment": [
+      "(comment) @comment",
+      "(line_comment) @comment",
+      "(block_comment) @comment"
+    ]
   },
   "lua": {
-    "FunctionDefinition": ["(function_declaration name: (identifier) @name) @function"],
-    "Parameter": ["(parameters (identifier) @param)"],
-    "CodeComment": ["(comment) @comment"]
+    "FunctionDefinition": [
+      "(function_declaration name: (identifier) @name) @function"
+    ],
+    "Parameter": [
+      "(parameters (identifier) @param)"
+    ],
+    "VariableDeclaration": [
+      "(assignment_statement (variable_list (identifier) @name)) @variable"
+    ],
+    "CodeComment": [
+      "(comment) @comment",
+      "(line_comment) @comment",
+      "(block_comment) @comment"
+    ]
   }
-} 
+}

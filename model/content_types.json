@@ -1,389 +1,223 @@
 {
-  "APIDocumentation": [
-    "openapi.yaml",
-    "swagger.json",
-    "swagger.yaml"
+  "description": "Ordered list of classifiers for mapping file paths to their primary InformationContentEntity class.",
+  "ignore_patterns": [
+    "\\.(min|bundle|chunk|prod|production|vendor)\\.(js|css)$",
+    "\\.(js|css)\\.map$",
+    "\\.(pyc|class|o|swp|exe|dll)$",
+    "(?i)^(\\.DS_Store|Thumbs\\.db|__pycache__|\\.cache|node_modules|dist|build|target)$"
   ],
-  "ArchitecturalDecisionRecord": [
-    "adr.md",
-    "adr.txt",
-    "architectural-decision.md"
-  ],
-  "AudioDescription": [
-    ".aac",
-    ".aiff",
-    ".au",
-    ".flac",
-    ".kar",
-    ".mid",
-    ".midi",
-    ".mp3",
-    ".ogg",
-    ".opus",
-    ".ra",
-    ".rm",
-    ".wav",
-    ".wma",
-    ".m4a"
-  ],
-  "BestPracticeGuideline": [
-    "best-practices.md",
-    "coding-standards.md",
-    "style-guide.md"
-  ],
-  "BuildScript": [
-    ".babelrc",
-    ".dockerignore",
-    ".eslintrc",
-    ".gradle",
-    ".prettierrc",
-    "CMakeLists.txt",
-    "Cargo.lock",
-    "Cargo.toml",
-    "Dockerfile",
-    "Gemfile",
-    "Gemfile.lock",
-    "Makefile",
-    "Pipfile",
-    "Podfile",
-    "Podfile.lock",
-    "babel.config.js",
-    "build.gradle",
-    "build.sbt",
-    "build.xml",
-    "cabal.project",
-    "cargo.toml",
-    "composer.json",
-    "composer.lock",
-    "docker-compose.yaml",
-    "docker-compose.yml",
-    "eslint.config.js",
-    "go.mod",
-    "go.sum",
-    "gradle-wrapper.properties",
-    "gradle.properties",
-    "maven.config",
-    "mix.exs",
-    "package-lock.json",
-    "package.json",
-    "pnpm-lock.yaml",
-    "poetry.lock",
-    "pom.xml",
-    "prettier.config.js",
-    "pubspec.lock",
-    "pubspec.yaml",
-    "pyproject.toml",
-    "rebar.config",
-    "requirements.txt",
-    "rollup.config.js",
-    "sbt",
-    "setup.py",
-    "stack.yaml",
-    "tsconfig.json",
-    "vite.config.js",
-    "webpack.config.js",
-    "yarn.lock"
-  ],
-  "CSharpCode": [
-    ".cs"
-  ],
-  "CSSCode": [
-    ".css",
-    ".scss",
-    ".sass",
-    ".less",
-    ".styl",
-    ".stylus",
-    ".pcss",
-    ".postcss",
-    ".wxss",
-    ".acss"
-  ],
-  "Changelog": [
-    "CHANGELOG",
-    "CHANGELOG.md",
-    "CHANGELOG.rst",
-    "HISTORY",
-    "HISTORY.md",
-    "changelog",
-    "changelog.md",
-    "history",
-    "history.md"
-  ],
-  "CodeComment": [
-    ".comment",
-    ".docblock"
-  ],
-  "ConfigurationSetting": [
-    ".env",
-    ".properties",
-    ".config",
-    ".ini",
-    ".cfg",
-    ".conf",
-    ".toml",
-    ".yaml",
-    ".yml"
-  ],
-  "ContributionGuide": [
-    "CONTRIBUTING",
-    "CONTRIBUTING.md",
-    "CONTRIBUTING.rst",
-    "contributing",
-    "contributing.md"
-  ],
-  "DatabaseSchema": [
-    ".accdb",
-    ".db",
-    ".db-journal",
-    ".db-shm",
-    ".db-wal",
-    ".dbf",
-    ".fdb",
-    ".frm",
-    ".gdb",
-    ".ibd",
-    ".mdb",
-    ".myd",
-    ".odb",
-    ".sqlite",
-    ".sqlite-shm",
-    ".sqlite-wal",
-    ".sqlite3"
-  ],
-  "DockerfileSpecification": [
-    "Dockerfile",
-    ".dockerfile"
-  ],
-  "FontDescription": [
-    ".ttf",
-    ".otf",
-    ".woff",
-    ".woff2",
-    ".eot",
-    ".pfb",
-    ".pfm",
-    ".bdf",
-    ".fnt",
-    ".psf",
-    ".sfd",
-    ".ufo",
-    ".vfb",
-    ".vfl"
-  ],
-  "GoCode": [
-    ".go"
-  ],
-  "GraphQLCode": [
-    ".graphql",
-    ".gql"
-  ],
-  "HTMLCode": [
-    ".html",
-    ".htm",
-    ".xhtml",
-    ".jsp",
-    ".asp",
-    ".aspx"
-  ],
-  "ImageDescription": [
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".gif",
-    ".bmp",
-    ".tiff",
-    ".tif",
-    ".webp",
-    ".ico",
-    ".cur",
-    ".ani",
-    ".psd",
-    ".ai",
-    ".eps",
-    ".raw",
-    ".cr2",
-    ".nef",
-    ".arw",
-    ".dng",
-    ".heic",
-    ".heif",
-    ".avif",
-    ".jxl"
-  ],
-  "JavaCode": [
-    ".java"
-  ],
-  "JavaScriptCode": [
-    ".js",
-    ".mjs",
-    ".jsx"
-  ],
-  "JupyterNotebook": [
-    ".ipynb",
-    ".jupyter"
-  ],
-  "License": [
-    "LICENSE",
-    "LICENSE.txt",
-    "LICENSE.md",
-    "COPYING",
-    "COPYING.txt",
-    "COPYRIGHT",
-    "COPYRIGHT.txt",
-    "license",
-    "license.txt",
-    "license.md",
-    "copying",
-    "copying.txt",
-    "copyright",
-    "copyright.txt"
-  ],
-  "Log": [
-    ".log",
-    ".out",
-    ".err",
-    ".trace",
-    ".debug",
-    ".info",
-    ".warn",
-    ".error",
-    ".access",
-    ".error.log",
-    ".access.log",
-    ".combined.log"
-  ],
-  "Markup": [
-    ".md",
-    ".markdown",
-    ".rst",
-    ".adoc",
-    ".asciidoc",
-    ".tex",
-    ".latex"
-  ],
-  "Notebook": [
-    ".nb",
-    ".rmd",
-    ".qmd"
-  ],
-  "PHPCode": [
-    ".php"
-  ],
-  "PythonCode": [
-    ".py"
-  ],
-  "Readme": [
-    "README",
-    "README.txt",
-    "README.md",
-    "README.rst",
-    "README.adoc",
-    "readme",
-    "readme.txt",
-    "readme.md"
-  ],
-  "RubyCode": [
-    ".rb"
-  ],
-  "RustCode": [
-    ".rs"
-  ],
-  "SQLCode": [
-    ".sql"
-  ],
-  "TypeScriptCode": [
-    ".ts",
-    ".tsx"
-  ],
-  "UserGuide": [
-    "user-guide.md",
-    "manual.md",
-    "docs/user-guide.md"
-  ],
-  "VideoDescription": [
-    ".mp4",
-    ".avi",
-    ".mov",
-    ".wmv",
-    ".flv",
-    ".webm",
-    ".mkv",
-    ".m4v",
-    ".3gp",
-    ".ogv",
-    ".mts",
-    ".m2ts",
-    ".vob",
-    ".asf",
-    ".rmvb"
-  ],
-  "SoftwareCode": [
-    ".bash",
-    ".bat",
-    ".c",
-    ".clj",
-    ".cmd",
-    ".cpp",
-    ".dart",
-    ".fish",
-    ".fs",
-    ".graphql",
-    ".groovy",
-    ".h",
-    ".hpp",
-    ".hs",
-    ".kt",
-    ".lua",
-    ".m",
-    ".ml",
-    ".nim",
-    ".pl",
-    ".ps1",
-    ".ps1e",
-    ".ps1m",
-    ".ps1xml",
-    ".psc1",
-    ".psc2",
-    ".psd1",
-    ".psm1",
-    ".r",
-    ".scala",
-    ".sh",
-    ".swift",
-    ".vbs",
-    ".zig",
-    ".zsh"
-  ],
-  "TestFile": [
-    ".spec.java",
-    ".spec.js",
-    ".spec.py",
-    ".spec.ts",
-    ".test.clj",
-    ".test.go",
-    ".test.hs",
-    ".test.java",
-    ".test.js",
-    ".test.kt",
-    ".test.ml",
-    ".test.php",
-    ".test.py",
-    ".test.rb",
-    ".test.rs",
-    ".test.scala",
-    ".test.swift",
-    ".test.ts",
-    "_test.go",
-    "_test.py"
-  ],
-  "Documentation": [
-    ".chm",
-    ".doc",
-    ".docx",
-    ".odt",
-    ".pdf",
-    ".rtf",
-    ".txt"
+  "classifiers": [
+    {
+      "class": "Readme",
+      "regex": "(?i)^README(\\.(md|rst|txt))?$"
+    },
+    {
+      "class": "License",
+      "regex": "(?i)^(LICENSE|COPYING|COPYRIGHT)(\\.(md|txt))?$"
+    },
+    {
+      "class": "ContributionGuide",
+      "regex": "(?i)^(CONTRIBUTING|CONTRIBUTORS)(\\.(md|rst|txt))?$"
+    },
+    {
+      "class": "ContributionGuide",
+      "regex": "(?i)^CODE_OF_CONDUCT\\.md$"
+    },
+    {
+      "class": "ContributionGuide",
+      "regex": "\\.github/(ISSUE_TEMPLATE|PULL_REQUEST_TEMPLATE)(/.*)?\\.md$"
+    },
+    {
+      "class": "Changelog",
+      "regex": "(?i)^(CHANGELOG|HISTORY|RELEASES)(\\.(md|rst|txt))?$"
+    },
+    {
+      "class": "Documentation",
+      "regex": "(?i)^SECURITY\\.md$"
+    },
+    {
+      "class": "ArchitecturalDecisionRecord",
+      "regex": "(?i)/adrs?/.*\\.md$|docs/(architecture|adr)/.*\\.md$"
+    },
+    {
+      "class": "APIDocumentation",
+      "regex": "(?i)(swagger|openapi|api[-_]docs|postman_collection)\\.(json|ya?ml)$"
+    },
+    {
+      "class": "DockerfileSpecification",
+      "regex": "(?i)^Dockerfile(\\..*)?$"
+    },
+    {
+      "class": "DatabaseSchema",
+      "regex": "(?i)(schema|tables|structure)\\.sql$|\\.dbml$"
+    },
+    {
+      "class": "SQLCode",
+      "regex": "(?i)/migrations?/.*\\.sql$|^(V|U)[0-9]+__.*\\.sql$"
+    },
+    {
+      "class": "ConfigurationSetting",
+      "regex": "\\.tf$|\\.tfvars$|\\.hcl$|\\.k8s\\.ya?ml$|/Chart\\.ya?ml$|/templates/.*\\.ya?ml$|ansible\\.cfg$|/playbooks/.*\\.ya?ml$"
+    },
+    {
+      "class": "ConfigurationSetting",
+      "regex": "\\.github/workflows/.*\\.ya?ml$|\\.circleci/config\\.ya?ml$|^\\.travis\\.ya?ml$|Jenkinsfile$"
+    },
+    {
+      "class": "ConfigurationSetting",
+      "regex": "app\\.json$|app\\.yaml$|vercel\\.json$|netlify\\.toml$"
+    },
+    {
+      "class": "BuildScript",
+      "regex": "^(package\\.json|package-lock\\.json|yarn\\.lock|pnpm-lock\\.yaml|tsconfig.*\\.json|jsconfig\\.json|webpack\\.config\\.js|vite\\.config\\.js|rollup\\.config\\.js|babel\\.config\\.js|pyproject\\.toml|poetry\\.lock|Pipfile|setup\\.py|requirements.*\\.txt|composer\\.json|composer\\.lock|Gemfile|Gemfile\\.lock|go\\.mod|go\\.sum|Cargo\\.toml|Cargo\\.lock|pom\\.xml|build\\.gradle|build\\.xml|Makefile|CMakeLists\\.txt|docker-compose\\.ya?ml)$"
+    },
+    {
+      "class": "ConfigurationSetting",
+      "regex": "^(\\.gitignore|\\.gitattributes|\\.gitmodules|\\.editorconfig|\\.nvmrc|\\.dockerignore|\\.eslintignore|\\.prettierignore|\\.stylelintignore)$"
+    },
+    {
+      "class": "BestPracticeGuideline",
+      "regex": "^(\\.babelrc|\\.eslintrc.*|eslint\\.config\\.js|\\.prettierrc.*|prettier\\.config\\.js|\\.stylelintrc.*|stylelint\\.config\\.js|postcss\\.config\\.js|tailwind\\.config\\.js)$"
+    },
+    {
+      "class": "TestCode",
+      "regex": "((_|-|\\.)(test|spec)s?|^(Test|test_)|/(tests|__tests__|specs|cypress)/).*\\.(js|ts|py|java|rs|cs|go|php)$"
+    },
+    {
+      "class": "JupyterNotebook",
+      "regex": "\\.ipynb$"
+    },
+    {
+      "class": "Notebook",
+      "regex": "\\.Rmd$"
+    },
+    {
+      "class": "GraphQLCode",
+      "regex": "\\.(graphql|gql)$"
+    },
+    {
+      "class": "Template",
+      "regex": "\\.(ejs|hbs|handlebars|mustache|njk|twig|liquid|jinja2?|pug|haml|slim|blade\\.php|jsp)$"
+    },
+    {
+      "class": "HTMLCode",
+      "regex": "\\.(html|htm|xhtml)$"
+    },
+    {
+      "class": "CSSCode",
+      "regex": "\\.(css|scss|sass|less|styl(us)?|p(ost)?css)$"
+    },
+    {
+      "class": "TypeScriptCode",
+      "regex": "\\.tsx?$"
+    },
+    {
+      "class": "JavaScriptCode",
+      "regex": "\\.(m?js|jsx|cjs)$"
+    },
+    {
+      "class": "PythonCode",
+      "regex": "\\.py$"
+    },
+    {
+      "class": "JavaCode",
+      "regex": "\\.java$"
+    },
+    {
+      "class": "CSharpCode",
+      "regex": "\\.cs$"
+    },
+    {
+      "class": "RubyCode",
+      "regex": "\\.rb$"
+    },
+    {
+      "class": "PHPCode",
+      "regex": "\\.php$"
+    },
+    {
+      "class": "GoCode",
+      "regex": "\\.go$"
+    },
+    {
+      "class": "RustCode",
+      "regex": "\\.rs$"
+    },
+    {
+      "class": "SQLCode",
+      "regex": "\\.sql$"
+    },
+    {
+      "class": "SoftwareCode",
+      "regex": "\\.wat$"
+    },
+    {
+      "class": "ImageDescription",
+      "regex": "(?i)\\.(jpe?g|png|gif|bmp|tiff?|webp|ico|svg|psd|ai|eps|raw|heic|avif)$"
+    },
+    {
+      "class": "VideoDescription",
+      "regex": "(?i)\\.(mp4|avi|mov|wmv|flv|webm|mkv)$"
+    },
+    {
+      "class": "AudioDescription",
+      "regex": "(?i)\\.(mp3|wav|ogg|flac|aac|wma)$"
+    },
+    {
+      "class": "FontDescription",
+      "regex": "(?i)\\.(woff2?|ttf|otf|eot)$"
+    },
+    {
+      "class": "ThreeDimensionalModelDescription",
+      "regex": "(?i)\\.(obj|stl|fbx|gltf|glb)$"
+    },
+    {
+      "class": "YAML",
+      "regex": "\\.ya?ml$"
+    },
+    {
+      "class": "JSON",
+      "regex": "\\.jsonc?$"
+    },
+    {
+      "class": "XML",
+      "regex": "\\.xml$"
+    },
+    {
+      "class": "DataFormat",
+      "regex": "\\.properties$|\\.(po|pot)$"
+    },
+    {
+      "class": "DataFormat",
+      "regex": "\\.(csv|tsv|parquet|avro|hdf5|h5|pkl|dat|bin|feather)$"
+    },
+    {
+      "class": "SoftwareCode",
+      "regex": "\\.(h|hpp|c|cpp|m|swift|kt|scala|groovy|lua|pl|ps1|sh|bash|bat|cmd|r|zig|dart)$"
+    },
+    {
+      "class": "Documentation",
+      "regex": "\\.(md|markdown|pdf|docx?|odt|rtf|txt|rst|tex|adoc)$"
+    },
+    {
+      "class": "UserGuide",
+      "regex": "(?i)(user[-_ ]?guide|getting[-_ ]?started|quick[-_ ]?start|how[-_ ]?to|walkthrough|manual)(\\.(md|rst|txt|pdf|docx?))?$"
+    },
+    {
+      "class": "Tutorial",
+      "regex": "(?i)(tutorial|step[-_ ]?by[-_ ]?step|lesson|exercise|practice)(\\.(md|rst|txt|pdf|docx?))?$"
+    },
+    {
+      "class": "UserInterfaceDesignDescription",
+      "regex": "(?i)\\.(fig|sketch|xd|psd|ai)$"
+    },
+    {
+      "class": "Log",
+      "regex": "(?i)\\.log$"
+    },
+    {
+      "class": "ConfigurationSetting",
+      "regex": "\\.(pem|key|crt|cer)$"
+    }
   ]
 }

@@ -1,0 +1,95 @@
+{
+  "description": "Ordered list of classifiers for mapping file paths to DigitalInformationCarrier classes.",
+  "ignore_patterns": [
+    "\\.(min|bundle|chunk|prod|production)\\.(js|css)$",
+    "\\.(js|css)\\.map$",
+    "\\.(pyc|class|o|swp)$",
+    "(?i)^(\\.DS_Store|Thumbs\\.db)$"
+  ],
+  "classifiers": [
+    {
+      "class": "DocumentationFile",
+      "regex": "(?i)^README(\\.(md|rst|txt))?$"
+    },
+    {
+      "class": "LicenseFile",
+      "regex": "(?i)^(LICENSE|COPYING|COPYRIGHT)(\\.(md|txt))?$"
+    },
+    {
+      "class": "DocumentationFile",
+      "regex": "(?i)^(CONTRIBUTING|CHANGELOG|HISTORY|SECURITY|CODE_OF_CONDUCT)(\\.(md|rst|txt))?$"
+    },
+    {
+      "class": "BuildFile",
+      "regex": "^(package\\.json|package-lock\\.json|yarn\\.lock|pnpm-lock\\.yaml|tsconfig.*\\.json|webpack\\.config\\.js|vite\\.config\\.js|rollup\\.config\\.js|babel\\.config\\.js|\\.babelrc|\\.eslintrc.*|prettier\\.config\\.js|\\.prettierrc|Makefile|pom\\.xml|build\\.gradle|pyproject\\.toml|requirements.*\\.txt|composer\\.json|Gemfile|go\\.mod|Cargo\\.toml)$"
+    },
+    {
+      "class": "Dockerfile",
+      "regex": "(?i)^Dockerfile(\\..*)?$|^docker-compose\\.ya?ml$|\\.dockerignore$"
+    },
+    {
+      "class": "SourceCodeFile",
+      "regex": "^(index|main|mod|__init__|app)\\.(js|ts|py|rs)$|\\.module\\.(js|ts|css)$"
+    },
+    {
+      "class": "StylesheetFile",
+      "regex": "\\.(css|scss|sass|less|styl(us)?|p(ost)?css)$"
+    },
+    {
+      "class": "NotebookFile",
+      "regex": "\\.ipynb$"
+    },
+    {
+      "class": "SourceCodeFile",
+      "regex": "\\.(sql|db|sqlite3?|mdb|accdb|fdb|db-journal|sqlite-wal|sqlite-shm|sh|bash|zsh|ps1|bat|cmd|js|mjs|cjs|jsx|ts|tsx|py|java|go|rs|rb|php|c|cpp|cs|swift|lua|scala|kt|pl|r|h|hpp)$"
+    },
+    {
+      "class": "MarkupFile",
+      "regex": "\\.(html|htm|xml|xhtml|ejs|hbs|handlebars|mustache|njk|twig|liquid|jinja2?|pug|haml|slim|blade\\.php)$"
+    },
+    {
+      "class": "ImageFile",
+      "regex": "(?i)\\.(jpe?g|png|gif|bmp|tiff?|webp|ico|svg|psd|ai|raw|heic|avif)$"
+    },
+    {
+      "class": "VideoFile",
+      "regex": "(?i)\\.(mp4|avi|mov|wmv|flv|webm|mkv)$"
+    },
+    {
+      "class": "AudioFile",
+      "regex": "(?i)\\.(mp3|wav|ogg|flac|aac|wma)$"
+    },
+    {
+      "class": "FontFile",
+      "regex": "(?i)\\.(woff2?|ttf|otf|eot)$"
+    },
+    {
+      "class": "ThreeDimensionalModelFile",
+      "regex": "(?i)\\.(glb|gltf|fbx|obj|stl|blend)$"
+    },
+    {
+      "class": "UserInterfaceDesignFile",
+      "regex": "(?i)\\.(fig|sketch|xd|psd|ai)$"
+    },
+    {
+      "class": "ArchiveFile",
+      "regex": "\\.(zip|rar|7z|tar|gz|bz2|xz)$"
+    },
+    {
+      "class": "ConfigurationFile",
+      "regex": "\\.(jsonc?|ya?ml|toml|ini|cfg|conf|config|properties)$|^\\.env(\\..*)?$"
+    },
+    {
+      "class": "LogFile",
+      "regex": "\\.log$"
+    },
+    {
+      "class": "DocumentationFile",
+      "regex": "\\.(md|markdown|rst|txt|pdf|docx?|odt|tex|adoc)$"
+    },
+    {
+      "class": "ConfigurationFile",
+      "regex": "^\\.(git|editor|prettier|eslint|npm)ignore$|^\\.(gitattributes|nvmrc|mailmap|gitmodules|gitkeep)$"
+    }
+  ]
+}
