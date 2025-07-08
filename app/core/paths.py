@@ -1,86 +1,190 @@
+"""Path utilities for Semantic Web KMS core modules."""
+
 import os
 import re
+from typing import Optional
 
 from app.core.config import (
     BASIC_FORMAL_ONTOLOGY_PATH,
+    CARRIER_TYPES_PATH,
     CODE_QUERIES_PATH,
     CONTENT_TYPES_PATH,
-    DEFAULT_INPUT_DIR,
     EXCLUDED_DIRECTORIES_PATH,
-    FILE_EXTENSIONS_PATH,
     LANGUAGE_MAPPING_PATH,
     LOG_DIR,
     MODEL_DIR,
+    ONTOLOGY_CACHE_FILENAME,
     OUTPUT_DIR,
     WEB_DEV_ONTOLOGY_PATH,
 )
 
+_current_input_dir: Optional[str] = None
+
+
+def set_input_dir(path: str) -> None:
+    """
+    Set the current input directory for extractors to use.
+
+    Args:
+        path (str): The input directory path to set.
+    Returns:
+        None
+    """
+    global _current_input_dir
+    _current_input_dir = path
+
+
+def get_input_dir() -> str:
+    """
+    Get the current input directory. Must be set by set_input_dir() before use.
+
+    Returns:
+        str: The input directory to use.
+
+    Raises:
+        RuntimeError: If the input directory has not been set.
+    """
+    if _current_input_dir is None:
+        raise RuntimeError(
+            "Input directory not set. Call set_input_dir(path) before using get_input_dir()."
+        )
+    return _current_input_dir
+
 
 def get_output_path(filename: str) -> str:
-    """Return the absolute path for a file in the output directory."""
+    """
+    Return the absolute path for a file in the output directory.
+
+    Args:
+        filename (str): The name of the file.
+
+    Returns:
+        str: The absolute path to the file in the output directory.
+    """
     return os.path.join(OUTPUT_DIR, filename)
 
 
 def get_log_path(filename: str) -> str:
-    """Return the absolute path for a file in the logs directory."""
+    """
+    Return the absolute path for a file in the logs directory.
+
+    Args:
+        filename (str): The name of the log file.
+
+    Returns:
+        str: The absolute path to the log file in the logs directory.
+    """
     return os.path.join(LOG_DIR, filename)
 
 
-def get_language_mapping_path():
-    """Return the path to language_mapping.json."""
+def get_language_mapping_path() -> str:
+    """
+    Return the path to language_mapping.json.
+
+    Returns:
+        str: The path to the language mapping JSON file.
+    """
     return LANGUAGE_MAPPING_PATH
 
 
-def get_code_queries_path():
-    """Return the path to code_queries.json."""
+def get_code_queries_path() -> str:
+    """
+    Return the path to code_queries.json.
+
+    Returns:
+        str: The path to the code queries JSON file.
+    """
     return CODE_QUERIES_PATH
 
 
-def get_file_extensions_path():
-    """Return the path to file_extensions.json."""
-    return FILE_EXTENSIONS_PATH
+def get_file_extensions_path() -> str:
+    """
+    Return the path to file_extensions.json.
+
+    Returns:
+        str: The path to the file extensions JSON file.
+    """
+    return CARRIER_TYPES_PATH
 
 
-def get_excluded_directories_path():
-    """Return the path to excluded_directories.json."""
+def get_excluded_directories_path() -> str:
+    """
+    Return the path to excluded_directories.json.
+
+    Returns:
+        str: The path to the excluded directories JSON file.
+    """
     return EXCLUDED_DIRECTORIES_PATH
 
 
-def get_content_types_path():
-    """Return the path to content_types.json."""
+def get_content_types_path() -> str:
+    """
+    Return the path to content_types.json.
+
+    Returns:
+        str: The path to the content types JSON file.
+    """
     return CONTENT_TYPES_PATH
 
 
-def get_web_dev_ontology_path():
-    """Return the path to web_development_ontology.owl."""
+def get_web_dev_ontology_path() -> str:
+    """
+    Return the path to web_development_ontology.owl.
+
+    Returns:
+        str: The path to the web development ontology OWL file.
+    """
     return WEB_DEV_ONTOLOGY_PATH
 
 
-def get_basic_formal_ontology_path():
-    """Return the path to basic_formal_ontology.owl."""
+def get_basic_formal_ontology_path() -> str:
+    """
+    Return the path to basic_formal_ontology.owl.
+
+    Returns:
+        str: The path to the basic formal ontology OWL file.
+    """
     return BASIC_FORMAL_ONTOLOGY_PATH
 
 
 def get_model_path(filename: str) -> str:
-    """Return the absolute path for a file in the model directory."""
+    """
+    Return the absolute path for a file in the model directory.
+
+    Args:
+        filename (str): The name of the file.
+
+    Returns:
+        str: The absolute path to the file in the model directory.
+    """
     return os.path.join(MODEL_DIR, filename)
 
 
 def get_input_path(filename: str) -> str:
-    """Return the absolute path for a file in the input directory."""
-    return os.path.join(DEFAULT_INPUT_DIR, filename)
+    """
+    Return the absolute path for a file in the input directory.
+
+    Args:
+        filename (str): The name of the file.
+
+    Returns:
+        str: The absolute path to the file in the input directory.
+
+    Raises:
+        RuntimeError: If the input directory has not been set.
+    """
+    return os.path.join(get_input_dir(), filename)
 
 
 def uri_safe_string(text: str) -> str:
-    """Convert a string to URI-safe format by replacing problematic characters with underscores.
-
-    This replaces URL encoding with a more readable underscore-based approach.
+    """
+    Convert a string to URI-safe format by replacing problematic characters with underscores.
 
     Args:
-        text (str): The input string to make URI-safe
+        text (str): The input string to convert.
 
     Returns:
-        str: URI-safe string with problematic characters replaced by underscores
+        str: The URI-safe version of the input string.
     """
     if not text:
         return ""
@@ -97,3 +201,28 @@ def uri_safe_string(text: str) -> str:
     uri_safe = uri_safe.strip("_")
 
     return uri_safe
+
+
+def get_carrier_types_path() -> str:
+    """
+    Return the absolute path to the carrier_types.json file.
+
+    Returns:
+        str: The absolute path to the carrier types JSON file.
+    """
+    return os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        "model",
+        "carrier_types.json",
+    )
+
+
+def get_ontology_cache_path() -> str:
+    """
+    Return the full path to the ontology cache JSON file.
+
+    Returns:
+        str: The full path to the ontology cache JSON file.
+    """
+    ontology_path = get_web_dev_ontology_path()
+    return os.path.join(os.path.dirname(ontology_path), ONTOLOGY_CACHE_FILENAME)
