@@ -1,3 +1,5 @@
+"""Flask API server for Semantic Web KMS."""
+
 import os
 from typing import Any, Dict, List, cast
 
@@ -28,7 +30,22 @@ DASHBOARD_QUERIES = {
 
 
 def run_dashboard_sparql(query: str) -> Any:
-    """Run a SPARQL query against the AllegroGraph endpoint and return the JSON result as a dictionary."""
+    """
+    Run a SPARQL query against the AllegroGraph endpoint and return the JSON result as a dictionary.
+
+    Args:
+        query (str): The SPARQL query string to execute.
+
+    Returns:
+        dict: The JSON-decoded response from the AllegroGraph endpoint.
+
+    Raises:
+        requests.HTTPError: If the HTTP request to the endpoint fails.
+        Exception: For other unexpected errors during the request.
+
+    Side Effects:
+        Sends a POST request to the AllegroGraph server.
+    """
     agraph_endpoint = (
         f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"  # AllegroGraph REST API endpoint
     )
@@ -39,6 +56,7 @@ def run_dashboard_sparql(query: str) -> Any:
         data={"query": query},
         headers=headers,
         auth=auth,
+        timeout=30,  # 30 second timeout
     )
     resp.raise_for_status()
     return resp.json()
@@ -47,7 +65,18 @@ def run_dashboard_sparql(query: str) -> Any:
 @app.route("/api/dashboard_stats", methods=["GET"])
 @cache.cached()
 def dashboard_stats() -> Any:
-    """Return dashboard statistics by running predefined SPARQL queries and aggregating the results."""
+    """
+    Return dashboard statistics by running predefined SPARQL queries and aggregating the results.
+
+    Returns:
+        flask.Response: A JSON response containing dashboard statistics as key-value pairs.
+
+    Raises:
+        Exception: If a SPARQL query fails, an exception may be raised by run_dashboard_sparql.
+
+    Side Effects:
+        Caches the response for improved performance.
+    """
     results: Dict[str, int] = {}
     for key, query in DASHBOARD_QUERIES.items():
         data: Dict[str, Any] = run_dashboard_sparql(query)
@@ -66,7 +95,24 @@ def dashboard_stats() -> Any:
 
 @app.route("/api/sparql", methods=["POST"])
 def sparql_query():
-    """Handle a POST request to execute a SPARQL query and return the results as JSON."""
+    """
+    Handle a POST request to execute a SPARQL query and return the results as JSON.
+
+    Returns:
+        flask.Response: A JSON response containing the SPARQL query results or an error message.
+
+    Raises:
+        None. All exceptions are handled and returned as error responses.
+
+    Request JSON:
+        {
+            "query": "SPARQL query string"
+        }
+
+    Response JSON:
+        On success: SPARQL query results as JSON.
+        On error: {"error": "error message"}
+    """
     data = request.get_json()
     query = data.get("query")
     if not query:
@@ -75,7 +121,7 @@ def sparql_query():
     headers = {"Accept": "application/sparql-results+json"}
     auth = (AGRAPH_USER, AGRAPH_PASS) if AGRAPH_USER and AGRAPH_PASS else None
     resp = requests.post(
-        agraph_endpoint, data={"query": query}, headers=headers, auth=auth
+        agraph_endpoint, data={"query": query}, headers=headers, auth=auth, timeout=30
     )
     if resp.status_code == 200:
         return jsonify(resp.json())
@@ -84,4 +130,9 @@ def sparql_query():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Read host, port, and debug mode from environment variables, with sensible defaults
+    host = os.environ.get("API_HOST", "127.0.0.1")
+    port = int(os.environ.get("API_PORT", 5000))
+    debug = os.environ.get("API_DEBUG", "true").lower() == "true"
+
+    app.run(host=host, port=port, debug=debug)
