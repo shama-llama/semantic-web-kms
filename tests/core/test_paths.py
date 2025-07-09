@@ -33,7 +33,7 @@ def test_get_code_queries_path():
 
 def test_get_file_extensions_path():
     """Test get_file_extensions_path returns correct path."""
-    assert paths.get_file_extensions_path() == paths.CARRIER_TYPES_PATH
+    assert paths.get_carrier_extensions_path() == paths.CARRIER_TYPES_PATH
 
 
 def test_get_excluded_directories_path():
@@ -54,13 +54,6 @@ def test_get_web_dev_ontology_path():
 def test_get_basic_formal_ontology_path():
     """Test get_basic_formal_ontology_path returns correct path."""
     assert paths.get_basic_formal_ontology_path() == paths.BASIC_FORMAL_ONTOLOGY_PATH
-
-
-def test_get_model_path():
-    """Test get_model_path returns correct path."""
-    filename = "model.owl"
-    result = paths.get_model_path(filename)
-    assert result.endswith(os.path.join(paths.MODEL_DIR, filename))
 
 
 def test_get_input_path(tmp_path):
@@ -90,7 +83,7 @@ def test_uri_safe_string():
 def test_get_carrier_types_path():
     """Test get_carrier_types_path returns correct path."""
     result = paths.get_carrier_types_path()
-    assert result.endswith(os.path.join("model", "carrier_types.json"))
+    assert result.endswith(os.path.join("mappings", "carrier_types.json"))
 
 
 def test_get_ontology_cache_path():

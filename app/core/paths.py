@@ -12,7 +12,7 @@ from app.core.config import (
     EXCLUDED_DIRECTORIES_PATH,
     LANGUAGE_MAPPING_PATH,
     LOG_DIR,
-    MODEL_DIR,
+    MAPPINGS_DIR,
     ONTOLOGY_CACHE_FILENAME,
     OUTPUT_DIR,
     WEB_DEV_ONTOLOGY_PATH,
@@ -49,6 +49,22 @@ def get_input_dir() -> str:
             "Input directory not set. Call set_input_dir(path) before using get_input_dir()."
         )
     return _current_input_dir
+
+
+def get_input_path(filename: str) -> str:
+    """
+    Return the absolute path for a file in the input directory.
+
+    Args:
+        filename (str): The name of the file.
+
+    Returns:
+        str: The absolute path to the file in the input directory.
+
+    Raises:
+        RuntimeError: If the input directory has not been set.
+    """
+    return os.path.join(get_input_dir(), filename)
 
 
 def get_output_path(filename: str) -> str:
@@ -97,7 +113,7 @@ def get_code_queries_path() -> str:
     return CODE_QUERIES_PATH
 
 
-def get_file_extensions_path() -> str:
+def get_carrier_extensions_path() -> str:
     """
     Return the path to file_extensions.json.
 
@@ -147,33 +163,24 @@ def get_basic_formal_ontology_path() -> str:
     return BASIC_FORMAL_ONTOLOGY_PATH
 
 
-def get_model_path(filename: str) -> str:
+def get_carrier_types_path() -> str:
     """
-    Return the absolute path for a file in the model directory.
-
-    Args:
-        filename (str): The name of the file.
+    Return the absolute path to the carrier_types.json file.
 
     Returns:
-        str: The absolute path to the file in the model directory.
+        str: The absolute path to the carrier types JSON file.
     """
-    return os.path.join(MODEL_DIR, filename)
+    return os.path.join(MAPPINGS_DIR, "carrier_types.json")
 
 
-def get_input_path(filename: str) -> str:
+def get_ontology_cache_path() -> str:
     """
-    Return the absolute path for a file in the input directory.
-
-    Args:
-        filename (str): The name of the file.
+    Return the full path to the ontology cache JSON file.
 
     Returns:
-        str: The absolute path to the file in the input directory.
-
-    Raises:
-        RuntimeError: If the input directory has not been set.
+        str: The full path to the ontology cache JSON file.
     """
-    return os.path.join(get_input_dir(), filename)
+    return os.path.join(MAPPINGS_DIR, ONTOLOGY_CACHE_FILENAME)
 
 
 def uri_safe_string(text: str) -> str:
@@ -201,28 +208,3 @@ def uri_safe_string(text: str) -> str:
     uri_safe = uri_safe.strip("_")
 
     return uri_safe
-
-
-def get_carrier_types_path() -> str:
-    """
-    Return the absolute path to the carrier_types.json file.
-
-    Returns:
-        str: The absolute path to the carrier types JSON file.
-    """
-    return os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "model",
-        "carrier_types.json",
-    )
-
-
-def get_ontology_cache_path() -> str:
-    """
-    Return the full path to the ontology cache JSON file.
-
-    Returns:
-        str: The full path to the ontology cache JSON file.
-    """
-    ontology_path = get_web_dev_ontology_path()
-    return os.path.join(os.path.dirname(ontology_path), ONTOLOGY_CACHE_FILENAME)
