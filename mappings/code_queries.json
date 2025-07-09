@@ -46,10 +46,10 @@
       "(class_declaration name: (identifier) @name) @class"
     ],
     "EnumDefinition": [
-      "(enum_declaration name: (identifier) @name) @enum"
+      "(lexical_declaration (variable_declarator name: (identifier) @name value: (object))) @enum"
     ],
     "AttributeDeclaration": [
-      "(field_definition name: (property_identifier) @attr) @attribute"
+      "(method_definition name: (property_identifier) @attr) @attribute"
     ],
     "VariableDeclaration": [
       "[(lexical_declaration (variable_declarator name: (identifier) @name)) (variable_declaration (variable_declarator name: (identifier) @name))] @variable"
@@ -163,7 +163,7 @@
       "(local_declaration_statement (variable_declaration (variable_declarator (identifier) @name))) @variable"
     ],
     "FunctionCall": [
-      "(invocation_expression expression: [(identifier) @func (member_access_expression name: (identifier) @func)])"
+      "(invocation_expression (member_access_expression name: (identifier) @func) @call)"
     ],
     "ImportDeclaration": [
       "(using_directive) @import"
