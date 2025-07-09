@@ -1,20 +1,13 @@
-# essential:
-Flask>=2.0.0
-flask-cors>=3.0.10
+# Production dependencies
 rdflib==7.1.4
-requests==2.32.4
+rich==13.7.1
+gitpython==3.1.44
 tree-sitter==0.21.3
 tree-sitter-languages==1.10.2
-PyYAML==6.0.1
-toml==0.10.2
-xmltodict==0.13.0
-Pillow==10.3.0
-rich==13.7.1
-GitPython==3.1.44
-Flask-Caching
-
-# document/NLP/HTML extraction:
-pdfminer.six==20250506
+markdown-it-py==3.0.0
+requests==2.32.4
+flask==3.1.1
+flask-caching==2.3.1
+flask-cors==6.0.1
 spacy==3.8.7
-python-magic==0.4.27
-beautifulsoup4==4.13.4
+Pillow==10.3.0
