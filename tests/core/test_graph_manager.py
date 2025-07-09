@@ -7,11 +7,12 @@ from rdflib import Namespace, URIRef
 
 from app.core.graph_manager import GraphManager
 
+
 class DummyOntology:
     """A minimal ontology mock with namespaces for testing."""
-    namespaces = {
-        "ex": Namespace("http://example.org/")
-    }
+
+    namespaces = {"ex": Namespace("http://example.org/")}
+
 
 def test_add_triple_and_stats():
     """Test adding a triple and retrieving graph statistics."""
@@ -27,6 +28,7 @@ def test_add_triple_and_stats():
     assert stats["predicates"] == 1
     assert stats["objects"] == 1
 
+
 def test_serialize(tmp_path):
     """Test serializing the graph to a Turtle file."""
     ontology = DummyOntology()
@@ -40,7 +42,8 @@ def test_serialize(tmp_path):
     assert out_path.exists()
     content = out_path.read_text()
     assert "@prefix ex:" in content or "http://example.org/" in content
-    assert "subject" in content and "predicate" in content and "object" in content 
+    assert "subject" in content and "predicate" in content and "object" in content
+
 
 def test_empty_graph_stats():
     """Test stats on an empty graph."""
@@ -81,4 +84,4 @@ def test_serialize_invalid_format(tmp_path):
     gm = GraphManager(ontology)
     out_path = tmp_path / "graph.invalid"
     with pytest.raises(Exception):
-        gm.serialize(str(out_path), fmt="invalidformat") 
+        gm.serialize(str(out_path), fmt="invalidformat")
