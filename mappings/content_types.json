@@ -52,6 +52,10 @@
       "regex": "(?i)(schema|tables|structure)\\.sql$|\\.dbml$"
     },
     {
+      "class": "DatabaseSchema",
+      "regex": "\\.db$"
+    },
+    {
       "class": "SQLCode",
       "regex": "(?i)/migrations?/.*\\.sql$|^(V|U)[0-9]+__.*\\.sql$"
     },

@@ -28,20 +28,12 @@
       "regex": "(?i)^Dockerfile(\\..*)?$|^docker-compose\\.ya?ml$|\\.dockerignore$"
     },
     {
-      "class": "SourceCodeFile",
-      "regex": "^(index|main|mod|__init__|app)\\.(js|ts|py|rs)$|\\.module\\.(js|ts|css)$"
-    },
-    {
       "class": "StylesheetFile",
       "regex": "\\.(css|scss|sass|less|styl(us)?|p(ost)?css)$"
     },
     {
       "class": "NotebookFile",
       "regex": "\\.ipynb$"
-    },
-    {
-      "class": "SourceCodeFile",
-      "regex": "\\.(sql|db|sqlite3?|mdb|accdb|fdb|db-journal|sqlite-wal|sqlite-shm|sh|bash|zsh|ps1|bat|cmd|js|mjs|cjs|jsx|ts|tsx|py|java|go|rs|rb|php|c|cpp|cs|swift|lua|scala|kt|pl|r|h|hpp)$"
     },
     {
       "class": "MarkupFile",
@@ -90,6 +82,26 @@
     {
       "class": "ConfigurationFile",
       "regex": "^\\.(git|editor|prettier|eslint|npm)ignore$|^\\.(gitattributes|nvmrc|mailmap|gitmodules|gitkeep)$"
+    },
+    {
+      "class": "ConfigurationFile",
+      "regex": "^\\.editorconfig$|^\\.jshintrc$|^\\.bowerrc$|^\\.browserslistrc$|^pre-commit$"
+    },
+    {
+      "class": "BuildFile",
+      "regex": "^\\.buildignore$|\\.sln$|\\.csproj$|\\.props$|Directory\\.(Build|Packages)\\.props$"
+    },
+    {
+      "class": "SourceCodeFile",
+      "regex": "\\.(sql|db|sqlite3?|mdb|accdb|fdb|db-journal|sqlite-wal|sqlite-shm|sh|bash|zsh|ps1|bat|cmd|js|mjs|cjs|jsx|ts|tsx|py|java|go|rs|rb|php|c|cpp|cs|swift|lua|scala|kt|pl|r|h|hpp)$"
+    },
+    {
+      "class": "SourceCodeFile",
+      "regex": "^(index|main|mod|__init__|app)\\.(js|ts|py|rs)$|\\.module\\.(js|ts|css)$"
+    },
+    {
+      "class": "SourceCodeFile",
+      "regex": "api-test\\.http$"
     }
   ]
 }
