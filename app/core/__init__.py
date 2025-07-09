@@ -1,4 +1,5 @@
 """Core package for Semantic Web KMS."""
+
 # Centralized user-facing messages and error strings
 MESSAGES = {
     "file_not_found": "File not found: {path}",
