@@ -17,6 +17,7 @@ ENV/
 logs/
 output/
 *.log
+.outdir/
 
 # Environment/config
 .env
@@ -43,6 +44,9 @@ dist/
 *.egg
 *.whl
 
+# Frontend build artifacts
+static/ 
+
 # Test/coverage
 .coverage
 htmlcov/
@@ -58,6 +62,3 @@ model/*.bak
 *.swp
 *.bak
 *.tmp
-
-# Project-specific
-scripts/
