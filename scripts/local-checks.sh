@@ -74,7 +74,7 @@ source .venv/bin/activate
 print_status "Installing backend dependencies..."
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
-pip install -q pytest pytest-cov flake8 mypy black isort pydocstyle vulture pyright safety build
+pip install -q pytest pytest-cov flake8 mypy black isort pydocstyle vulture pyright pip-audit bandit build
 
 # Results summary associative array
 # Requires Bash 4+
@@ -176,13 +176,22 @@ fi
 echo ""
 print_header "BACKEND SECURITY"
 print_step "Running backend security checks..."
-print_status "Checking Python dependencies for vulnerabilities..."
-if safety check; then
-    print_success "No security vulnerabilities found in Python dependencies"
-    CHECK_RESULTS[backend_security]="SUCCESS"
+print_status "Checking Python dependencies for vulnerabilities with pip-audit..."
+if pip-audit; then
+    print_success "No security vulnerabilities found in Python dependencies (pip-audit)"
+    CHECK_RESULTS[backend_security_pip_audit]="SUCCESS"
 else
-    print_warning "Security vulnerabilities found in Python dependencies"
-    CHECK_RESULTS[backend_security]="FAIL"
+    print_warning "Security vulnerabilities found in Python dependencies (pip-audit)"
+    CHECK_RESULTS[backend_security_pip_audit]="FAIL"
+fi
+
+print_status "Running Bandit static code analysis..."
+if bandit -r app/ --quiet; then
+    print_success "No issues found by Bandit in backend code"
+    CHECK_RESULTS[backend_bandit]="SUCCESS"
+else
+    print_warning "Potential security issues found by Bandit in backend code"
+    CHECK_RESULTS[backend_bandit]="FAIL"
 fi
 
 # Frontend checks
