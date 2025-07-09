@@ -12,21 +12,33 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    "rdflib>=6.0.0",
-    "rich>=13.0.0",
-    "gitpython>=3.1.0",
-    "tree-sitter-languages>=1.0.0",
-    "markdown-it-py>=3.0.0",
+    "rdflib==7.1.4",
+    "rich==13.7.1",
+    "gitpython==3.1.44",
+    "tree-sitter-languages==1.10.2",
+    "markdown-it-py==3.0.0",
+    "requests==2.32.4",
+    "flask==3.1.1",
+    "flask-caching==2.3.1",
+    "flask-cors==6.0.1",
+    "spacy==3.8.7",
+    "pillow==10.3.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "flake8>=6.0.0",
-    "pydocstyle>=6.3.0",
-    "mypy>=1.0.0",
-    "vulture>=2.0.0",
+    "pytest==8.4.1",
+    "pytest-cov==6.2.1",
+    "flake8==7.3.0",
+    "mypy==1.16.1",
+    "black==25.1.0",
+    "isort==6.0.1",
+    "pydocstyle==6.3.0",
+    "vulture==2.14",
+    "pyright==1.1.402",
+    "pip-audit==2.9.0",
+    "bandit==1.8.6",
+    "build==1.2.2.post1",
 ]
 
 # Black configuration
@@ -96,3 +108,7 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ] 
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["tests*", "scripts*", "docs*", "portal*", "mappings*", "model*", "output*", "logs*", "test_data*", "ontologies*"] 

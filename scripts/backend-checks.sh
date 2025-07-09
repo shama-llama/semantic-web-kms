@@ -61,16 +61,29 @@ fi
 print_status "Installing backend dependencies..."
 pip install -q --upgrade pip
 pip install -q -r requirements.txt
-pip install -q pytest pytest-cov flake8 mypy black isort pydocstyle vulture pyright
+pip install -q pytest pytest-cov flake8 mypy black isort pydocstyle vulture pyright build
+
+# Initialize results tracking
+declare -A CHECK_RESULTS
+
+# Build step
+echo ""
+print_header "BUILD CHECKS"
+print_step "Running build checks..."
+
+print_status "Checking if package can be built..."
+if python -m build; then
+    print_success "Package build successful"
+    CHECK_RESULTS[build]="SUCCESS"
+else
+    print_error "Package build failed"
+    CHECK_RESULTS[build]="FAIL"
+fi
 
 # Quick linting checks
 echo ""
 print_header "LINTING CHECKS"
 print_step "Running quick linting checks..."
-
-# Results summary associative array
-# Requires Bash 4+
-declare -A CHECK_RESULTS
 
 print_status "Running black check..."
 if black --check app/; then

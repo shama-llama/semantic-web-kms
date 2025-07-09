@@ -1,21 +1,13 @@
-# Development, linting, and testing dependencies for this project
-# Install with: pip install -r requirements-dev.txt
-
-# Linting/formatting
-black==25.1.0
-isort==6.0.1
+# Development requirements for backend
+pytest==8.4.1
+pytest-cov==6.2.1
 flake8==7.3.0
 mypy==1.16.1
+black==25.1.0
+isort==6.0.1
 pydocstyle==6.3.0
 vulture==2.14
 pyright==1.1.402
-
-# Testing
-pytest==8.4.1
-pytest-cov==6.2.1
-
-# Security
-safety==3.5.2
-
-# Build
-build==1.2.2.post1 
+pip-audit==2.9.0
+bandit==1.8.6
+build==1.2.2.post1

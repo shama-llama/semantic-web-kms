@@ -63,22 +63,36 @@ else
     source .venv/bin/activate
 fi
 
-# Install safety if not already installed
-print_status "Installing safety..."
-pip install -q safety
+# Install pip-audit if not already installed
+print_status "Installing pip-audit..."
+pip install -q pip-audit
+
+# Install bandit if not already installed
+print_status "Installing bandit..."
+pip install -q bandit
 
 # Results summary associative array
 # Requires Bash 4+
 declare -A CHECK_RESULTS
 
-print_status "Checking Python dependencies for vulnerabilities..."
-if safety check; then
-    print_success "No security vulnerabilities found in Python dependencies"
-    CHECK_RESULTS[backend_security]="SUCCESS"
+print_status "Checking Python dependencies for vulnerabilities with pip-audit..."
+if pip-audit; then
+    print_success "No security vulnerabilities found in Python dependencies (pip-audit)"
+    CHECK_RESULTS[backend_security_pip_audit]="SUCCESS"
 else
-    print_warning "Security vulnerabilities found in Python dependencies"
-    print_status "Run 'safety check' for details"
-    CHECK_RESULTS[backend_security]="FAIL"
+    print_warning "Security vulnerabilities found in Python dependencies (pip-audit)"
+    print_status "Run 'pip-audit' for details"
+    CHECK_RESULTS[backend_security_pip_audit]="FAIL"
+fi
+
+print_status "Running Bandit static code analysis..."
+if bandit -r app/ --quiet; then
+    print_success "No issues found by Bandit in backend code"
+    CHECK_RESULTS[backend_bandit]="SUCCESS"
+else
+    print_warning "Potential security issues found by Bandit in backend code"
+    print_status "Run 'bandit -r app/' for details"
+    CHECK_RESULTS[backend_bandit]="FAIL"
 fi
 
 # Frontend security checks

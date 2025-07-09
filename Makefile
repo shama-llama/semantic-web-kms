@@ -60,7 +60,7 @@ test:
 	@echo "\033[1;36mRunning tests...\033[0m"
 	@echo "Backend tests..."
 	@if [ -d ".venv" ]; then source .venv/bin/activate; fi
-	@pytest --cov=app --cov-report=term-missing
+	PYTHONPATH=. pytest --maxfail=3 --disable-warnings -q
 	@echo "Frontend tests..."
 	@cd portal && npm run test:run
 	@echo "\033[0;32mAll tests passed!\033[0m"
