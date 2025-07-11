@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <uri name="http://purl.obolibrary.org/obo/bfo/" uri="bfo.owl"/>
+    <uri name="http://purl.org/dc/terms/" uri="dcterms.owl"/>
+    <uri name="http://usefulinc.com/ns/doap#" uri="doap.owl"/>
+    <uri name="http://xmlns.com/foaf/0.1/" uri="foaf.owl"/>
+    <uri name="https://schema.org/" uri="schema.owl"/>
+    <uri name="http://semantic-web-kms.edu.et/wdo/" uri="wdo.owl"/>
+</catalog>
