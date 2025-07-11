@@ -8,21 +8,24 @@
      xmlns:wdo="http://semantic-web-kms.edu.et/wdo#"
      xmlns:xml="http://www.w3.org/XML/1998/namespace"
      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:doap="http://usefulinc.com/ns/doap#"
+     xmlns:foaf="http://xmlns.com/foaf/0.1/"
      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
-     xmlns:terms="http://purl.org/dc/terms/">
+     xmlns:terms="http://purl.org/dc/terms/"
+     xmlns:schema="https://schema.org/">
     <owl:Ontology rdf:about="http://semantic-web-kms.edu.et/wdo/">
         <owl:versionIRI rdf:resource="http://semantic-web-kms.edu.et/wdo/1.0.0"/>
         <owl:imports rdf:resource="http://purl.obolibrary.org/obo/bfo/2020/bfo-core.owl"/>
         <dc:creator xml:lang="en">Group One, CoSc 6232 (Spring 2025)</dc:creator>
-        <dc:description xml:lang="en">An ontology designed to support semantic-based explicit knowledge management for web development projects. WDO provides a structured vocabulary for representing artifacts extracted from local repositories, including codebase components (classes, functions, attributes), documentation, licensing information, READMEs, best practices, and various digital assets. Its goal is to facilitate the organization, retrieval, and understanding of explicit knowledge within web development lifecycles.</dc:description>
+        <dc:description xml:lang="en">An ontology designed to support semantic-based explicit knowledge management for web development projects. WDO provides a structured vocabulary for representing artifacts like codebase components (classes, functions, attributes), documentation, licensing information, READMEs, best practices, and various digital assets extracted from local repositories or github oranizations. Its goal is to simplify the management, retrieval, and understanding of explicit knowledge within web development projects.</dc:description>
         <dc:identifier>WDO</dc:identifier>
         <dc:publisher xml:lang="en">Department of Computer Science, Addis Ababa University</dc:publisher>
-        <dc:rights xml:lang="en">This ontology is made available under the Creative Commons Attribution 4.0 International (CC BY 4.0) license.</dc:rights>
-        <dc:title xml:lang="en">Web Development Ontology (WDO) for Knowledge Management</dc:title>
-        <rdfs:comment xml:lang="en">Web Development Ontology (WDO) is aligned with Basic Formal Ontology (BFO) 2020 (http://purl.obolibrary.org/obo/bfo/2020/bfo-core.owl) as its top-level ontology and incorporates and adapts concepts from ontologies like DoCO and CodeOntology where relevant to the web development domain. This version has been extended to include more specific types of file carriers and content entities, and has been refined for greater formal correctness.</rdfs:comment>
+        <dc:rights xml:lang="en">MIT License</dc:rights>
+        <dc:title xml:lang="en">Web Development Ontology</dc:title>
+        <rdfs:comment xml:lang="en">Web Development Ontology (WDO) is aligned with Basic Formal Ontology (BFO) 2020 (http://purl.obolibrary.org/obo/bfo/2020/bfo-core.owl) as its top-level ontology and adapts concepts from DoCO and CodeOntology where relevant to the web development domain.</rdfs:comment>
         <rdfs:seeAlso rdf:resource="https://github.com/shama-llama/semantic-web-kms"/>
-        <owl:versionInfo xml:lang="en">Version 1.0.0 - First fully working version.</owl:versionInfo>
+        <owl:versionInfo xml:lang="en">1.0.0</owl:versionInfo>
     </owl:Ontology>
     
 
@@ -86,16 +89,6 @@
     
 
 
-    <!-- http://semantic-web-kms.edu.et/wdo#sourceRepositoryURL -->
-
-    <owl:AnnotationProperty rdf:about="http://semantic-web-kms.edu.et/wdo#sourceRepositoryURL">
-        <rdfs:label xml:lang="en">source repository URL</rdfs:label>
-        <skos:definition xml:lang="en">An annotation property to specify the URL or path of the local repository from which an artifact was extracted.</skos:definition>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#anyURI"/>
-    </owl:AnnotationProperty>
-    
-
-
     <!-- http://www.w3.org/2000/01/rdf-schema#comment -->
 
     <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#comment"/>
@@ -154,7 +147,14 @@
     <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#accesses">
         <owl:inverseOf rdf:resource="http://semantic-web-kms.edu.et/wdo#isAccessedBy"/>
         <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#FunctionDefinition"/>
-        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#AttributeDeclaration"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#AttributeDeclaration"/>
+                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#VariableDeclaration"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:range>
         <dc:identifier>WDO_OP:0000021</dc:identifier>
         <rdfs:label xml:lang="en">accesses</rdfs:label>
         <skos:definition xml:lang="en">A relation indicating that a function or method reads from or writes to a variable, attribute, or field.</skos:definition>
@@ -202,6 +202,31 @@
     
 
 
+    <!-- http://semantic-web-kms.edu.et/wdo#committed -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#committed">
+        <owl:inverseOf rdf:resource="http://semantic-web-kms.edu.et/wdo#committedBy"/>
+        <rdfs:domain rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#Commit"/>
+        <dc:identifier>WDO_OP:0000121</dc:identifier>
+        <rdfs:label xml:lang="en">committed</rdfs:label>
+        <skos:definition xml:lang="en">A relation linking a person to the commits they have performed as committer.</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://semantic-web-kms.edu.et/wdo#committedBy -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#committedBy">
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#Commit"/>
+        <rdfs:range rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+        <dc:identifier>WDO_OP:0000120</dc:identifier>
+        <rdfs:label xml:lang="en">committed by</rdfs:label>
+        <skos:definition xml:lang="en">A relation linking a commit to the person who performed the commit operation (committer in Git).</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
     <!-- http://semantic-web-kms.edu.et/wdo#compiles -->
 
     <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#compiles">
@@ -224,6 +249,19 @@
         <dc:identifier>WDO_OP:0000006</dc:identifier>
         <rdfs:label xml:lang="en">conforms to guideline</rdfs:label>
         <skos:definition xml:lang="en">A relation indicating that an entity (e.g., SoftwareCode, a process) adheres to a BestPracticeGuideline.</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://semantic-web-kms.edu.et/wdo#contributesTo -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#contributesTo">
+        <owl:inverseOf rdf:resource="http://semantic-web-kms.edu.et/wdo#hasContributor"/>
+        <rdfs:domain rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#Repository"/>
+        <dc:identifier>WDO_OP:0000124</dc:identifier>
+        <rdfs:label xml:lang="en">contributes to</rdfs:label>
+        <skos:definition xml:lang="en">A relation linking a person to a repository or project they have contributed to in any capacity.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -322,6 +360,19 @@
     
 
 
+    <!-- http://semantic-web-kms.edu.et/wdo#hasCodePart -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#hasCodePart">
+        <owl:inverseOf rdf:resource="http://semantic-web-kms.edu.et/wdo#isCodePartOf"/>
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#SoftwareCode"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#CodeConstruct"/>
+        <dc:identifier>WDO_OP:0000130</dc:identifier>
+        <rdfs:label xml:lang="en">has code part</rdfs:label>
+        <skos:definition xml:lang="en">A relation indicating that a software code content entity contains a code construct as one of its parts.</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
     <!-- http://semantic-web-kms.edu.et/wdo#hasCommit -->
 
     <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#hasCommit">
@@ -344,6 +395,18 @@
         <dc:identifier>WDO_OP:0000041</dc:identifier>
         <rdfs:label xml:lang="en">has commit message</rdfs:label>
         <skos:definition xml:lang="en">A relation linking a Commit process to its descriptive CommitMessage entity.</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://semantic-web-kms.edu.et/wdo#hasContributor -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#hasContributor">
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#Repository"/>
+        <rdfs:range rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+        <dc:identifier>WDO_OP:0000125</dc:identifier>
+        <rdfs:label xml:lang="en">has contributor</rdfs:label>
+        <skos:definition xml:lang="en">A relation linking a repository or project to a person who has contributed to it in any capacity.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -439,8 +502,8 @@
         <rdfs:domain>
             <owl:Class>
                 <owl:unionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#WebDevelopmentProject"/>
                     <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#Organization"/>
+                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#WebDevelopmentProject"/>
                 </owl:unionOf>
             </owl:Class>
         </rdfs:domain>
@@ -545,11 +608,18 @@
     <!-- http://semantic-web-kms.edu.et/wdo#isAccessedBy -->
 
     <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#isAccessedBy">
-        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#AttributeDeclaration"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#AttributeDeclaration"/>
+                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#VariableDeclaration"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
         <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#FunctionDefinition"/>
         <dc:identifier>WDO_OP:0000068</dc:identifier>
         <rdfs:label xml:lang="en">is accessed by</rdfs:label>
-        <skos:definition xml:lang="en">A relation from an attribute to the function that accesses it.</skos:definition>
+        <skos:definition xml:lang="en">A relation from an attribute or variable to the function that accesses it.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -625,6 +695,18 @@
         <dc:identifier>WDO_OP:0000066</dc:identifier>
         <rdfs:label xml:lang="en">is called by function at</rdfs:label>
         <skos:definition xml:lang="en">A specific relation from a function to the call site that invokes it.</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://semantic-web-kms.edu.et/wdo#isCodePartOf -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#isCodePartOf">
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#CodeConstruct"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#SoftwareCode"/>
+        <dc:identifier>WDO_OP:0000131</dc:identifier>
+        <rdfs:label xml:lang="en">is code part of</rdfs:label>
+        <skos:definition xml:lang="en">A relation indicating that a code construct is part of a software code content entity.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -863,10 +945,10 @@
     <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#isManipulatedBy">
         <owl:inverseOf rdf:resource="http://semantic-web-kms.edu.et/wdo#manipulates"/>
         <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#HTMLCode"/>
-        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#JavaScriptCode"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#ProgrammingLanguageCode"/>
         <dc:identifier>WDO_OP:0000081</dc:identifier>
         <rdfs:label xml:lang="en">is manipulated by</rdfs:label>
-        <skos:definition xml:lang="en">A relation from an HTML entity to the JavaScript code that manipulates it.</skos:definition>
+        <skos:definition xml:lang="en">A relation from an HTML entity to the programming language code that manipulates it.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -934,6 +1016,19 @@
     
 
 
+    <!-- http://semantic-web-kms.edu.et/wdo#isReferredToByArgument -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#isReferredToByArgument">
+        <owl:inverseOf rdf:resource="http://semantic-web-kms.edu.et/wdo#refersToVariable"/>
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#VariableDeclaration"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#Argument"/>
+        <dc:identifier>WDO_OP:0000102</dc:identifier>
+        <rdfs:label xml:lang="en">is referred to by argument</rdfs:label>
+        <skos:definition xml:lang="en">The inverse relation, linking a VariableDeclaration to Argument nodes that refer to it as an argument at a callsite.</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
     <!-- http://semantic-web-kms.edu.et/wdo#isRepositoryOf -->
 
     <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#isRepositoryOf">
@@ -941,8 +1036,8 @@
         <rdfs:range>
             <owl:Class>
                 <owl:unionOf rdf:parseType="Collection">
-                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#WebDevelopmentProject"/>
                     <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#Organization"/>
+                    <rdf:Description rdf:about="http://semantic-web-kms.edu.et/wdo#WebDevelopmentProject"/>
                 </owl:unionOf>
             </owl:Class>
         </rdfs:range>
@@ -1018,11 +1113,11 @@
     <!-- http://semantic-web-kms.edu.et/wdo#manipulates -->
 
     <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#manipulates">
-        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#JavaScriptCode"/>
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#ProgrammingLanguageCode"/>
         <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#HTMLCode"/>
         <dc:identifier>WDO_OP:0000019</dc:identifier>
         <rdfs:label xml:lang="en">manipulates</rdfs:label>
-        <skos:definition xml:lang="en">A relation indicating that JavaScript code acts on or modifies HTML code, such as through the Document Object Model (DOM).</skos:definition>
+        <skos:definition xml:lang="en">A relation indicating that programming language code acts on or modifies HTML code, such as through the Document Object Model (DOM).</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -1047,6 +1142,18 @@
         <dc:identifier>WDO_OP:0000046</dc:identifier>
         <rdfs:label xml:lang="en">packages into</rdfs:label>
         <skos:definition xml:lang="en">A relation from a build script to the final distributable archive artifact it creates (e.g., a JAR, ZIP, wheel).</skos:definition>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://semantic-web-kms.edu.et/wdo#refersToVariable -->
+
+    <owl:ObjectProperty rdf:about="http://semantic-web-kms.edu.et/wdo#refersToVariable">
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#Argument"/>
+        <rdfs:range rdf:resource="http://semantic-web-kms.edu.et/wdo#VariableDeclaration"/>
+        <dc:identifier>WDO_OP:0000101</dc:identifier>
+        <rdfs:label xml:lang="en">refers to variable</rdfs:label>
+        <skos:definition xml:lang="en">A relation from an Argument node at a callsite to the VariableDeclaration it refers to as an argument value.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -1433,6 +1540,18 @@
     
 
 
+    <!-- http://semantic-web-kms.edu.et/wdo#hasProgrammingLanguage -->
+
+    <owl:DatatypeProperty rdf:about="http://semantic-web-kms.edu.et/wdo#hasProgrammingLanguage">
+        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#ProgrammingLanguageCode"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <dc:identifier>WDO_DP:0000036</dc:identifier>
+        <rdfs:label xml:lang="en">has programming language</rdfs:label>
+        <skos:definition xml:lang="en">A data property that specifies the name of the programming language (e.g., &quot;Java&quot;, &quot;Python&quot;).</skos:definition>
+    </owl:DatatypeProperty>
+    
+
+
     <!-- http://semantic-web-kms.edu.et/wdo#hasRelativePath -->
 
     <owl:DatatypeProperty rdf:about="http://semantic-web-kms.edu.et/wdo#hasRelativePath">
@@ -1610,18 +1729,6 @@
     
 
 
-    <!-- http://semantic-web-kms.edu.et/wdo#programmingLanguage -->
-
-    <owl:DatatypeProperty rdf:about="http://semantic-web-kms.edu.et/wdo#programmingLanguage">
-        <rdfs:domain rdf:resource="http://semantic-web-kms.edu.et/wdo#ProgrammingLanguageCode"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-        <dc:identifier>WDO_DP:0000036</dc:identifier>
-        <rdfs:label xml:lang="en">programming language</rdfs:label>
-        <skos:definition xml:lang="en">A data property that specifies the name of the programming language (e.g., &quot;Java&quot;, &quot;Python&quot;).</skos:definition>
-    </owl:DatatypeProperty>
-    
-
-
     <!-- http://semantic-web-kms.edu.et/wdo#startsAtLine -->
 
     <owl:DatatypeProperty rdf:about="http://semantic-web-kms.edu.et/wdo#startsAtLine">
@@ -1645,10 +1752,19 @@
     
 
 
+    <!-- http://purl.org/dc/terms/LicenseDocument -->
+
+    <owl:Class rdf:about="http://purl.org/dc/terms/LicenseDocument">
+        <owl:equivalentClass rdf:resource="http://semantic-web-kms.edu.et/wdo#License"/>
+    </owl:Class>
+    
+
+
     <!-- http://semantic-web-kms.edu.et/wdo#APIDocumentation -->
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#APIDocumentation">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#Documentation"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/APIReference"/>
         <dc:identifier>WDO:0000081</dc:identifier>
         <rdfs:label xml:lang="en">API Documentation</rdfs:label>
         <skos:definition xml:lang="en">An API Documentation is a type of Documentation that describes an Application Programming Interface (API), including its endpoints, methods, parameters, and return values.</skos:definition>
@@ -1672,6 +1788,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#ArchiveFile">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#DigitalInformationCarrier"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/ArchiveComponent"/>
         <dc:identifier>WDO:0000111</dc:identifier>
         <rdfs:label xml:lang="en">Archive File</rdfs:label>
         <skos:definition xml:lang="en">An Archive File is a Digital Information Carrier that packages and optionally compresses one or more other files into a single file.</skos:definition>
@@ -1680,10 +1797,22 @@
     
 
 
+    <!-- http://semantic-web-kms.edu.et/wdo#Argument -->
+
+    <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Argument">
+        <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#CodeConstruct"/>
+        <dc:identifier>WDO:0000120</dc:identifier>
+        <rdfs:label xml:lang="en">Argument</rdfs:label>
+        <skos:definition xml:lang="en">An Argument is a CodeConstruct representing the use of a value (variable, attribute, or literal) as an argument at a specific function callsite. It may refer to a VariableDeclaration, AttributeDeclaration, or be a literal value.</skos:definition>
+    </owl:Class>
+    
+
+
     <!-- http://semantic-web-kms.edu.et/wdo#AssetFile -->
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#AssetFile">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#DigitalInformationCarrier"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/MediaObject"/>
         <dc:identifier>WDO:0000036</dc:identifier>
         <rdfs:label xml:lang="en">Asset File</rdfs:label>
         <skos:definition xml:lang="en">An Asset File is a Digital Information Carrier that bears the content of a non-code, non-documentation digital resource, such as an image, video, or font. This is an abstract class.</skos:definition>
@@ -1696,6 +1825,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#AttributeDeclaration">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#CodeConstruct"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/PropertyValue"/>
         <dc:identifier>WDO:0000010</dc:identifier>
         <rdfs:label xml:lang="en">Attribute Declaration</rdfs:label>
         <skos:definition xml:lang="en">An Attribute Declaration is a Code Construct which is the declaration of a field, attribute, or property within a class, struct, or interface.</skos:definition>
@@ -1719,6 +1849,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#AudioFile">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#AssetFile"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/AudioObject"/>
         <dc:identifier>WDO:0000039</dc:identifier>
         <rdfs:label xml:lang="en">Audio File</rdfs:label>
         <skos:definition xml:lang="en">An Audio File is an Asset File that bears an Audio Description.</skos:definition>
@@ -1731,6 +1862,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#BestPracticeGuideline">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#Documentation"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/HowTo"/>
         <dc:identifier>WDO:0000021</dc:identifier>
         <rdfs:label xml:lang="en">Best Practice Guideline</rdfs:label>
         <skos:definition xml:lang="en">A Best Practice Guideline is a type of Documentation that describes recommended methods or techniques for development.</skos:definition>
@@ -1767,6 +1899,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#BuildScript">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#InformationContentEntity"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/SoftwareSourceCode"/>
         <dc:identifier>WDO:0000070</dc:identifier>
         <rdfs:label xml:lang="en">Build Script</rdfs:label>
         <skos:definition xml:lang="en">A Build Script is an Information Content Entity that specifies the instructions, tasks, and dependencies for a build system to compile, test, and package a software project.</skos:definition>
@@ -1848,6 +1981,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#CodeComment">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#Documentation"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/Comment"/>
         <dc:identifier>WDO:0000015</dc:identifier>
         <rdfs:label xml:lang="en">Code Comment</rdfs:label>
         <skos:definition xml:lang="en">A Code Comment is a type of Documentation which is embedded within source code to explain parts of the code.</skos:definition>
@@ -1871,6 +2005,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Commit">
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/UpdateAction"/>
         <dc:identifier>WDO:0000108</dc:identifier>
         <rdfs:label xml:lang="en">Commit</rdfs:label>
         <skos:definition xml:lang="en">A Commit is a process that records a snapshot of changes to one or more files in a repository at a specific time.</skos:definition>
@@ -1883,6 +2018,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#CommitMessage">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#InformationContentEntity"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/Message"/>
         <dc:identifier>WDO:0000113</dc:identifier>
         <rdfs:label xml:lang="en">Commit Message</rdfs:label>
         <skos:definition xml:lang="en">A Commit Message is an Information Content Entity that is a textual description of the changes made in a specific commit process.</skos:definition>
@@ -1918,6 +2054,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#ConfigurationSetting">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#InformationContentEntity"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/PropertyValue"/>
         <dc:identifier>WDO:0000022</dc:identifier>
         <rdfs:label xml:lang="en">Configuration Setting</rdfs:label>
         <skos:definition xml:lang="en">A Configuration Setting is an Information Content Entity that is a parameter or setting used to control the behavior of a software application or system.</skos:definition>
@@ -1930,6 +2067,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#ContainerImage">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#DigitalInformationCarrier"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/SoftwareApplication"/>
         <dc:identifier>WDO:0000110</dc:identifier>
         <rdfs:label xml:lang="en">Container Image</rdfs:label>
         <skos:definition xml:lang="en">A Container Image is a Digital Information Carrier that bears a specification for creating a runnable software container, which is a standalone, executable package including all necessary code, runtime, and tools.</skos:definition>
@@ -1946,6 +2084,17 @@
         <rdfs:label xml:lang="en">Contribution Guide</rdfs:label>
         <skos:definition xml:lang="en">A Contribution Guide is a type of Guide that explains how to contribute to a project.</skos:definition>
         <skos:example xml:lang="en">A CONTRIBUTING.md file outlining the process for submitting pull requests.</skos:example>
+    </owl:Class>
+    
+
+
+    <!-- http://semantic-web-kms.edu.et/wdo#Contributor -->
+
+    <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Contributor">
+        <rdfs:subClassOf rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+        <dc:identifier>WDO:0000124</dc:identifier>
+        <rdfs:label xml:lang="en">Contributor</rdfs:label>
+        <skos:definition xml:lang="en">A person who has contributed to a project or repository in any capacity, including but not limited to code, documentation, design, or support.</skos:definition>
     </owl:Class>
     
 
@@ -1988,6 +2137,7 @@
     <!-- http://semantic-web-kms.edu.et/wdo#DigitalInformationCarrier -->
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#DigitalInformationCarrier">
+        <owl:equivalentClass rdf:resource="https://schema.org/DigitalDocument"/>
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000031"/>
         <dc:identifier>WDO:0000030</dc:identifier>
         <rdfs:label xml:lang="en">Digital Information Carrier</rdfs:label>
@@ -2037,6 +2187,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Documentation">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#InformationContentEntity"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/TechArticle"/>
         <dc:identifier>WDO:0000013</dc:identifier>
         <rdfs:label xml:lang="en">Documentation</rdfs:label>
         <skos:definition xml:lang="en">Documentation is an Information Content Entity that provides explanatory or reference information about a system, software, or process. This is an abstract class.</skos:definition>
@@ -2061,6 +2212,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#EnumDefinition">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#ComplexType"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/Enumeration"/>
         <dc:identifier>WDO:0000060</dc:identifier>
         <rdfs:label xml:lang="en">Enum Definition</rdfs:label>
         <skos:definition xml:lang="en">An Enum Definition is a Complex Type that defines an enumeration, a special data type consisting of a set of named constants.</skos:definition>
@@ -2108,6 +2260,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#FunctionDefinition">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#CodeConstruct"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/Function"/>
         <dc:identifier>WDO:0000009</dc:identifier>
         <rdfs:label xml:lang="en">Function Definition</rdfs:label>
         <skos:definition xml:lang="en">A Function Definition is a Code Construct which is the specification of a function, method, or constructor, including its signature and body.</skos:definition>
@@ -2142,6 +2295,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Guide">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#Documentation"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/HowTo"/>
         <dc:identifier>WDO:0000085</dc:identifier>
         <rdfs:label xml:lang="en">Guide</rdfs:label>
         <skos:definition xml:lang="en">A Guide is a type of Documentation that provides instructions on how to use, set up, or contribute to a project. This is an abstract class.</skos:definition>
@@ -2187,6 +2341,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#ImageFile">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#AssetFile"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/ImageObject"/>
         <dc:identifier>WDO:0000037</dc:identifier>
         <rdfs:label xml:lang="en">Image File</rdfs:label>
         <skos:definition xml:lang="en">An Image File is an Asset File that bears an Image Description.</skos:definition>
@@ -2211,6 +2366,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#InformationContentEntity">
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000031"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
         <dc:identifier>WDO:0000002</dc:identifier>
         <rdfs:label xml:lang="en">Information Content Entity</rdfs:label>
         <skos:definition xml:lang="en">An Information Content Entity is a generically dependent continuant that is dependent on some information bearer for its concretization and is about some entity. This is an abstract class.</skos:definition>
@@ -2339,6 +2495,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#List">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#TextualElement"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/ItemList"/>
         <dc:identifier>WDO:0000056</dc:identifier>
         <rdfs:label xml:lang="en">List</rdfs:label>
         <skos:definition xml:lang="en">A List is a Textual Element which consists of a series of items arranged in a sequence.</skos:definition>
@@ -2433,6 +2590,7 @@
     <!-- http://semantic-web-kms.edu.et/wdo#Organization -->
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Organization">
+        <owl:equivalentClass rdf:resource="http://xmlns.com/foaf/0.1/Organization"/>
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
         <dc:identifier>WDO:0000112</dc:identifier>
         <rdfs:label xml:lang="en">Organization</rdfs:label>
@@ -2481,6 +2639,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Parameter">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#CodeConstruct"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/PropertyValue"/>
         <dc:identifier>WDO:0000011</dc:identifier>
         <rdfs:label xml:lang="en">Parameter</rdfs:label>
         <skos:definition xml:lang="en">A Parameter is a Code Construct which is the specification of a variable bound within the scope of a function or method signature.</skos:definition>
@@ -2549,6 +2708,7 @@
     <!-- http://semantic-web-kms.edu.et/wdo#Repository -->
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Repository">
+        <owl:equivalentClass rdf:resource="http://usefulinc.com/ns/doap#Repository"/>
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
         <dc:identifier>WDO:0000107</dc:identifier>
         <rdfs:label xml:lang="en">Repository</rdfs:label>
@@ -2594,6 +2754,7 @@
     <!-- http://semantic-web-kms.edu.et/wdo#SoftwareCode -->
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#SoftwareCode">
+        <owl:equivalentClass rdf:resource="https://schema.org/SoftwareSourceCode"/>
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#InformationContentEntity"/>
         <dc:identifier>WDO:0000003</dc:identifier>
         <rdfs:label xml:lang="en">Software Code</rdfs:label>
@@ -2607,6 +2768,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#SoftwareFramework">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#InformationContentEntity"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/SoftwareApplication"/>
         <dc:identifier>WDO:0000092</dc:identifier>
         <rdfs:label xml:lang="en">Software Framework</rdfs:label>
         <skos:definition xml:lang="en">A Software Framework is an Information Content Entity that provides a reusable, generic platform of code for software applications, so that developers can focus on the specific logic of their application. This is an abstract class.</skos:definition>
@@ -2618,6 +2780,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#SoftwarePackage">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#InformationContentEntity"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/SoftwareApplication"/>
         <dc:identifier>WDO:0000012</dc:identifier>
         <rdfs:label xml:lang="en">Software Package</rdfs:label>
         <skos:definition xml:lang="en">A Software Package is an Information Content Entity which represents a distributable unit of reusable code, such as a library or module. This is an abstract class.</skos:definition>
@@ -2689,6 +2852,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Table">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#TextualElement"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/Table"/>
         <dc:identifier>WDO:0000058</dc:identifier>
         <rdfs:label xml:lang="en">Table</rdfs:label>
         <skos:definition xml:lang="en">A Table is a Textual Element which consists of data arranged in rows and columns.</skos:definition>
@@ -2737,6 +2901,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#ThreeDimensionalModelDescription">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#DigitalAssetDescription"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/3DModel"/>
         <dc:identifier>WDO:0000028</dc:identifier>
         <rdfs:label xml:lang="en">Three-Dimensional Model Description</rdfs:label>
         <skos:definition xml:lang="en">A Three-Dimensional Model Description is a Digital Asset Description that defines the characteristics of a 3D model, such as its geometry and textures.</skos:definition>
@@ -2772,6 +2937,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#Tutorial">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#Guide"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/HowTo"/>
         <dc:identifier>WDO:0000099</dc:identifier>
         <rdfs:label xml:lang="en">Tutorial</rdfs:label>
         <skos:definition xml:lang="en">A Tutorial is a type of Guide that provides step-by-step instructions to complete a specific task.</skos:definition>
@@ -2805,6 +2971,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#UserGuide">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#Guide"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/HowTo"/>
         <dc:identifier>WDO:0000103</dc:identifier>
         <rdfs:label xml:lang="en">User Guide</rdfs:label>
         <skos:definition xml:lang="en">A User Guide is a type of Guide that explains how to use a software product from an end-user perspective.</skos:definition>
@@ -2839,6 +3006,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#VariableDeclaration">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#CodeConstruct"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/PropertyValue"/>
         <dc:identifier>WDO:0000067</dc:identifier>
         <rdfs:label xml:lang="en">Variable Declaration</rdfs:label>
         <skos:definition xml:lang="en">A Variable Declaration is a Code Construct which is the declaration of a variable within a local scope, such as a function body.</skos:definition>
@@ -2862,6 +3030,7 @@
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#VideoFile">
         <rdfs:subClassOf rdf:resource="http://semantic-web-kms.edu.et/wdo#AssetFile"/>
+        <rdfs:subClassOf rdf:resource="https://schema.org/VideoObject"/>
         <dc:identifier>WDO:0000038</dc:identifier>
         <rdfs:label xml:lang="en">Video File</rdfs:label>
         <skos:definition xml:lang="en">A Video File is an Asset File that bears a Video Description.</skos:definition>
@@ -2873,6 +3042,7 @@
     <!-- http://semantic-web-kms.edu.et/wdo#WebDevelopmentProject -->
 
     <owl:Class rdf:about="http://semantic-web-kms.edu.et/wdo#WebDevelopmentProject">
+        <owl:equivalentClass rdf:resource="http://usefulinc.com/ns/doap#Project"/>
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
         <dc:identifier>WDO:0000001</dc:identifier>
         <rdfs:label xml:lang="en">Web Development Project</rdfs:label>
@@ -2912,8 +3082,159 @@
         <rdfs:label xml:lang="en">YAML</rdfs:label>
         <skos:definition xml:lang="en">A YAML is a Data Format that structures data according to the YAML Ain&apos;t Markup Language syntax.</skos:definition>
     </owl:Class>
+    
+
+
+    <!-- http://usefulinc.com/ns/doap#Project -->
+
+    <owl:Class rdf:about="http://usefulinc.com/ns/doap#Project"/>
+    
+
+
+    <!-- http://usefulinc.com/ns/doap#Repository -->
+
+    <owl:Class rdf:about="http://usefulinc.com/ns/doap#Repository"/>
+    
+
+
+    <!-- http://xmlns.com/foaf/0.1/Organization -->
+
+    <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Organization"/>
+    
+
+
+    <!-- http://xmlns.com/foaf/0.1/Person -->
+
+    <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Person"/>
+    
+
+
+    <!-- https://schema.org/APIReference -->
+
+    <owl:Class rdf:about="https://schema.org/APIReference"/>
+    
+
+
+    <!-- https://schema.org/ArchiveComponent -->
+
+    <owl:Class rdf:about="https://schema.org/ArchiveComponent"/>
+    
+
+
+    <!-- https://schema.org/AudioObject -->
+
+    <owl:Class rdf:about="https://schema.org/AudioObject"/>
+    
+
+
+    <!-- https://schema.org/Comment -->
+
+    <owl:Class rdf:about="https://schema.org/Comment"/>
+    
+
+
+    <!-- https://schema.org/CreativeWork -->
+
+    <owl:Class rdf:about="https://schema.org/CreativeWork"/>
+    
+
+
+    <!-- https://schema.org/DigitalDocument -->
+
+    <owl:Class rdf:about="https://schema.org/DigitalDocument"/>
+    
+
+
+    <!-- https://schema.org/Enumeration -->
+
+    <owl:Class rdf:about="https://schema.org/Enumeration"/>
+    
+
+
+    <!-- https://schema.org/Function -->
+
+    <owl:Class rdf:about="https://schema.org/Function"/>
+    
+
+
+    <!-- https://schema.org/HowTo -->
+
+    <owl:Class rdf:about="https://schema.org/HowTo"/>
+    
+
+
+    <!-- https://schema.org/ImageObject -->
+
+    <owl:Class rdf:about="https://schema.org/ImageObject"/>
+    
+
+
+    <!-- https://schema.org/ItemList -->
+
+    <owl:Class rdf:about="https://schema.org/ItemList"/>
+    
+
+
+    <!-- https://schema.org/MediaObject -->
+
+    <owl:Class rdf:about="https://schema.org/MediaObject"/>
+    
+
+
+    <!-- https://schema.org/Message -->
+
+    <owl:Class rdf:about="https://schema.org/Message"/>
+    
+
+
+    <!-- https://schema.org/PropertyValue -->
+
+    <owl:Class rdf:about="https://schema.org/PropertyValue"/>
+    
+
+
+    <!-- https://schema.org/SoftwareApplication -->
+
+    <owl:Class rdf:about="https://schema.org/SoftwareApplication"/>
+    
+
+
+    <!-- https://schema.org/SoftwareSourceCode -->
+
+    <owl:Class rdf:about="https://schema.org/SoftwareSourceCode"/>
+    
+
+
+    <!-- https://schema.org/Table -->
+
+    <owl:Class rdf:about="https://schema.org/Table"/>
+    
+
+
+    <!-- https://schema.org/TechArticle -->
+
+    <owl:Class rdf:about="https://schema.org/TechArticle"/>
+    
+
+
+    <!-- https://schema.org/UpdateAction -->
+
+    <owl:Class rdf:about="https://schema.org/UpdateAction"/>
+    
+
+
+    <!-- https://schema.org/VideoObject -->
+
+    <owl:Class rdf:about="https://schema.org/VideoObject"/>
+    
+
+
+    <!-- https://schema.org/3DModel -->
+
+    <owl:Class rdf:about="https://schema.org/3DModel"/>
 </rdf:RDF>
 
 
 
 <!-- Generated by the OWL API (version 4.5.29.2024-05-13T12:11:03Z) https://github.com/owlcs/owlapi -->
+
