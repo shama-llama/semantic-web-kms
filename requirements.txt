@@ -3,7 +3,7 @@ rdflib==7.1.4
 rich==13.7.1
 gitpython==3.1.44
 tree-sitter==0.21.3
-tree-sitter-languages==1.10.2
+tree-sitter-languages>=1.10.0
 markdown-it-py==3.0.0
 Pillow==10.3.0
 # Backend libraries
@@ -21,5 +21,7 @@ google-genai==1.25.0
 # Semantic similarity libraries
 scikit-learn==1.7.0
 networkx==3.5
+# WSGI server for production
+gunicorn==21.2.0
 # Required spaCy model for semantic annotation
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl

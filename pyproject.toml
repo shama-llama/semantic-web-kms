@@ -10,7 +10,7 @@ authors = [
     {name = "Group One, CoSc 6232 (Spring 2025)", email = "semanticwebkms@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.8,<3.13"
 license = {text = "MIT"}
 keywords = ["semantic-web", "knowledge-management", "ontology", "rdf", "sparql"]
 classifiers = [
@@ -31,7 +31,7 @@ dependencies = [
     "rich==13.7.1",
     "gitpython==3.1.44",
     "tree-sitter==0.21.3",
-    "tree-sitter-languages==1.10.2",
+    "tree-sitter-languages>=1.10.0",
     "markdown-it-py==3.0.0",
     "Pillow==10.3.0",
     "flask==3.1.1",
@@ -46,6 +46,7 @@ dependencies = [
     "google-genai==1.25.0",
     "scikit-learn==1.7.0",
     "networkx==3.5",
+    "gunicorn==21.2.0",
 ]
 
 [project.optional-dependencies]
@@ -159,7 +160,7 @@ omit = [
     "*/migrations/*",
     "*/venv/*",
     "*/env/*",
-    "*/\.venv/*",
+    "*/.venv/*",
 ]
 
 [tool.coverage.report]
