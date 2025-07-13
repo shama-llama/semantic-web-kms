@@ -68,7 +68,12 @@ def test_unsupported_file_type(monkeypatch):
     monkeypatch.setattr(
         code_extractor,
         "initialize_context_and_graph",
-        lambda ttl_path, INST, WDO, uri_safe_string: (Graph(), {}, {}, DummyCtx()),
+        lambda ttl_path, INST, WDO, uri_safe_string, uri_safe_file_path: (
+            Graph(),
+            {},
+            {},
+            DummyCtx(),
+        ),
     )
     monkeypatch.setattr(
         code_extractor, "finalize_and_serialize_graph", lambda ctx: None
@@ -116,7 +121,12 @@ def test_file_with_unusual_encoding(tmp_path, monkeypatch):
     monkeypatch.setattr(
         code_extractor,
         "initialize_context_and_graph",
-        lambda ttl_path, INST, WDO, uri_safe_string: (Graph(), {}, {}, DummyCtx()),
+        lambda ttl_path, INST, WDO, uri_safe_string, uri_safe_file_path: (
+            Graph(),
+            {},
+            {},
+            DummyCtx(),
+        ),
     )
     monkeypatch.setattr(
         code_extractor, "finalize_and_serialize_graph", lambda ctx: None

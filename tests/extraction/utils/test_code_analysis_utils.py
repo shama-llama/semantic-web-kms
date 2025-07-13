@@ -76,15 +76,15 @@ def foo():
     summary = {}
     calls = code_analysis_utils.extract_function_calls(node, summary)
     names = {c["name"] for c in calls}
-    assert "bar" in names and "baz" in names
+    assert "callsite: bar" in names and "callsite: baz" in names
     assert "calls" in summary and len(summary["calls"]) == 2
 
 
 def test_build_declaration_usage_summary():
     summary = {
         "calls": [
-            {"name": "foo", "arguments": ["x"], "start_line": 2},
-            {"name": "bar", "arguments": ["y"], "start_line": 3},
+            {"name": "callsite: foo", "arguments": ["x"], "start_line": 2},
+            {"name": "callsite: bar", "arguments": ["y"], "start_line": 3},
         ],
         "variables": [
             {"name": "x"},

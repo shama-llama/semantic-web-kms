@@ -15,10 +15,15 @@ def test_write_classes_runs():
     constructs = {"ClassDefinition": [{"name": "TestClass"}]}
     file_uri = "file://test.py"
     class_cache = {"ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache("hasSimpleName", "hasCanonicalName")
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasCanonicalName": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_classes(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert isinstance(result, dict)
 
@@ -28,10 +33,11 @@ def test_write_classes_empty_constructs():
     constructs = {"ClassDefinition": []}
     file_uri = "file://test.py"
     class_cache = {"ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache("hasSimpleName", "hasCanonicalName")
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_classes(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
 
@@ -41,17 +47,11 @@ def test_write_enums_runs():
     constructs = {"EnumDefinition": [{"name": "TestEnum"}]}
     file_uri = "file://test.py"
     class_cache = {"EnumDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_enums(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert isinstance(result, dict)
 
@@ -61,17 +61,11 @@ def test_write_enums_missing_name():
     constructs = {"EnumDefinition": [{"not_name": "nope"}]}
     file_uri = "file://test.py"
     class_cache = {"EnumDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_enums(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
 
@@ -91,17 +85,17 @@ def test_write_enums_with_decorators_and_lines():
     }
     file_uri = "file://test.py"
     class_cache = {"EnumDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasSourceCodeSnippet": mock.Mock(),
+        "startsAtLine": mock.Mock(),
+        "endsAtLine": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_enums(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert "TestEnum" in result
 
@@ -122,7 +116,7 @@ def test_write_enums_with_all_optional_fields():
     file_uri = "file://test.py"
     class_cache = {"EnumDefinition": "EnumClass", "ClassDefinition": "ClassClass"}
     prop_cache = {
-        "isElementOf": "isElementOf",
+        "isCodePartOf": "isCodePartOf",
         "hasSimpleName": "hasSimpleName",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "startsAtLine": "startsAtLine",
@@ -130,8 +124,9 @@ def test_write_enums_with_all_optional_fields():
         "hasTextValue": "hasTextValue",
     }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     entity_writers.write_enums(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert g.add.call_count >= 6
 
@@ -141,10 +136,11 @@ def test_write_enums_missing_name_optional():
     constructs = {"EnumDefinition": [{"raw": "enum {}"}]}
     file_uri = "file://test.py"
     class_cache = {"EnumDefinition": "EnumClass", "ClassDefinition": "ClassClass"}
-    prop_cache = {"isElementOf": "isElementOf", "hasSimpleName": "hasSimpleName"}
+    prop_cache = {"isCodePartOf": "isCodePartOf", "hasSimpleName": "hasSimpleName"}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_enums(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
     g.add.assert_not_called()
@@ -155,10 +151,11 @@ def test_write_comments_runs():
     constructs = {"CodeComment": [{"raw": "comment1"}]}
     file_uri = "file://test.py"
     class_cache = {"CodeComment": mock.Mock()}
-    prop_cache = make_prop_cache("isElementOf", "hasTextValue")
+    prop_cache = {"isCodePartOf": mock.Mock(), "hasTextValue": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_comments(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert isinstance(result, dict)
 
@@ -170,21 +167,27 @@ def test_write_comments_empty():
     class_cache = {"CodeComment": mock.Mock()}
     prop_cache = make_prop_cache("isElementOf", "hasTextValue")
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_comments(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
 
 
 def test_write_functions_runs():
     g = mock.Mock()
-    constructs = {"FunctionDefinition": [{"name": "func1"}]}
+    constructs = {"FunctionDefinition": [{"name": "test_func"}]}
     file_uri = "file://test.py"
     class_cache = {"FunctionDefinition": mock.Mock()}
-    prop_cache = make_prop_cache("hasSimpleName", "hasCanonicalName")
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasCanonicalName": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
-    class_uris = {"TestClass": mock.Mock()}
-    type_uris = {"TestType": mock.Mock()}
+    class_uris = {}
+    type_uris = {}
+    content_uri = "content://test.py"
     result = entity_writers.write_functions(
         g,
         constructs,
@@ -194,6 +197,7 @@ def test_write_functions_runs():
         uri_safe_string,
         class_uris,
         type_uris,
+        content_uri,
     )
     assert isinstance(result, dict)
 
@@ -207,6 +211,7 @@ def test_write_functions_missing_name():
     uri_safe_string = lambda s: s
     class_uris = {"TestClass": mock.Mock()}
     type_uris = {"TestType": mock.Mock()}
+    content_uri = "content://test.py"
     result = entity_writers.write_functions(
         g,
         constructs,
@@ -216,6 +221,7 @@ def test_write_functions_missing_name():
         uri_safe_string,
         class_uris,
         type_uris,
+        content_uri,
     )
     assert result == {}
 
@@ -225,17 +231,11 @@ def test_write_interfaces_runs():
     constructs = {"InterfaceDefinition": [{"name": "TestInterface"}]}
     file_uri = "file://test.py"
     class_cache = {"InterfaceDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_interfaces(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert isinstance(result, dict)
 
@@ -255,17 +255,17 @@ def test_write_interfaces_with_decorators_and_lines():
     }
     file_uri = "file://test.py"
     class_cache = {"InterfaceDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasSourceCodeSnippet": mock.Mock(),
+        "startsAtLine": mock.Mock(),
+        "endsAtLine": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_interfaces(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert "TestInterface" in result
 
@@ -286,7 +286,7 @@ def test_write_interfaces_with_all_optional_fields():
     file_uri = "file://test.py"
     class_cache = {"InterfaceDefinition": "IfaceClass", "ClassDefinition": "ClassClass"}
     prop_cache = {
-        "isElementOf": "isElementOf",
+        "isCodePartOf": "isCodePartOf",
         "hasSimpleName": "hasSimpleName",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "startsAtLine": "startsAtLine",
@@ -294,8 +294,9 @@ def test_write_interfaces_with_all_optional_fields():
         "hasTextValue": "hasTextValue",
     }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     entity_writers.write_interfaces(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert g.add.call_count >= 6
 
@@ -305,10 +306,11 @@ def test_write_interfaces_missing_name():
     constructs = {"InterfaceDefinition": [{"raw": "interface {}"}]}
     file_uri = "file://test.py"
     class_cache = {"InterfaceDefinition": "IfaceClass", "ClassDefinition": "ClassClass"}
-    prop_cache = {"isElementOf": "isElementOf", "hasSimpleName": "hasSimpleName"}
+    prop_cache = {"isCodePartOf": "isCodePartOf", "hasSimpleName": "hasSimpleName"}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_interfaces(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
     g.add.assert_not_called()
@@ -319,17 +321,11 @@ def test_write_structs_runs():
     constructs = {"StructDefinition": [{"name": "TestStruct"}]}
     file_uri = "file://test.py"
     class_cache = {"StructDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_structs(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert isinstance(result, dict)
 
@@ -343,17 +339,17 @@ def test_write_structs_with_raw_and_lines():
     }
     file_uri = "file://test.py"
     class_cache = {"StructDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasSourceCodeSnippet": mock.Mock(),
+        "startsAtLine": mock.Mock(),
+        "endsAtLine": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_structs(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert "TestStruct" in result
 
@@ -374,7 +370,7 @@ def test_write_structs_with_all_optional_fields():
     file_uri = "file://test.py"
     class_cache = {"StructDefinition": "StructClass", "ClassDefinition": "ClassClass"}
     prop_cache = {
-        "isElementOf": "isElementOf",
+        "isCodePartOf": "isCodePartOf",
         "hasSimpleName": "hasSimpleName",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "startsAtLine": "startsAtLine",
@@ -382,8 +378,9 @@ def test_write_structs_with_all_optional_fields():
         "hasTextValue": "hasTextValue",
     }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     entity_writers.write_structs(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert g.add.call_count >= 6
 
@@ -393,10 +390,11 @@ def test_write_structs_missing_name():
     constructs = {"StructDefinition": [{"raw": "struct {}"}]}
     file_uri = "file://test.py"
     class_cache = {"StructDefinition": "StructClass", "ClassDefinition": "ClassClass"}
-    prop_cache = {"isElementOf": "isElementOf", "hasSimpleName": "hasSimpleName"}
+    prop_cache = {"isCodePartOf": "isCodePartOf", "hasSimpleName": "hasSimpleName"}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_structs(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
     g.add.assert_not_called()
@@ -407,17 +405,11 @@ def test_write_traits_runs():
     constructs = {"TraitDefinition": [{"name": "TestTrait"}]}
     file_uri = "file://test.py"
     class_cache = {"TraitDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_traits(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert isinstance(result, dict)
 
@@ -442,7 +434,7 @@ def test_write_traits_with_all_optional_fields():
         "ClassDefinition": "ClassClass",
     }
     prop_cache = {
-        "isElementOf": "isElementOf",
+        "isCodePartOf": "isCodePartOf",
         "hasSimpleName": "hasSimpleName",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "startsAtLine": "startsAtLine",
@@ -450,8 +442,9 @@ def test_write_traits_with_all_optional_fields():
         "hasTextValue": "hasTextValue",
     }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     entity_writers.write_traits(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert g.add.call_count >= 6
 
@@ -465,10 +458,11 @@ def test_write_traits_missing_name():
         "InterfaceDefinition": "IfaceClass",
         "ClassDefinition": "ClassClass",
     }
-    prop_cache = {"isElementOf": "isElementOf", "hasSimpleName": "hasSimpleName"}
+    prop_cache = {"isCodePartOf": "isCodePartOf", "hasSimpleName": "hasSimpleName"}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_traits(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
     g.add.assert_not_called()
@@ -479,17 +473,11 @@ def test_write_modules_runs():
     constructs = {"ModuleDefinition": [{"name": "TestModule"}]}
     file_uri = "file://test.py"
     class_cache = {"ModuleDefinition": mock.Mock(), "ClassDefinition": mock.Mock()}
-    prop_cache = make_prop_cache(
-        "hasSimpleName",
-        "isElementOf",
-        "hasSourceCodeSnippet",
-        "startsAtLine",
-        "endsAtLine",
-        "hasTextValue",
-    )
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_modules(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert isinstance(result, dict)
 
@@ -509,15 +497,16 @@ def test_write_modules_with_all_optional_fields():
     file_uri = "file://test.py"
     class_cache = {"PackageDeclaration": "PkgClass"}
     prop_cache = {
-        "isElementOf": "isElementOf",
+        "isCodePartOf": "isCodePartOf",
         "hasSimpleName": "hasSimpleName",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "startsAtLine": "startsAtLine",
         "endsAtLine": "endsAtLine",
     }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     entity_writers.write_modules(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert g.add.call_count >= 5
 
@@ -527,10 +516,11 @@ def test_write_modules_missing_name():
     constructs = {"modules": [{"raw": "module {}"}]}
     file_uri = "file://test.py"
     class_cache = {"PackageDeclaration": "PkgClass"}
-    prop_cache = {"isElementOf": "isElementOf", "hasSimpleName": "hasSimpleName"}
+    prop_cache = {"isCodePartOf": "isCodePartOf", "hasSimpleName": "hasSimpleName"}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     result = entity_writers.write_modules(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert result == {}
     g.add.assert_not_called()
@@ -541,11 +531,16 @@ def test_write_decorators_runs():
     constructs = {"DecoratorDefinition": [{"name": "TestDecorator"}]}
     file_uri = "file://test.py"
     class_cache = {"DecoratorDefinition": mock.Mock()}
-    prop_cache = make_prop_cache("hasSimpleName", "isElementOf", "hasTextValue")
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasTextValue": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     # Should not raise (returns None)
     entity_writers.write_decorators(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
 
 
@@ -554,11 +549,16 @@ def test_write_types_runs():
     constructs = {"TypeDefinition": [{"name": "TestType"}]}
     file_uri = "file://test.py"
     class_cache = {"TypeDefinition": mock.Mock()}
-    prop_cache = make_prop_cache("hasSimpleName", "isElementOf", "hasTextValue")
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasTextValue": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     # Should not raise (returns None)
     entity_writers.write_types(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
 
 
@@ -567,11 +567,12 @@ def test_write_imports_runs():
     constructs = {"ImportDeclaration": [{"raw": "import os"}]}
     file_uri = "file://test.py"
     class_cache = {"ImportDeclaration": mock.Mock()}
-    prop_cache = make_prop_cache("imports", "hasTextValue")
+    prop_cache = {"imports": mock.Mock(), "hasSourceCodeSnippet": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     # Should not raise (returns None)
     entity_writers.write_imports(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
 
 
@@ -580,11 +581,12 @@ def test_write_imports_empty():
     constructs = {"ImportDeclaration": []}
     file_uri = "file://test.py"
     class_cache = {"ImportDeclaration": mock.Mock()}
-    prop_cache = make_prop_cache("imports", "hasTextValue")
+    prop_cache = {"imports": mock.Mock(), "hasTextValue": mock.Mock()}
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     # Should not raise
     entity_writers.write_imports(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
 
 
@@ -603,8 +605,13 @@ def test_write_database_schemas_runs():
     constructs = {"DatabaseSchema": [{"name": "TestSchema"}]}
     file_uri = "file://test.py"
     class_cache = {"DatabaseSchema": mock.Mock()}
-    prop_cache = make_prop_cache("hasSimpleName", "isElementOf", "hasTextValue")
+    prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "hasTextValue": mock.Mock(),
+    }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     # Should not raise
     entity_writers.write_database_schemas(
         g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
@@ -616,10 +623,11 @@ def test__add_class_basic_triples():
     class_uri = "uri"
     class_id = "TestClass"
     class_cache = {"ClassDefinition": mock.Mock()}
-    prop_cache = {"hasSimpleName": mock.Mock()}
+    prop_cache = {"hasSimpleName": mock.Mock(), "isCodePartOf": mock.Mock()}
+    content_uri = "content://test.py"
     # Should not raise
     entity_writers._add_class_basic_triples(
-        g, class_uri, class_id, class_cache, prop_cache
+        g, class_uri, class_id, class_cache, prop_cache, content_uri
     )
 
 
@@ -663,6 +671,7 @@ def test_write_parameters_all_fields():
     class_cache = {"Parameter": "ParamClass"}
     prop_cache = {
         "hasSimpleName": "hasSimpleName",
+        "isCodePartOf": "isCodePartOf",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "hasType": "hasType",
         "startsAtLine": "startsAtLine",
@@ -673,6 +682,7 @@ def test_write_parameters_all_fields():
     uri_safe_string = lambda s: s
     func_uris = {"foo": "foo_uri"}
     type_uris = {"int": "int_uri"}
+    content_uri = "content://test.py"
     entity_writers.write_parameters(
         g,
         constructs,
@@ -682,8 +692,10 @@ def test_write_parameters_all_fields():
         uri_safe_string,
         func_uris,
         type_uris,
+        content_uri,
     )
-    assert g.add.call_count >= 8
+    # 8 calls: RDF.type, isCodePartOf, RDFS.label, hasSimpleName, hasSourceCodeSnippet, hasType, startsAtLine, endsAtLine, isParameterOf, hasParameter
+    assert g.add.call_count == 10
 
 
 def test_write_parameters_missing_optional_fields():
@@ -691,10 +703,11 @@ def test_write_parameters_missing_optional_fields():
     constructs = {"Parameter": [{"name": "param2"}]}
     file_uri = "file://test.py"
     class_cache = {"Parameter": "ParamClass"}
-    prop_cache = {"hasSimpleName": "hasSimpleName"}
+    prop_cache = {"hasSimpleName": "hasSimpleName", "isCodePartOf": "isCodePartOf"}
     uri_safe_string = lambda s: s
     func_uris = {}
     type_uris = {}
+    content_uri = "content://test.py"
     entity_writers.write_parameters(
         g,
         constructs,
@@ -704,8 +717,9 @@ def test_write_parameters_missing_optional_fields():
         uri_safe_string,
         func_uris,
         type_uris,
+        content_uri,
     )
-    assert g.add.call_count == 2
+    assert g.add.call_count == 4  # RDF.type, isCodePartOf, RDFS.label, hasSimpleName
 
 
 def test_write_variables_all_fields():
@@ -725,6 +739,7 @@ def test_write_variables_all_fields():
     class_cache = {"VariableDeclaration": "VarClass"}
     prop_cache = {
         "hasSimpleName": "hasSimpleName",
+        "isCodePartOf": "isCodePartOf",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "hasType": "hasType",
         "startsAtLine": "startsAtLine",
@@ -733,6 +748,7 @@ def test_write_variables_all_fields():
     uri_safe_string = lambda s: s
     func_uris = {}
     type_uris = {"int": "int_uri"}
+    content_uri = "content://test.py"
     entity_writers.write_variables(
         g,
         constructs,
@@ -742,8 +758,10 @@ def test_write_variables_all_fields():
         uri_safe_string,
         func_uris,
         type_uris,
+        content_uri,
     )
-    assert g.add.call_count >= 6
+    # 8 calls: RDF.type, isCodePartOf, RDFS.label, hasSimpleName, hasSourceCodeSnippet, hasType, startsAtLine, endsAtLine
+    assert g.add.call_count == 8
 
 
 def test_write_variables_missing_optional_fields():
@@ -751,10 +769,11 @@ def test_write_variables_missing_optional_fields():
     constructs = {"VariableDeclaration": [{"name": "var2"}]}
     file_uri = "file://test.py"
     class_cache = {"VariableDeclaration": "VarClass"}
-    prop_cache = {"hasSimpleName": "hasSimpleName"}
+    prop_cache = {"hasSimpleName": "hasSimpleName", "isCodePartOf": "isCodePartOf"}
     uri_safe_string = lambda s: s
     func_uris = {}
     type_uris = {}
+    content_uri = "content://test.py"
     entity_writers.write_variables(
         g,
         constructs,
@@ -764,14 +783,15 @@ def test_write_variables_missing_optional_fields():
         uri_safe_string,
         func_uris,
         type_uris,
+        content_uri,
     )
-    assert g.add.call_count == 2
+    assert g.add.call_count == 4  # RDF.type, isCodePartOf, RDFS.label, hasSimpleName
 
 
 def test_write_calls_all_fields():
     g = mock.Mock()
     constructs = {
-        "FunctionCallSite": [
+        "calls": [
             {
                 "name": "call1",
                 "raw": "foo(1, 2)",
@@ -783,9 +803,10 @@ def test_write_calls_all_fields():
         ]
     }
     file_uri = "file://test.py"
-    class_cache = {"FunctionCallSite": "CallClass"}
+    class_cache = {"FunctionCallSite": "CallClass", "Argument": "ArgClass"}
     prop_cache = {
         "hasSimpleName": "hasSimpleName",
+        "isCodePartOf": "isCodePartOf",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
         "startsAtLine": "startsAtLine",
         "endsAtLine": "endsAtLine",
@@ -797,6 +818,7 @@ def test_write_calls_all_fields():
     uri_safe_string = lambda s: s
     func_uris = {"foo": "foo_uri"}
     type_uris = {}
+    content_uri = "content://test.py"
     entity_writers.write_calls(
         g,
         constructs,
@@ -806,19 +828,21 @@ def test_write_calls_all_fields():
         uri_safe_string,
         func_uris,
         type_uris,
+        content_uri,
     )
     assert g.add.call_count >= 11
 
 
 def test_write_calls_missing_optional_fields():
     g = mock.Mock()
-    constructs = {"FunctionCallSite": [{"name": "call2"}]}
+    constructs = {"calls": [{"name": "call2"}]}
     file_uri = "file://test.py"
     class_cache = {"FunctionCallSite": "CallClass"}
-    prop_cache = {"hasSimpleName": "hasSimpleName"}
+    prop_cache = {"hasSimpleName": "hasSimpleName", "isCodePartOf": "isCodePartOf"}
     uri_safe_string = lambda s: s
     func_uris = {}
     type_uris = {}
+    content_uri = "content://test.py"
     entity_writers.write_calls(
         g,
         constructs,
@@ -828,8 +852,9 @@ def test_write_calls_missing_optional_fields():
         uri_safe_string,
         func_uris,
         type_uris,
+        content_uri,
     )
-    assert g.add.call_count == 2
+    assert g.add.call_count == 4  # RDF.type, isCodePartOf, RDFS.label, hasSimpleName
 
 
 def test_write_decorators_all_fields():
@@ -840,12 +865,13 @@ def test_write_decorators_all_fields():
     file_uri = "file://test.py"
     class_cache = {"Decorator": "DecClass"}
     prop_cache = {
-        "isElementOf": "isElementOf",
+        "isCodePartOf": "isCodePartOf",
         "hasSimpleName": "hasSimpleName",
         "hasSourceCodeSnippet": "hasSourceCodeSnippet",
     }
     uri_safe_string = lambda s: s
+    content_uri = "content://test.py"
     entity_writers.write_decorators(
-        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string
+        g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
     )
     assert g.add.call_count >= 6

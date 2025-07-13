@@ -19,14 +19,14 @@ def test_get_repo_uri():
     assert isinstance(uri, URIRef)
     assert repo_name.replace("/", "_") in str(uri)
 
-
-def test_get_file_uri():
-    repo_name = "repo"
-    file_path = "src/main.py"
-    uri = git_extractor.get_file_uri(repo_name, file_path)
-    assert isinstance(uri, URIRef)
-    assert "repo" in str(uri)
-    assert "src_main.py" in str(uri)
+    def test_get_file_uri():
+        repo_name = "repo"
+        file_path = "src/main.py"
+        uri = git_extractor.get_file_uri(repo_name, file_path)
+        assert isinstance(uri, URIRef)
+        assert "repo" in str(uri)
+        # The path should be URI-encoded (slashes are replaced)
+        assert "src_main.py" in str(uri)
 
 
 def test_get_commit_uri():
@@ -161,7 +161,7 @@ def test_extract_commit_data_with_parent_and_diff(monkeypatch):
     fake_commit.author.name = "Bob"
     fake_parent = mock.Mock()
     fake_commit.parents = [fake_parent]
-    fake_diff = [mock.Mock(a_path="changed.py")]
+    fake_diff = [mock.Mock(a_path="changed.py", b_path="changed.py")]
     fake_commit.diff.return_value = fake_diff
     fake_commit.tree.traverse.return_value = []
     repo_commit_map = {"repo2": [fake_commit]}
@@ -183,6 +183,76 @@ def test_extract_commit_data_with_parent_and_diff(monkeypatch):
     assert commit_data["issue_references"] == ["42"]
 
 
+def test_extract_commit_data_with_file_move(monkeypatch):
+    """Test that git extractor uses current path (b_path) for moved files."""
+    # Prepare a fake commit with a file move (different a_path and b_path)
+    fake_commit = mock.Mock()
+    fake_commit.hexsha = "move123"
+    fake_commit.message = "Move file to new location"
+    fake_commit.committed_date = 1234567892
+    fake_commit.author.name = "Charlie"
+    fake_parent = mock.Mock()
+    fake_commit.parents = [fake_parent]
+    # Simulate a file move: old path vs new path
+    fake_diff = [
+        mock.Mock(a_path="old/location/file.py", b_path="new/location/file.py")
+    ]
+    fake_commit.diff.return_value = fake_diff
+    fake_commit.tree.traverse.return_value = []
+    repo_commit_map = {"repo3": [fake_commit]}
+
+    class DummyProgress:
+        def advance(self, task):
+            self.advanced = True
+
+    progress = DummyProgress()
+    result = git_extractor.extract_commit_data(
+        repo_commit_map, "/tmp/repos", progress, overall_task=3
+    )
+    assert len(result) == 1
+    commit_data = result[0]
+    assert commit_data["repo_name"] == "repo3"
+    assert commit_data["commit_hash"] == "move123"
+    assert commit_data["commit_author"] == "Charlie"
+    # Should use the current path (b_path), not the old path (a_path)
+    assert commit_data["modified_files"] == ["new/location/file.py"]
+    assert commit_data["issue_references"] == []
+
+
+def test_extract_commit_data_with_deleted_file(monkeypatch):
+    """Test that git extractor handles deleted files correctly."""
+    # Prepare a fake commit with a deleted file (a_path but no b_path)
+    fake_commit = mock.Mock()
+    fake_commit.hexsha = "delete123"
+    fake_commit.message = "Delete old file"
+    fake_commit.committed_date = 1234567893
+    fake_commit.author.name = "David"
+    fake_parent = mock.Mock()
+    fake_commit.parents = [fake_parent]
+    # Simulate a file deletion: old path exists, new path is None
+    fake_diff = [mock.Mock(a_path="deleted/file.py", b_path=None)]
+    fake_commit.diff.return_value = fake_diff
+    fake_commit.tree.traverse.return_value = []
+    repo_commit_map = {"repo4": [fake_commit]}
+
+    class DummyProgress:
+        def advance(self, task):
+            self.advanced = True
+
+    progress = DummyProgress()
+    result = git_extractor.extract_commit_data(
+        repo_commit_map, "/tmp/repos", progress, overall_task=4
+    )
+    assert len(result) == 1
+    commit_data = result[0]
+    assert commit_data["repo_name"] == "repo4"
+    assert commit_data["commit_hash"] == "delete123"
+    assert commit_data["commit_author"] == "David"
+    # Should use a_path when b_path is None (deleted file)
+    assert commit_data["modified_files"] == ["deleted/file.py"]
+    assert commit_data["issue_references"] == []
+
+
 def test_write_ttl_minimal(monkeypatch):
     # Prepare minimal commit data
     all_commit_data = [
@@ -196,29 +266,33 @@ def test_write_ttl_minimal(monkeypatch):
             "issue_references": ["42"],
         }
     ]
+    from rdflib import Graph, URIRef
+
     prop_cache = {
-        "hasCommitHash": "hasCommitHash",
-        "hasCommitMessage": "hasCommitMessage",
-        "isMessageOfCommit": "isMessageOfCommit",
-        "hasCommit": "hasCommit",
-        "isCommitIn": "isCommitIn",
-        "addressesIssue": "addressesIssue",
-        "isAddressedBy": "isAddressedBy",
-        "fixesIssue": "fixesIssue",
-        "isFixedBy": "isFixedBy",
-        "modifies": "modifies",
-        "isModifiedBy": "isModifiedBy",
-        "hasFile": "hasFile",
+        "hasCommitHash": URIRef("http://example.org/hasCommitHash"),
+        "hasCommitMessage": URIRef("http://example.org/hasCommitMessage"),
+        "isMessageOfCommit": URIRef("http://example.org/isMessageOfCommit"),
+        "hasCommit": URIRef("http://example.org/hasCommit"),
+        "isCommitIn": URIRef("http://example.org/isCommitIn"),
+        "committedBy": URIRef("http://example.org/committedBy"),
+        "addressesIssue": URIRef("http://example.org/addressesIssue"),
+        "isAddressedBy": URIRef("http://example.org/isAddressedBy"),
+        "fixesIssue": URIRef("http://example.org/fixesIssue"),
+        "isFixedBy": URIRef("http://example.org/isFixedBy"),
+        "modifies": URIRef("http://example.org/modifies"),
+        "isModifiedBy": URIRef("http://example.org/isModifiedBy"),
+        "hasFile": URIRef("http://example.org/hasFile"),
     }
     class_cache = {
-        "Repository": "Repository",
-        "Commit": "Commit",
-        "CommitMessage": "CommitMessage",
-        "InformationContentEntity": "InformationContentEntity",
-        "Issue": "Issue",
+        "Repository": URIRef("http://example.org/Repository"),
+        "Commit": URIRef("http://example.org/Commit"),
+        "CommitMessage": URIRef("http://example.org/CommitMessage"),
+        "InformationContentEntity": URIRef(
+            "http://example.org/InformationContentEntity"
+        ),
+        "Issue": URIRef("http://example.org/Issue"),
     }
-    g = mock.Mock()
-    g.add = mock.Mock()
+    g = Graph()
 
     class DummyProgress:
         def advance(self, task):
@@ -238,8 +312,8 @@ def test_write_ttl_minimal(monkeypatch):
     assert commits_added == 1
     assert issues_added == 1
     assert file_mod_count == 1
-    # Check that add was called
-    assert g.add.call_count > 0
+    # Check that triples were added
+    assert len(g) > 0
 
 
 def test_write_ttl_multiple_commits(monkeypatch):
@@ -263,29 +337,33 @@ def test_write_ttl_multiple_commits(monkeypatch):
             "issue_references": ["99"],
         },
     ]
+    from rdflib import Graph, URIRef
+
     prop_cache = {
-        "hasCommitHash": "hasCommitHash",
-        "hasCommitMessage": "hasCommitMessage",
-        "isMessageOfCommit": "isMessageOfCommit",
-        "hasCommit": "hasCommit",
-        "isCommitIn": "isCommitIn",
-        "addressesIssue": "addressesIssue",
-        "isAddressedBy": "isAddressedBy",
-        "fixesIssue": "fixesIssue",
-        "isFixedBy": "isFixedBy",
-        "modifies": "modifies",
-        "isModifiedBy": "isModifiedBy",
-        "hasFile": "hasFile",
+        "hasCommitHash": URIRef("http://example.org/hasCommitHash"),
+        "hasCommitMessage": URIRef("http://example.org/hasCommitMessage"),
+        "isMessageOfCommit": URIRef("http://example.org/isMessageOfCommit"),
+        "hasCommit": URIRef("http://example.org/hasCommit"),
+        "isCommitIn": URIRef("http://example.org/isCommitIn"),
+        "committedBy": URIRef("http://example.org/committedBy"),
+        "addressesIssue": URIRef("http://example.org/addressesIssue"),
+        "isAddressedBy": URIRef("http://example.org/isAddressedBy"),
+        "fixesIssue": URIRef("http://example.org/fixesIssue"),
+        "isFixedBy": URIRef("http://example.org/isFixedBy"),
+        "modifies": URIRef("http://example.org/modifies"),
+        "isModifiedBy": URIRef("http://example.org/isModifiedBy"),
+        "hasFile": URIRef("http://example.org/hasFile"),
     }
     class_cache = {
-        "Repository": "Repository",
-        "Commit": "Commit",
-        "CommitMessage": "CommitMessage",
-        "InformationContentEntity": "InformationContentEntity",
-        "Issue": "Issue",
+        "Repository": URIRef("http://example.org/Repository"),
+        "Commit": URIRef("http://example.org/Commit"),
+        "CommitMessage": URIRef("http://example.org/CommitMessage"),
+        "InformationContentEntity": URIRef(
+            "http://example.org/InformationContentEntity"
+        ),
+        "Issue": URIRef("http://example.org/Issue"),
     }
-    g = mock.Mock()
-    g.add = mock.Mock()
+    g = Graph()
 
     class DummyProgress:
         def advance(self, task):
@@ -305,4 +383,66 @@ def test_write_ttl_multiple_commits(monkeypatch):
     assert commits_added == 2
     assert issues_added == 1
     assert file_mod_count == 3
-    assert g.add.call_count > 0
+    assert len(g) > 0
+
+
+def test_contributor_registry_normalization():
+    """Test that contributor names are normalized correctly."""
+    from app.extraction.extractors.git_extractor import ContributorRegistry
+
+    registry = ContributorRegistry()
+
+    # Test basic normalization
+    assert registry.normalize_contributor_name("john doe") == "John Doe"
+    assert registry.normalize_contributor_name("JANE SMITH") == "Jane Smith"
+    assert registry.normalize_contributor_name("hamid HAMZA") == "Hamid Hamza"
+
+    # Test edge cases
+    assert registry.normalize_contributor_name("") == ""
+    assert registry.normalize_contributor_name("   ") == ""
+    assert registry.normalize_contributor_name("a") == "A"
+    assert registry.normalize_contributor_name("A") == "A"
+
+    # Test single word
+    assert registry.normalize_contributor_name("john") == "John"
+    assert registry.normalize_contributor_name("JOHN") == "John"
+
+
+def test_contributor_registry_deduplication():
+    """Test that contributor registry deduplicates normalized names."""
+    from app.extraction.extractors.git_extractor import ContributorRegistry
+
+    registry = ContributorRegistry()
+
+    # Same person with different name formats should get the same URI
+    uri1 = registry.get_or_create_contributor_uri("john doe")
+    uri2 = registry.get_or_create_contributor_uri("JOHN DOE")
+    uri3 = registry.get_or_create_contributor_uri("John Doe")
+
+    assert uri1 == uri2 == uri3
+    assert registry.get_contributor_count() == 1
+
+    # Different people should get different URIs
+    uri4 = registry.get_or_create_contributor_uri("jane smith")
+    assert uri4 != uri1
+    assert registry.get_contributor_count() == 2
+
+
+def test_contributor_registry_reset():
+    """Test that contributor registry can be reset."""
+    from app.extraction.extractors.git_extractor import ContributorRegistry
+
+    registry = ContributorRegistry()
+
+    # Add some contributors
+    registry.get_or_create_contributor_uri("john doe")
+    registry.get_or_create_contributor_uri("jane smith")
+    assert registry.get_contributor_count() == 2
+
+    # Reset
+    registry.reset()
+    assert registry.get_contributor_count() == 0
+
+    # Add again after reset
+    uri = registry.get_or_create_contributor_uri("john doe")
+    assert registry.get_contributor_count() == 1

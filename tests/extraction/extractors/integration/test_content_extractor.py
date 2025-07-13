@@ -16,7 +16,8 @@ def test_uri_safe_string():
     s = "My Content: 2024/07/09"
     safe = content_extractor.uri_safe_string(s)
     assert isinstance(safe, str)
-    assert ":" not in safe and "/" not in safe
+    assert ":" not in safe  # Colons should be replaced
+    # Note: Forward slashes are now preserved for file paths
 
 
 # Add more tests for other helpers or pure functions as discovered
@@ -197,9 +198,9 @@ def test_add_content_triples_integration(tmp_path):
     context = ExtractionContext(
         content_classifiers=[], content_ignore_patterns=[], ontology=None
     )
-    file_uri = URIRef("http://example.org/file")
+    file_uri = URIRef("http://example.org/repo1/main.py")
     repo_enc = "repo1"
-    path_enc = "main_py"
+    path_enc = "main.py"
     content_extractor.add_content_triples(
         g, record, context, file_uri, repo_enc, path_enc
     )
@@ -286,6 +287,74 @@ def test_software_package_registry_register_and_reset(caplog):
         )
 
 
+def test_content_registry_register_and_reset(caplog):
+    """Test ContentRegistry to ensure it properly manages unique content URIs."""
+    reg = content_extractor.ContentRegistry()
+    uri1 = reg.get_or_create_content_uri("repo1", "path1")
+    uri2 = reg.get_or_create_content_uri("repo1", "path1")
+    uri3 = reg.get_or_create_content_uri("repo2", "path2")
+    assert uri1 == uri2
+    assert uri1 != uri3
+    assert reg.get_content_count() == 2
+    reg.reset()
+    assert reg.get_content_count() == 0
+    # Logging
+    with caplog.at_level("INFO"):
+        reg.get_or_create_content_uri("repo3", "path3")
+        reg.log_registered_contents()
+        assert (
+            "Registered contents" in caplog.text
+            or "No contents registered" in caplog.text
+        )
+
+
+def test_csharp_language_mapping():
+    """Test that C# language mapping works correctly from tree-sitter to RDF."""
+    from rdflib import Graph, Literal, URIRef
+    from rdflib.namespace import XSD
+
+    from app.extraction.extractors.content_extractor import (
+        ExtractionContext,
+        add_content_triples,
+    )
+    from app.extraction.utils.file_utils import FileRecord
+
+    # Create a mock file record for C# code
+    record = FileRecord(
+        id=1,
+        repository="test-repo",
+        path="test.cs",
+        abs_path="/tmp/test.cs",
+        filename="test.cs",
+        extension=".cs",
+        size_bytes=1024,
+        ontology_class="CSharpCode",
+        class_uri="http://web-development-ontology.netlify.app/wdo#CSharpCode",
+    )
+
+    # Create a mock context
+    context = ExtractionContext(
+        content_classifiers=[], content_ignore_patterns=[], ontology=None
+    )
+
+    # Create a graph and URIs
+    g = Graph()
+    file_uri = URIRef("http://example.com/file")
+    repo_enc = "test-repo"
+    path_enc = "test.cs"
+
+    # Call the function that adds content triples
+    add_content_triples(g, record, context, file_uri, repo_enc, path_enc)
+
+    # Check that the programming language is set to "csharp" (not "c_sharp")
+    for s, p, o in g:
+        if str(p).endswith("hasProgrammingLanguage"):
+            assert str(o) == "csharp", f"Expected 'csharp', got '{o}'"
+            break
+    else:
+        assert False, "No hasProgrammingLanguage triple found"
+
+
 def test_extract_image_metadata_unreadable(tmp_path):
     # File does not exist
     meta = content_extractor.extract_image_metadata(str(tmp_path / "missing.png"))
@@ -368,7 +437,7 @@ def test_main_integration(tmp_path, monkeypatch):
         content_extractor, "get_ontology_cache_path", lambda: str(cache_path)
     )
     # Patch get_output_path to a dummy output file
-    output_path = tmp_path / "web_development_ontology.ttl"
+    output_path = tmp_path / "wdkb.ttl"
     monkeypatch.setattr(
         content_extractor, "get_output_path", lambda _: str(output_path)
     )

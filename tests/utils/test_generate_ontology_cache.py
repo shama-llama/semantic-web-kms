@@ -32,7 +32,7 @@ def mock_subjects(predicate=None, object=None):
 def test_main_creates_expected_cache(mock_get_path, mock_wdo):
     """Test that main() creates a cache file with the expected structure."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        fake_onto_path = os.path.join(tmpdir, "web_development_ontology.owl")
+        fake_onto_path = os.path.join(tmpdir, "wdo.owl")
         fake_cache_path = os.path.join(tmpdir, "ontology_cache.json")
         mock_get_path.return_value = fake_onto_path
         # Patch constants in the module

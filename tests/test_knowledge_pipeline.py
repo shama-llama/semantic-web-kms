@@ -48,20 +48,29 @@ def test_upload_ttl_to_allegrograph_failure():
 
 def test_main_success():
     """Test main runs all steps successfully."""
-    with patch("app.knowledge_pipeline.run_cmd") as mock_run_cmd, patch(
+    with patch(
+        "app.knowledge_pipeline.run_extraction_with_progress"
+    ) as mock_extraction, patch(
+        "app.knowledge_pipeline.run_annotation_with_progress"
+    ) as mock_annotation, patch(
         "app.knowledge_pipeline.upload_ttl_to_allegrograph"
-    ) as mock_upload:
+    ) as mock_upload, patch(
+        "app.knowledge_pipeline.print_pipeline_summary"
+    ) as mock_summary:
         kp.main()
-        assert mock_run_cmd.call_count == 2
+        mock_extraction.assert_called_once()
+        mock_annotation.assert_called_once()
         mock_upload.assert_called_once_with(kp.TTL_PATH)
+        mock_summary.assert_called_once()
 
 
 def test_main_failure_exits():
-    """Test main exits if a step fails (simulate by raising SystemExit)."""
-    with patch("app.knowledge_pipeline.run_cmd", side_effect=[None, SystemExit]), patch(
-        "app.knowledge_pipeline.upload_ttl_to_allegrograph"
-    ) as mock_upload:
+    """Test main exits if a step fails."""
+    with patch(
+        "app.knowledge_pipeline.run_extraction_with_progress",
+        side_effect=Exception("Test error"),
+    ), patch("app.knowledge_pipeline.upload_ttl_to_allegrograph") as mock_upload:
         with pytest.raises(SystemExit):
             kp.main()
-        # Should not call upload if annotation step fails
+        # Should not call upload if extraction step fails
         mock_upload.assert_not_called()

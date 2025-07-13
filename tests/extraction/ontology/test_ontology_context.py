@@ -22,6 +22,7 @@ def test_create_ontology_context():
         INST=INST,
         WDO=WDO,
         uri_safe_string=uri_safe_string,
+        uri_safe_file_path=lambda s: s.replace(" ", "_"),
         TTL_PATH=TTL_PATH,
     )
     assert ctx.g is g
@@ -58,6 +59,7 @@ def test_ontology_context_dataclass_fields():
         INST=Namespace("http://example.org/inst/"),
         WDO=Namespace("http://example.org/wdo/"),
         uri_safe_string=lambda s: s,
+        uri_safe_file_path=lambda s: s,
         TTL_PATH=Path("/tmp/test.ttl"),
     )
     assert hasattr(ctx, "g")

@@ -18,7 +18,8 @@ def test_uri_safe_string():
     s = "My Code: 2024/07/09"
     safe = code_extractor.uri_safe_string(s)
     assert isinstance(safe, str)
-    assert ":" not in safe and "/" not in safe
+    assert ":" not in safe  # Colons should be replaced
+    # Note: Forward slashes are now preserved for file paths
 
 
 # Add more tests for other helpers or pure functions as discovered
@@ -129,7 +130,12 @@ def foo(x):
     monkeypatch.setattr(
         code_extractor,
         "initialize_context_and_graph",
-        lambda ttl_path, INST, WDO, uri_safe_string: (Graph(), {}, {}, DummyCtx1()),
+        lambda ttl_path, INST, WDO, uri_safe_string, uri_safe_file_path: (
+            Graph(),
+            {},
+            {},
+            DummyCtx1(),
+        ),
     )
     # Patch finalize_and_serialize_graph to do nothing
     monkeypatch.setattr(
@@ -183,7 +189,12 @@ def foo(x):
     monkeypatch.setattr(
         code_extractor,
         "initialize_context_and_graph",
-        lambda ttl_path, INST, WDO, uri_safe_string: (Graph(), {}, {}, DummyCtx2()),
+        lambda ttl_path, INST, WDO, uri_safe_string, uri_safe_file_path: (
+            Graph(),
+            {},
+            {},
+            DummyCtx2(),
+        ),
     )
     # Patch finalize_and_serialize_graph to do nothing
     monkeypatch.setattr(
@@ -222,7 +233,12 @@ def foo(x):
     monkeypatch.setattr(
         code_extractor,
         "initialize_context_and_graph",
-        lambda ttl_path, INST, WDO, uri_safe_string: (Graph(), {}, {}, DummyCtx3()),
+        lambda ttl_path, INST, WDO, uri_safe_string, uri_safe_file_path: (
+            Graph(),
+            {},
+            {},
+            DummyCtx3(),
+        ),
     )
     monkeypatch.setattr(
         code_extractor, "finalize_and_serialize_graph", lambda ctx: None
@@ -268,7 +284,12 @@ def foo(x):
     monkeypatch.setattr(
         code_extractor,
         "initialize_context_and_graph",
-        lambda ttl_path, INST, WDO, uri_safe_string: (Graph(), {}, {}, DummyCtx4()),
+        lambda ttl_path, INST, WDO, uri_safe_string, uri_safe_file_path: (
+            Graph(),
+            {},
+            {},
+            DummyCtx4(),
+        ),
     )
     monkeypatch.setattr(
         code_extractor, "finalize_and_serialize_graph", lambda ctx: None
