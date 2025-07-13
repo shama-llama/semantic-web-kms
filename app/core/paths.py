@@ -145,7 +145,7 @@ def get_content_types_path() -> str:
 
 def get_web_dev_ontology_path() -> str:
     """
-    Return the path to web_development_ontology.owl.
+    Return the path to wdo.owl.
 
     Returns:
         str: The path to the web development ontology OWL file.
@@ -155,7 +155,7 @@ def get_web_dev_ontology_path() -> str:
 
 def get_basic_formal_ontology_path() -> str:
     """
-    Return the path to basic_formal_ontology.owl.
+    Return the path to bfo.owl.
 
     Returns:
         str: The path to the basic formal ontology OWL file.
@@ -198,13 +198,46 @@ def uri_safe_string(text: str) -> str:
 
     # Replace spaces and other problematic characters with underscores
     # This includes: spaces, tabs, newlines, and other whitespace
-    # Also includes: /, \, :, *, ?, ", <, >, |, and other filesystem-incompatible chars
-    uri_safe = re.sub(r"[^\w\-_.]", "_", str(text))
+    # Also includes: \, :, *, ?, ", <, >, |, and other filesystem-incompatible chars
+    # Note: We preserve forward slashes for file paths
+    uri_safe = re.sub(r"[^\w\-./]", "_", str(text))
 
     # Replace multiple consecutive underscores with a single one
     uri_safe = re.sub(r"_+", "_", uri_safe)
 
     # Remove leading/trailing underscores
-    uri_safe = uri_safe.strip("_")
+    uri_safe = re.sub(r"(^_+|_+$)", "", uri_safe)
 
     return uri_safe
+
+
+def uri_safe_file_path(file_path: str) -> str:
+    """
+    Convert a file path to URI-safe format while preserving directory structure.
+
+    Args:
+        file_path (str): The file path to convert.
+
+    Returns:
+        str: The URI-safe version of the file path with preserved directory structure.
+    """
+    if not file_path:
+        return ""
+
+    # Split the path into components
+    path_components = file_path.split("/")
+
+    # Make each component URI-safe while preserving the structure
+    safe_components = []
+    for component in path_components:
+        if component:
+            # Replace problematic characters in each component, but preserve dots
+            safe_component = re.sub(r"[^\w\-.]", "_", component)
+            # Replace multiple consecutive underscores with a single one
+            safe_component = re.sub(r"_+", "_", safe_component)
+            # Remove leading/trailing underscores
+            safe_component = re.sub(r"(^_+|_+$)", "", safe_component)
+            safe_components.append(safe_component)
+
+    # Rejoin with forward slashes
+    return "/".join(safe_components)

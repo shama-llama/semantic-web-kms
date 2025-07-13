@@ -1,16 +1,15 @@
 """Utility to generate a JSON cache of ontology classes and properties from the WDO ontology."""
 
 import json
-import os
 import re
 from typing import Any, Dict, List
 
-from app.core.paths import get_web_dev_ontology_path
+from app.core.paths import get_ontology_cache_path, get_web_dev_ontology_path
 from app.ontology.wdo import WDOOntology
 
 # Output path for the cache
 ONTOLOGY_PATH: str = get_web_dev_ontology_path()
-CACHE_PATH: str = os.path.join(os.path.dirname(ONTOLOGY_PATH), "ontology_cache.json")
+CACHE_PATH: str = get_ontology_cache_path()
 
 
 def get_local_name(uri: str) -> str:
