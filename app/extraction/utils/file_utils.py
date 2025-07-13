@@ -1,11 +1,15 @@
 """File and repository utility functions and data models for extraction."""
 
+import datetime
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from app.core.paths import get_input_dir
+
+logger = logging.getLogger(__name__)
 
 
 def get_repo_dirs(excluded_dirs: Set[str]) -> List[str]:
@@ -129,18 +133,37 @@ def build_file_records(
                 abs_path = os.path.join(dirpath, fname)
                 rel_path = os.path.relpath(abs_path, repo_path)
                 ext = Path(fname).suffix
-                file_records.append(
-                    FileRecord(
-                        id=file_id,
-                        repository=repo,
-                        path=rel_path,
-                        filename=fname,
-                        extension=ext,
-                        size_bytes=os.path.getsize(abs_path),
-                        abs_path=abs_path,
+                try:
+                    stat = os.stat(abs_path)
+                    modification_timestamp = datetime.datetime.fromtimestamp(
+                        stat.st_mtime
+                    ).isoformat()
+                    try:
+                        creation_timestamp = datetime.datetime.fromtimestamp(
+                            getattr(stat, "st_birthtime", stat.st_ctime)
+                        ).isoformat()
+                    except AttributeError:
+                        creation_timestamp = datetime.datetime.fromtimestamp(
+                            stat.st_ctime
+                        ).isoformat()
+                    file_records.append(
+                        FileRecord(
+                            id=file_id,
+                            repository=repo,
+                            path=rel_path,
+                            filename=fname,
+                            extension=ext,
+                            size_bytes=os.path.getsize(abs_path),
+                            abs_path=abs_path,
+                            creation_timestamp=creation_timestamp,
+                            modification_timestamp=modification_timestamp,
+                        )
                     )
-                )
-                file_id += 1
+                    file_id += 1
+                except Exception as e:
+                    logger.warning(f"Failed to process file {abs_path}: {e}")
+                    # Skip this file and continue with the next one
+                    pass
                 if progress is not None and extract_task is not None:
                     progress.advance(extract_task)
     return file_records

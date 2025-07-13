@@ -29,8 +29,10 @@ from app.core.paths import (
     get_ontology_cache_path,
     get_output_path,
     get_web_dev_ontology_path,
+    uri_safe_file_path,
     uri_safe_string,
 )
+from app.core.progress_tracker import get_current_tracker
 from app.extraction.utils.classification_utils import (
     classify_file,
     load_classifiers_from_json,
@@ -107,6 +109,67 @@ class FrameworkRegistry:
 
 # Global framework registry instance
 framework_registry = FrameworkRegistry()
+
+
+class ContentRegistry:
+    """Registry to manage unique content URIs across the entire extraction process."""
+
+    def __init__(self):
+        """Initialize the content registry with an empty dictionary."""
+        self._content_uris: Dict[str, URIRef] = {}
+
+    def get_or_create_content_uri(self, repo_enc: str, path_enc: str) -> URIRef:
+        """
+        Get existing content URI or create a new one if it doesn't exist.
+
+        Args:
+            repo_enc: URI-safe encoded repository name.
+            path_enc: URI-safe encoded file path.
+
+        Returns:
+            URIRef: The URI for the content (either existing or newly created).
+        """
+        content_key = f"{repo_enc}/{path_enc}_content"
+        if content_key not in self._content_uris:
+            # Create a new URI for this content
+            content_uri = INST[content_key]
+            self._content_uris[content_key] = content_uri
+        return self._content_uris[content_key]
+
+    def get_registered_contents(self) -> Dict[str, URIRef]:
+        """
+        Get all registered contents and their URIs.
+
+        Returns:
+            Dict[str, URIRef]: A copy of the internal content URI mapping.
+        """
+        return self._content_uris.copy()
+
+    def get_content_count(self) -> int:
+        """
+        Get the total number of unique contents registered.
+
+        Returns:
+            int: The number of unique contents registered.
+        """
+        return len(self._content_uris)
+
+    def reset(self) -> None:
+        """Reset the content registry to empty state."""
+        self._content_uris.clear()
+
+    def log_registered_contents(self) -> None:
+        """Log all registered contents."""
+        if self._content_uris:
+            logger.info(f"Registered contents ({len(self._content_uris)}):")
+            for key, uri in self._content_uris.items():
+                logger.info(f"  {key} -> {uri}")
+        else:
+            logger.info("No contents registered")
+
+
+# Global content registry instance
+content_registry = ContentRegistry()
 
 
 class SoftwarePackageRegistry:
@@ -399,7 +462,7 @@ def add_content_triples(
     Raises:
         None directly, but may propagate exceptions from called functions if not handled.
     """
-    content_uri = INST[f"content_{repo_enc}_{path_enc}"]
+    content_uri = content_registry.get_or_create_content_uri(repo_enc, path_enc)
     content_class_uri = record.class_uri
     if not content_class_uri:
         return
@@ -429,12 +492,29 @@ def add_content_triples(
         "TypeScriptCode",
     }
     if class_name in programming_language_classes:
-        language_name = class_name.replace("Code", "")
+        # Convert tree-sitter language names to RDF-friendly names
+        tree_sitter_to_rdf_mapping = {
+            "c_sharp": "csharp",
+            "typescript": "typescript",
+            "javascript": "javascript",
+            "python": "python",
+            "java": "java",
+            "go": "go",
+            "rust": "rust",
+            "ruby": "ruby",
+            "php": "php",
+            "scala": "scala",
+            "swift": "swift",
+            "lua": "lua",
+        }
+        language_name = class_name.replace("Code", "").lower()
+        # Map tree-sitter names to RDF-friendly names
+        rdf_language_name = tree_sitter_to_rdf_mapping.get(language_name, language_name)
         g.add(
             (
                 content_uri,
-                WDO.programmingLanguage,
-                Literal(language_name, datatype=XSD.string),
+                WDO.hasProgrammingLanguage,
+                Literal(rdf_language_name, datatype=XSD.string),
             )
         )
     if class_name in ["ConfigurationSetting", "CommitMessage", "Log"]:
@@ -505,8 +585,8 @@ def add_content_only_triples(
     repo_clean = repo_name.replace(" ", "_")
     path_clean = record.path.replace(" ", "_")
     repo_enc = uri_safe_string(repo_clean)
-    path_enc = uri_safe_string(path_clean)
-    file_uri = INST[f"file_{repo_enc}_{path_enc}"]
+    path_enc = uri_safe_file_path(path_clean)
+    file_uri = INST[f"{repo_enc}/{path_enc}"]
     if repo_enc not in processed_repos:
         add_repository_metadata(g, repo_enc, repo_name, input_dir, processed_repos)
     add_content_triples(
@@ -1310,15 +1390,36 @@ def main() -> None:
             content_ignore_patterns=content_ignore_patterns,
             ontology=ontology,
         )
-        ttl_path = get_output_path("web_development_ontology.ttl")
+        ttl_path = get_output_path("wdkb.ttl")
         console = Console()
+
+        # Get progress tracker for frontend reporting
+        tracker = get_current_tracker()
+
+        # Define custom progress bar with green completion styling
+        bar_column = BarColumn(
+            bar_width=30,  # Thinner bar width
+            style="blue",  # Style for the incomplete part of the bar
+            complete_style="bold blue",  # Style for the completed part
+            finished_style="bold green",  # Style when task is 100% complete
+        )
+
         with Progress(
             TextColumn("[bold blue]{task.description}"),
-            BarColumn(),
+            bar_column,  # Use custom bar column
             "[progress.percentage]{task.percentage:>3.0f}%",
             TimeElapsedColumn(),
             console=console,
         ) as progress:
+            # Update progress tracker if available
+            if tracker:
+                tracker.update_stage(
+                    "contentExtraction",
+                    "processing",
+                    0,
+                    "Starting content extraction...",
+                )
+
             extract_task = progress.add_task("Extracting content...", total=total_files)
             file_records = build_file_records(
                 repo_dirs, excluded_dirs, progress, extract_task
@@ -1326,6 +1427,17 @@ def main() -> None:
             processed_repos: Set[str] = set()
             error_count = 0
             content_records = []
+
+            # Update progress tracker with extraction completion
+            if tracker:
+                tracker.update_stage(
+                    "contentExtraction",
+                    "processing",
+                    30,
+                    f"Processing {len(file_records)} files...",
+                )
+
+            processed_files = 0
             for record in file_records:
                 try:
                     # Classify and prepare content record for TTL writing
@@ -1356,9 +1468,33 @@ def main() -> None:
                         exc_info=True,
                     )
                     error_count += 1
+
+                processed_files += 1
+                # Update progress tracker every 10 files or at completion
+                if tracker and (
+                    processed_files % 10 == 0 or processed_files == len(file_records)
+                ):
+                    progress_percentage = 30 + int(
+                        (processed_files / len(file_records)) * 30
+                    )  # 30-60%
+                    tracker.update_stage(
+                        "contentExtraction",
+                        "processing",
+                        progress_percentage,
+                        f"Processing content: {processed_files}/{len(file_records)} files",
+                    )
             logger.info(
                 f"Content extraction complete: {len(file_records)} files processed. {error_count} files failed."
             )
+            # Update progress tracker for TTL writing
+            if tracker:
+                tracker.update_stage(
+                    "contentExtraction",
+                    "processing",
+                    60,
+                    f"Writing ontology: {len(content_records)} content records...",
+                )
+
             # Writing TTL with progress bar
             ttl_task = progress.add_task("Writing TTL...", total=len(content_records))
             g = Graph()
@@ -1377,8 +1513,8 @@ def main() -> None:
                 repo_clean = repo_name.replace(" ", "_")
                 path_clean = record.path.replace(" ", "_")
                 repo_enc = uri_safe_string(repo_clean)
-                path_enc = uri_safe_string(path_clean)
-                file_uri = INST[f"file_{repo_enc}_{path_enc}"]
+                path_enc = uri_safe_file_path(path_clean)
+                file_uri = INST[f"{repo_enc}/{path_enc}"]
                 if repo_enc not in processed_repos:
                     add_repository_metadata(
                         graph, repo_enc, repo_name, input_dir, processed_repos
@@ -1392,12 +1528,48 @@ def main() -> None:
                     path_enc,
                 )
 
+            # Create a custom progress wrapper for TTL writing
+            class ProgressWrapper:
+                def __init__(self, rich_progress, rich_task, tracker):
+                    self.rich_progress = rich_progress
+                    self.rich_task = rich_task
+                    self.tracker = tracker
+                    self.processed = 0
+                    self.total = len(content_records)
+                    # Add tasks attribute to mimic Rich Progress
+                    self.tasks = {rich_task: type("Task", (), {"total": self.total})()}
+
+                def advance(self, task):
+                    self.rich_progress.advance(self.rich_task)
+                    self.processed += 1
+
+                    # Update tracker every 10 records or at completion
+                    if self.tracker and (
+                        self.processed % 10 == 0 or self.processed == self.total
+                    ):
+                        # TTL writing is the second half of the stage (60-100%)
+                        progress_percentage = 60 + int(
+                            (self.processed / self.total) * 40
+                        )
+                        self.tracker.update_stage(
+                            "contentExtraction",
+                            "processing",
+                            progress_percentage,
+                            f"Writing ontology: {self.processed}/{self.total} content records",
+                        )
+
+                def update(self, task, **kwargs):
+                    self.rich_progress.update(self.rich_task, **kwargs)
+
+            # Use the progress wrapper for TTL writing
+            progress_wrapper = ProgressWrapper(progress, ttl_task, tracker)
+
             write_ttl_with_progress(
                 content_records,
                 add_content_triples_for_ttl,
                 g,
                 ttl_path,
-                progress,
+                progress_wrapper,
                 ttl_task,
                 context.ontology,
                 input_dir,
@@ -1412,6 +1584,7 @@ def main() -> None:
         )
         framework_registry.log_registered_frameworks()
         software_package_registry.log_registered_packages()
+        content_registry.log_registered_contents()
     except Exception as e:
         logger.error(f"Fatal error in content extraction: {e}", exc_info=True)
         raise

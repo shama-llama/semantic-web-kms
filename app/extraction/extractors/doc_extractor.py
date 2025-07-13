@@ -22,8 +22,15 @@ from app.core.paths import get_excluded_directories_path  # type: ignore
 from app.core.paths import get_log_path  # type: ignore
 from app.core.paths import get_output_path  # type: ignore
 from app.core.paths import get_web_dev_ontology_path  # type: ignore
-from app.core.paths import uri_safe_string  # type: ignore
-from app.core.paths import get_carrier_types_path, get_content_types_path, get_input_dir
+from app.core.paths import (  # type: ignore
+    get_carrier_types_path,
+    get_content_types_path,
+    get_input_dir,
+    uri_safe_file_path,
+    uri_safe_string,
+)
+from app.core.progress_tracker import get_current_tracker
+from app.extraction.extractors.content_extractor import content_registry
 from app.extraction.utils.file_utils import (
     FileRecord,
     build_file_records,
@@ -563,7 +570,7 @@ def parse_markdown(text: str) -> MarkdownElement:
                 type=token.type,
                 content=None,
                 start_line=token.map[0] + 1 if token.map else None,
-                end_line=None,
+                end_line=token.map[1] if token.map else None,  # Will increment below
                 level=(
                     int(token.tag[1:])
                     if token.type == "heading_open"
@@ -576,11 +583,17 @@ def parse_markdown(text: str) -> MarkdownElement:
                 token_index=i,
                 tag=getattr(token, "tag", None),
             )
+            # Tree-sitter/Markdown-it: token.map gives [start, end) (0-based); add 1 for 1-based lines, increment end_line for inclusivity
+            if elem.end_line is not None:
+                elem.end_line += 1
             parent_stack[-1].children.append(elem)
             parent_stack.append(elem)
         elif token.nesting == -1:
             if len(parent_stack) > 1:
                 parent_stack[-1].end_line = token.map[1] if token.map else None
+                # Tree-sitter/Markdown-it: token.map gives [start, end) (0-based); add 1 for inclusivity
+                if parent_stack[-1].end_line is not None:
+                    parent_stack[-1].end_line += 1
                 parent_stack.pop()
         elif token.nesting == 0:
             content = (
@@ -592,11 +605,14 @@ def parse_markdown(text: str) -> MarkdownElement:
                 type=token.type,
                 content=content,
                 start_line=token.map[0] + 1 if token.map else None,
-                end_line=token.map[1] if token.map else None,
+                end_line=token.map[1] if token.map else None,  # Will increment below
                 children=[],
                 token_index=i,
                 tag=getattr(token, "tag", None),
             )
+            # Tree-sitter/Markdown-it: token.map gives [start, end) (0-based); add 1 for 1-based lines, increment end_line for inclusivity
+            if elem.end_line is not None:
+                elem.end_line += 1
             parent_stack[-1].children.append(elem)
     return root
 
@@ -607,6 +623,7 @@ def add_triples_from_markdown(
     context: DocExtractionContext,
     parent_uri: URIRef,
     file_enc: str,
+    repo_enc: str,
     parent_stack: Optional[list] = None,
 ):
     """Recursively add RDF triples for markdown elements to the graph.
@@ -617,6 +634,7 @@ def add_triples_from_markdown(
         context: The extraction context.
         parent_uri: The URI of the parent resource.
         file_enc: The encoded file identifier.
+        repo_enc: The encoded repository identifier.
         parent_stack: Stack of parent URIs for nested elements.
     """
     if parent_stack is None:
@@ -627,7 +645,9 @@ def add_triples_from_markdown(
         elem_id = (
             f"{file_enc}_{element.type.replace('_open', '')}_{element.token_index}"
         )
-        elem_uri = URIRef(f"http://semantic-web-kms.edu.et/wdo/instances/{elem_id}")
+        elem_uri = URIRef(
+            f"http://web-development-ontology.netlify.app/wdo/instances/{repo_enc}/{file_enc}/{elem_id}"
+        )
         # Use the filename for document context
         document_name = file_enc
         label_prefix = MD_TO_WDO[element.type].lower()
@@ -663,7 +683,9 @@ def add_triples_from_markdown(
     elif element.type in {"fence", "code_block"}:
         elem_class = context.class_cache["CodeBlock"]
         elem_id = f"{file_enc}_codeblock_{element.token_index}"
-        elem_uri = URIRef(f"http://semantic-web-kms.edu.et/wdo/instances/{elem_id}")
+        elem_uri = URIRef(
+            f"http://web-development-ontology.netlify.app/wdo/instances/{repo_enc}/{file_enc}/{elem_id}"
+        )
         code_label = (
             f"CodeBlock: {element.content[:50]}" if element.content else "CodeBlock"
         )
@@ -697,7 +719,13 @@ def add_triples_from_markdown(
     # Recurse for children
     for child in element.children:
         add_triples_from_markdown(
-            child, g, context, elem_uri or parent_stack[-1], file_enc, parent_stack[:]
+            child,
+            g,
+            context,
+            elem_uri or parent_stack[-1],
+            file_enc,
+            repo_enc,
+            parent_stack[:],
         )
     if elem_uri and elem_uri in parent_stack:
         parent_stack.pop()
@@ -744,19 +772,19 @@ def process_doc_files_with_context(
         abs_path = file_rec.abs_path
         fname = file_rec.filename
         ext = file_rec.extension
-        file_enc = uri_safe_string(rel_path)
+        file_enc = uri_safe_file_path(rel_path)
         repo_enc = uri_safe_string(repo)
         file_uri = URIRef(
-            f"http://semantic-web-kms.edu.et/wdo/instances/{repo_enc}/{file_enc}"
+            f"http://web-development-ontology.netlify.app/wdo/instances/{repo_enc}/{file_enc}"
         )
-        doc_uri = URIRef(
-            f"http://semantic-web-kms.edu.et/wdo/instances/{repo_enc}/{file_enc}_content"
-        )
+        doc_uri = content_registry.get_or_create_content_uri(repo_enc, file_enc)
         doc_type_class_name = get_doc_type(fname)
         doc_type_class = context.class_cache.get(
             doc_type_class_name, context.class_cache["Documentation"]
         )
-        repo_uri = URIRef(f"http://semantic-web-kms.edu.et/wdo/instances/{repo_enc}")
+        repo_uri = URIRef(
+            f"http://web-development-ontology.netlify.app/wdo/instances/{repo_enc}"
+        )
         add_doc_file_triples(
             file_rec, g, context, file_uri, doc_uri, doc_type_class, repo_uri
         )
@@ -764,7 +792,9 @@ def process_doc_files_with_context(
             with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
                 text = f.read()
             root_elem = parse_markdown(text)
-            add_triples_from_markdown(root_elem, g, context, doc_uri, file_enc)
+            add_triples_from_markdown(
+                root_elem, g, context, doc_uri, file_enc, repo_enc
+            )
             handle_special_doc_types(doc_type_class, text, doc_uri, g, context)
         except FileNotFoundError:
             logger.error(f"File not found: {abs_path}", exc_info=True)
@@ -797,10 +827,10 @@ def process_code_files_with_context(
         abs_path = file_rec.abs_path
         fname = file_rec.filename
         ext = file_rec.extension
-        file_enc = uri_safe_string(rel_path)
+        file_enc = uri_safe_file_path(rel_path)
         repo_enc = uri_safe_string(repo)
         file_uri = URIRef(
-            f"http://semantic-web-kms.edu.et/wdo/instances/{repo_enc}/{file_enc}"
+            f"http://web-development-ontology.netlify.app/wdo/instances/{repo_enc}/{file_enc}"
         )
         add_code_file_triples(file_rec, g, context, file_uri)
         try:
@@ -856,15 +886,15 @@ def process_code_comments(
     for idx, comment in enumerate(comments):
         comment_id = f"{file_enc}_codecomment_{idx}"
         comment_uri = URIRef(
-            f"http://semantic-web-kms.edu.et/wdo/instances/{comment_id}"
+            f"http://web-development-ontology.netlify.app/wdo/instances/{comment_id}"
         )
         g.add((comment_uri, RDF.type, context.class_cache["CodeComment"]))
         comment_label = (
             f"comment: {comment['raw'][:50]}" if comment.get("raw") else "comment"
         )
         g.add((comment_uri, RDFS.label, Literal(comment_label, datatype=XSD.string)))
-        if "isElementOf" in context.prop_cache:
-            g.add((comment_uri, context.prop_cache["isElementOf"], file_uri))
+        if "isDocumentComponentOf" in context.prop_cache:
+            g.add((comment_uri, context.prop_cache["isDocumentComponentOf"], file_uri))
         g.add(
             (
                 comment_uri,
@@ -949,7 +979,7 @@ def process_doc_files(doc_files, g, class_cache, prop_cache, ontology, console):
         prop_cache=prop_cache,
         excluded_dirs=set(),
         input_dir=get_input_dir(),
-        ttl_path=get_output_path("web_development_ontology.ttl"),
+        ttl_path=get_output_path("wdkb.ttl"),
         log_path=get_log_path("doc_extractor.log"),
         console=console,
     )
@@ -975,7 +1005,7 @@ def process_code_files(code_files, g, class_cache, prop_cache):
         prop_cache=prop_cache,
         excluded_dirs=set(),
         input_dir=get_input_dir(),
-        ttl_path=get_output_path("web_development_ontology.ttl"),
+        ttl_path=get_output_path("wdkb.ttl"),
         log_path="",
         console=None,
     )
@@ -991,22 +1021,74 @@ def run_extraction(context: DocExtractionContext, doc_files, code_files, g):
         code_files: List of code file records.
         g: The RDF graph to which triples are added.
     """
+    tracker = get_current_tracker()
+    # Define custom progress bar with green completion styling
+    bar_column = BarColumn(
+        bar_width=30,  # Thinner bar width
+        style="blue",  # Style for the incomplete part of the bar
+        complete_style="bold blue",  # Style for the completed part
+        finished_style="bold green",  # Style when task is 100% complete
+    )
+
     with Progress(
         TextColumn("[bold blue]{task.description}"),
-        BarColumn(),
+        bar_column,  # Use custom bar column
         "[progress.percentage]{task.percentage:>3.0f}%",
         TimeElapsedColumn(),
         console=context.console,
     ) as progress:
+        if tracker:
+            tracker.update_stage(
+                "documentationExtraction",
+                "processing",
+                0,
+                "Starting documentation extraction...",
+            )
         extract_task = progress.add_task(
             "[blue]Extracting documentation...", total=len(doc_files) + len(code_files)
         )
+        processed_files = 0
         for _ in process_doc_files_with_context(doc_files, g, context):
             progress.advance(extract_task)
+            processed_files += 1
+            if tracker and (
+                processed_files % 10 == 0
+                or processed_files == len(doc_files) + len(code_files)
+            ):
+                progress_percentage = int(
+                    (processed_files / (len(doc_files) + len(code_files))) * 60
+                )
+                tracker.update_stage(
+                    "documentationExtraction",
+                    "processing",
+                    progress_percentage,
+                    f"Processing documentation: {processed_files}/{len(doc_files) + len(code_files)} files",
+                )
         for _ in process_code_files(
             code_files, g, context.class_cache, context.prop_cache
         ):
             progress.advance(extract_task)
+            processed_files += 1
+            if tracker and (
+                processed_files % 10 == 0
+                or processed_files == len(doc_files) + len(code_files)
+            ):
+                progress_percentage = int(
+                    (processed_files / (len(doc_files) + len(code_files))) * 60
+                )
+                tracker.update_stage(
+                    "documentationExtraction",
+                    "processing",
+                    progress_percentage,
+                    f"Processing documentation: {processed_files}/{len(doc_files) + len(code_files)} files",
+                )
+        if tracker:
+            tracker.update_stage(
+                "documentationExtraction",
+                "processing",
+                60,
+                f"Writing ontology: {processed_files} documentation/code records...",
+            )
         # Use the new write_ttl_with_progress signature from rdf_utils
         all_records = doc_files + code_files
 
@@ -1014,13 +1096,41 @@ def run_extraction(context: DocExtractionContext, doc_files, code_files, g):
             # This is a placeholder; actual triple addition logic should be implemented as needed
             pass
 
-        ttl_task = progress.add_task("[blue]Writing TTL...", total=len(all_records))
+        ttl_task = progress.add_task("[blue]Writing TTL...", total=processed_files)
+
+        class ProgressWrapper:
+            def __init__(self, rich_progress, rich_task, tracker):
+                self.rich_progress = rich_progress
+                self.rich_task = rich_task
+                self.tracker = tracker
+                self.processed = 0
+                self.total = processed_files
+                self.tasks = {rich_task: type("Task", (), {"total": self.total})()}
+
+            def advance(self, task):
+                self.rich_progress.advance(self.rich_task)
+                self.processed += 1
+                if self.tracker and (
+                    self.processed % 10 == 0 or self.processed == self.total
+                ):
+                    progress_percentage = 60 + int((self.processed / self.total) * 40)
+                    self.tracker.update_stage(
+                        "documentationExtraction",
+                        "processing",
+                        progress_percentage,
+                        f"Writing ontology: {self.processed}/{self.total} documentation/code records",
+                    )
+
+            def update(self, task, **kwargs):
+                self.rich_progress.update(self.rich_task, **kwargs)
+
+        progress_wrapper = ProgressWrapper(progress, ttl_task, tracker)
         write_ttl_with_progress(
-            all_records,
+            doc_files + code_files,
             add_triples_fn,
             g,
             context.ttl_path,
-            progress,
+            progress_wrapper,
             ttl_task,
         )
 
@@ -1100,7 +1210,7 @@ def _create_context(console, ontology, ontology_cache, class_cache, prop_cache):
         prop_cache=prop_cache,
         excluded_dirs=excluded_dirs,
         input_dir=get_input_dir(),
-        ttl_path=get_output_path("web_development_ontology.ttl"),
+        ttl_path=get_output_path("wdkb.ttl"),
         log_path=get_log_path("doc_extractor.log"),
         console=console,
     )

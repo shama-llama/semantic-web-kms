@@ -16,8 +16,10 @@ from app.core.namespaces import INST, WDO
 from app.core.paths import (
     get_code_queries_path,
     get_language_mapping_path,
+    uri_safe_file_path,
     uri_safe_string,
 )
+from app.core.progress_tracker import get_current_tracker
 from app.extraction.ontology.ontology_context import initialize_context_and_graph
 from app.extraction.utils.ast_extraction import (
     extract_python_entities,
@@ -238,6 +240,73 @@ def extract_access_relationships(summary: Dict[str, Any]) -> None:
     summary["access_relationships"] = access_relationships
 
 
+def extract_manipulation_and_styling_relationships(constructs: dict) -> None:
+    """
+    Extract manipulation and styling relationships for ontology writing.
+
+    Args:
+        constructs: Dict of extracted code constructs (functions, variables, etc.).
+    Returns:
+        None. Updates constructs in place with 'manipulation_relationships' and 'styling_relationships'.
+    """
+    manipulation_relationships = []
+    styling_relationships = []
+
+    # Programming language code classes that can manipulate HTML
+    manipulator_types = {
+        "JavaScriptCode",
+        "TypeScriptCode",
+        "PythonCode",
+        "PHPCode",
+        "RubyCode",
+        "GoCode",
+        "JavaCode",
+        "RustCode",
+        "CSharpCode",
+    }
+    # Identify manipulators (functions) and HTML variables
+    js_functions = [
+        f
+        for f in constructs.get("functions", [])
+        + constructs.get("FunctionDefinition", [])
+        if f.get("type") in manipulator_types or f.get("language") in manipulator_types
+    ]
+    html_vars = [
+        v
+        for v in constructs.get("variables", [])
+        + constructs.get("VariableDeclaration", [])
+        if str(v.get("type") or "").lower() in {"html", "htmlelement", "element"}
+        or "html" in str(v.get("name") or "").lower()
+    ]
+    for func in js_functions:
+        func_name = func.get("name", "")
+        raw_code = func.get("raw", "")
+        for var in html_vars:
+            var_name = var.get("name", "")
+            if var_name and var_name in raw_code:
+                manipulation_relationships.append(
+                    {"manipulator": func_name, "manipulatee": var_name}
+                )
+
+    # Styling: Only CSS code styles HTML
+    css_functions = [
+        f
+        for f in constructs.get("functions", [])
+        + constructs.get("FunctionDefinition", [])
+        if f.get("type") == "CSSCode" or f.get("language") == "CSSCode"
+    ]
+    for func in css_functions:
+        func_name = func.get("name", "")
+        raw_code = func.get("raw", "")
+        for var in html_vars:
+            var_name = var.get("name", "")
+            if var_name and var_name in raw_code:
+                styling_relationships.append({"styler": func_name, "stylee": var_name})
+
+    constructs["manipulation_relationships"] = manipulation_relationships
+    constructs["styling_relationships"] = styling_relationships
+
+
 def extract_ast_entities_progress(
     supported_files, language_mapping, queries, summary_data, progress, extract_task
 ):
@@ -270,6 +339,8 @@ def extract_ast_entities_progress(
             extract_tree_sitter_file(
                 abs_path, lang_name, queries, summary_data[summary_key]
             )
+        # Add manipulation and styling relationships after entity extraction
+        extract_manipulation_and_styling_relationships(summary_data[summary_key])
         progress.advance(extract_task)
 
 
@@ -321,9 +392,17 @@ def extract_all_ast_entities(
         summary_data: Dict to update with extraction results.
         console: Rich console for progress display.
     """
+    # Define custom progress bar with green completion styling
+    bar_column = BarColumn(
+        bar_width=30,  # Thinner bar width
+        style="blue",  # Style for the incomplete part of the bar
+        complete_style="bold blue",  # Style for the completed part
+        finished_style="bold green",  # Style when task is 100% complete
+    )
+
     with Progress(
         TextColumn("[bold blue]{task.description}"),
-        BarColumn(),
+        bar_column,  # Use custom bar column
         "[progress.percentage]{task.percentage:>3.0f}%",
         TimeElapsedColumn(),
         console=console,
@@ -354,9 +433,16 @@ def write_and_serialize_ontology(ctx, supported_files, summary_data, language_ma
     logger.info(
         "AST extraction complete. Writing code structure entities to ontology..."
     )
+    # Define custom progress bar with green completion styling
+    bar_column = BarColumn(
+        bar_width=30,  # Thinner bar width
+        style="blue",  # Style for the incomplete part of the bar
+        complete_style="bold blue",  # Style for the completed part
+        finished_style="bold green",  # Style when task is 100% complete
+    )
     with Progress(
         TextColumn("[bold blue]{task.description}"),
-        BarColumn(),
+        bar_column,  # Use custom bar column
         "[progress.percentage]{task.percentage:>3.0f}%",
         TimeElapsedColumn(),
         console=None,  # No console for this internal task
@@ -409,30 +495,130 @@ def main() -> None:
         logger.info("No supported files found. Exiting code extraction.")
         return
     g, class_cache, prop_cache, ctx = initialize_context_and_graph(
-        ttl_path, INST, WDO, uri_safe_string
+        ttl_path, INST, WDO, uri_safe_string, uri_safe_file_path
     )
     summary_data: Dict[str, Dict[str, Any]] = {}
+
+    # Get progress tracker for frontend reporting
+    tracker = get_current_tracker()
+
+    # Define custom progress bar with green completion styling
+    bar_column = BarColumn(
+        bar_width=30,  # Thinner bar width
+        style="blue",  # Style for the incomplete part of the bar
+        complete_style="bold blue",  # Style for the completed part
+        finished_style="bold green",  # Style when task is 100% complete
+    )
+
     with Progress(
         TextColumn("[bold blue]{task.description}"),
-        BarColumn(),
+        bar_column,  # Use custom bar column
         "[progress.percentage]{task.percentage:>3.0f}%",
         TimeElapsedColumn(),
         console=console,
     ) as progress:
+        # Update progress tracker if available
+        if tracker:
+            tracker.update_stage(
+                "codeExtraction", "processing", 0, "Starting code extraction..."
+            )
+
         extract_task = progress.add_task(
             "[blue]Extracting AST entities...", total=len(supported_files)
         )
-        extract_ast_entities_progress(
-            supported_files,
-            language_mapping,
-            queries,
-            summary_data,
-            progress,
-            extract_task,
-        )
+        # Update progress tracker with extraction completion
+        if tracker:
+            tracker.update_stage(
+                "codeExtraction",
+                "processing",
+                30,
+                f"Extracting code entities from {len(supported_files)} files...",
+            )
+
+        # Granular progress tracking for entity extraction
+        processed_files = 0
+        for rec in supported_files:
+            repo = rec["repository"]
+            rel_path = rec["path"]
+            abs_path = rec["abs_path"]
+            ext = rec["extension"]
+            lang_name = language_mapping.get(ext)
+            summary_key = f"{repo}/{rel_path}"
+            summary_data[summary_key] = {"errors": []}
+            if not lang_name:
+                continue
+            if lang_name == "python":
+                process_file_with_ast(
+                    abs_path,
+                    summary_data[summary_key],
+                    ast.parse,
+                    extract_python_entities,
+                )
+            elif lang_name in queries:
+                extract_tree_sitter_file(
+                    abs_path, lang_name, queries, summary_data[summary_key]
+                )
+            extract_manipulation_and_styling_relationships(summary_data[summary_key])
+            progress.advance(extract_task)
+            processed_files += 1
+            if tracker and (
+                processed_files % 10 == 0 or processed_files == len(supported_files)
+            ):
+                progress_percentage = 30 + int(
+                    (processed_files / len(supported_files)) * 30
+                )  # 30-60%
+                tracker.update_stage(
+                    "codeExtraction",
+                    "processing",
+                    progress_percentage,
+                    f"Processing code: {processed_files}/{len(supported_files)} files",
+                )
+
+        # TTL writing phase
+        if tracker:
+            tracker.update_stage(
+                "codeExtraction",
+                "processing",
+                60,
+                f"Writing ontology: {len(supported_files)} code records...",
+            )
+
+        # Create a custom progress wrapper for TTL writing
+        class ProgressWrapper:
+            def __init__(self, rich_progress, rich_task, tracker):
+                self.rich_progress = rich_progress
+                self.rich_task = rich_task
+                self.tracker = tracker
+                self.processed = 0
+                self.total = len(supported_files)
+                self.tasks = {rich_task: type("Task", (), {"total": self.total})()}
+
+            def advance(self, task):
+                self.rich_progress.advance(self.rich_task)
+                self.processed += 1
+                if self.tracker and (
+                    self.processed % 10 == 0 or self.processed == self.total
+                ):
+                    progress_percentage = 60 + int((self.processed / self.total) * 40)
+                    self.tracker.update_stage(
+                        "codeExtraction",
+                        "processing",
+                        progress_percentage,
+                        f"Writing ontology: {self.processed}/{self.total} code records",
+                    )
+
+            def update(self, task, **kwargs):
+                self.rich_progress.update(self.rich_task, **kwargs)
+
         ttl_task = progress.add_task("[blue]Writing TTL...", total=len(supported_files))
+        progress_wrapper = ProgressWrapper(progress, ttl_task, tracker)
         write_ontology_progress(
-            ctx, supported_files, summary_data, language_mapping, progress, ttl_task
+            ctx,
+            supported_files,
+            summary_data,
+            language_mapping,
+            progress_wrapper,
+            ttl_task,
         )
     finalize_and_serialize_graph(ctx)
     console.print(

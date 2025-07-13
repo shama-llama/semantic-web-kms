@@ -15,7 +15,9 @@ from app.extraction.utils.string_utils import (
 )
 
 
-def write_classes(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_classes(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write class entities to the ontology, strictly enforcing WDO domain/range.
 
@@ -26,6 +28,7 @@ def write_classes(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         Dict mapping class names to their URIs.
     """
@@ -37,7 +40,12 @@ def write_classes(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
             continue
         class_uri = URIRef(f"{file_uri}/class/{uri_safe_string(class_id)}")
         class_uris[class_id] = class_uri
-        _add_class_basic_triples(g, class_uri, class_id, class_cache, prop_cache)
+        _add_class_basic_triples(
+            g, class_uri, class_id, class_cache, prop_cache, content_uri
+        )
+        # Add rdfs:label with prefix and truncation
+        label = f"class: {_truncate_label(class_id)}"
+        g.add((class_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         _add_class_optional_properties(g, class_uri, cls, prop_cache)
         methods = _collect_class_methods(cls)
         if methods:
@@ -48,7 +56,9 @@ def write_classes(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
     return class_uris
 
 
-def write_enums(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_enums(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write enum entities to the ontology.
 
@@ -59,6 +69,7 @@ def write_enums(g, constructs, file_uri, class_cache, prop_cache, uri_safe_strin
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         Dict mapping enum names to their URIs.
     """
@@ -77,7 +88,9 @@ def write_enums(g, constructs, file_uri, class_cache, prop_cache, uri_safe_strin
             "EnumDefinition", class_cache.get("ClassDefinition", RDFS.seeAlso)
         )
         g.add((enum_uri, RDF.type, enum_class))
-        g.add((enum_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add((enum_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        label = f"enum: {_truncate_label(enum_id)}"
+        g.add((enum_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 enum_uri,
@@ -120,7 +133,9 @@ def write_enums(g, constructs, file_uri, class_cache, prop_cache, uri_safe_strin
     return enum_uris
 
 
-def write_interfaces(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_interfaces(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write interface entities to the ontology.
 
@@ -131,6 +146,7 @@ def write_interfaces(g, constructs, file_uri, class_cache, prop_cache, uri_safe_
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         Dict mapping interface names to their URIs.
     """
@@ -145,7 +161,11 @@ def write_interfaces(g, constructs, file_uri, class_cache, prop_cache, uri_safe_
             "InterfaceDefinition", class_cache.get("ClassDefinition", RDFS.seeAlso)
         )
         g.add((interface_uri, RDF.type, interface_class))
-        g.add((interface_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add(
+            (interface_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri)
+        )
+        label = f"interface: {_truncate_label(interface_id)}"
+        g.add((interface_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 interface_uri,
@@ -188,7 +208,9 @@ def write_interfaces(g, constructs, file_uri, class_cache, prop_cache, uri_safe_
     return interface_uris
 
 
-def write_structs(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_structs(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write struct entities to the ontology.
 
@@ -199,6 +221,7 @@ def write_structs(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         Dict mapping struct names to their URIs.
     """
@@ -216,7 +239,9 @@ def write_structs(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
                 class_cache.get("StructDefinition", class_cache["ClassDefinition"]),
             )
         )
-        g.add((struct_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add((struct_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        label = f"struct: {_truncate_label(struct_id)}"
+        g.add((struct_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 struct_uri,
@@ -259,7 +284,9 @@ def write_structs(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
     return struct_uris
 
 
-def write_traits(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_traits(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write trait entities to the ontology.
 
@@ -270,6 +297,7 @@ def write_traits(g, constructs, file_uri, class_cache, prop_cache, uri_safe_stri
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         Dict mapping trait names to their URIs.
     """
@@ -292,7 +320,9 @@ def write_traits(g, constructs, file_uri, class_cache, prop_cache, uri_safe_stri
                 ),
             )
         )
-        g.add((trait_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add((trait_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        label = f"trait: {_truncate_label(trait_id)}"
+        g.add((trait_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 trait_uri,
@@ -335,7 +365,9 @@ def write_traits(g, constructs, file_uri, class_cache, prop_cache, uri_safe_stri
     return trait_uris
 
 
-def write_modules(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_modules(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write module entities to the ontology.
 
@@ -346,6 +378,7 @@ def write_modules(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         Dict mapping module names to their URIs.
     """
@@ -363,7 +396,9 @@ def write_modules(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
                 class_cache.get("PackageDeclaration", RDFS.seeAlso),
             )
         )
-        g.add((module_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add((module_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        label = f"module: {_truncate_label(module_id)}"
+        g.add((module_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 module_uri,
@@ -398,9 +433,11 @@ def write_modules(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
     return module_uris
 
 
-def write_comments(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_comments(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
-    Write comment entities to the ontology.
+    Write comment entities to the ontology, including rdfs:label in the format 'comment: <text>'.
 
     Args:
         g: RDFLib Graph to add triples to.
@@ -409,6 +446,7 @@ def write_comments(g, constructs, file_uri, class_cache, prop_cache, uri_safe_st
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         Dict mapping comment IDs to their URIs.
     """
@@ -419,7 +457,11 @@ def write_comments(g, constructs, file_uri, class_cache, prop_cache, uri_safe_st
         comment_uris[comment_id] = comment_uri
         comment_class = class_cache.get("CodeComment", RDFS.seeAlso)
         g.add((comment_uri, RDF.type, comment_class))
-        g.add((comment_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add((comment_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        # Add rdfs:label in the format 'comment: <text>' (truncated)
+        comment_text = comment.get("raw") or comment.get("name") or str(comment_id)
+        label = f"comment: {_truncate_label(comment_text)}"
+        g.add((comment_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 comment_uri,
@@ -455,6 +497,7 @@ def write_functions(
     uri_safe_string,
     class_uris,
     type_uris,
+    content_uri,
     language=None,
 ):
     """
@@ -469,6 +512,7 @@ def write_functions(
         uri_safe_string: Function to make URI-safe strings.
         class_uris: Dict mapping class names to URIs.
         type_uris: Dict mapping type names to URIs.
+        content_uri: URIRef for the content (e.g., a file or a class).
         language: Optional language string.
     Returns:
         Dict mapping function names to their URIs.
@@ -482,7 +526,14 @@ def write_functions(
             continue
         func_uri = URIRef(f"{file_uri}/function/{uri_safe_string(func_id)}")
         func_uris[func_id] = func_uri
-        _add_function_basic_triples(g, func_uri, func_id, class_cache, prop_cache)
+        _add_function_basic_triples(
+            g, func_uri, func_id, class_cache, prop_cache, content_uri
+        )
+        # Add isCodePartOf relationship to content_uri
+        g.add((func_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        # Add rdfs:label with prefix and truncation
+        label = f"func: {_truncate_label(func_id)}"
+        g.add((func_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         _add_function_optional_properties(g, func_uri, func, prop_cache)
         _add_function_return_type(g, func_uri, func, type_uris, prop_cache)
         _add_function_method_of(g, func_uri, func, class_uris, prop_cache)
@@ -499,6 +550,7 @@ def write_parameters(
     uri_safe_string,
     func_uris,
     type_uris,
+    content_uri,
 ):
     """
     Write parameter entities to the ontology, strictly enforcing WDO domain/range.
@@ -512,6 +564,7 @@ def write_parameters(
         uri_safe_string: Function to make URI-safe strings.
         func_uris: Dict mapping function names to URIs.
         type_uris: Dict mapping type names to URIs.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
@@ -521,6 +574,9 @@ def write_parameters(
             continue
         param_uri = URIRef(f"{file_uri}/param/{uri_safe_string(param_id)}")
         g.add((param_uri, RDF.type, class_cache["Parameter"]))
+        g.add((param_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        label = f"param: {_truncate_label(param_id)}"
+        g.add((param_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 param_uri,
@@ -571,6 +627,7 @@ def write_variables(
     uri_safe_string,
     func_uris,
     type_uris,
+    content_uri,
 ):
     """
     Write variable entities to the ontology, strictly enforcing WDO domain/range.
@@ -584,6 +641,7 @@ def write_variables(
         uri_safe_string: Function to make URI-safe strings.
         func_uris: Dict mapping function names to URIs.
         type_uris: Dict mapping type names to URIs.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
@@ -595,6 +653,9 @@ def write_variables(
             continue
         var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(var_id)}")
         g.add((var_uri, RDF.type, class_cache["VariableDeclaration"]))
+        g.add((var_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        label = f"var: {_truncate_label(var_id)}"
+        g.add((var_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (var_uri, prop_cache["hasSimpleName"], Literal(var_id, datatype=XSD.string))
         )
@@ -637,6 +698,7 @@ def write_calls(
     uri_safe_string,
     func_uris,
     type_uris,
+    content_uri,
 ):
     """
     Write function call entities to the ontology, strictly enforcing WDO domain/range.
@@ -650,15 +712,22 @@ def write_calls(
         uri_safe_string: Function to make URI-safe strings.
         func_uris: Dict mapping function names to URIs.
         type_uris: Dict mapping type names to URIs.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
-    for call in constructs.get("FunctionCallSite", []) + constructs.get("calls", []):
+    for call in constructs.get("calls", []):
         call_id = call.get("name")
         if not call_id:
             continue
         call_uri = URIRef(f"{file_uri}/call/{uri_safe_string(call_id)}")
         g.add((call_uri, RDF.type, class_cache["FunctionCallSite"]))
+        g.add((call_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        # Always set rdfs:label with 'callsite: ' prefix
+        label = (
+            f"callsite: {call_id}" if not call_id.startswith("callsite: ") else call_id
+        )
+        g.add((call_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
             (
                 call_uri,
@@ -666,7 +735,7 @@ def write_calls(
                 Literal(call_id, datatype=XSD.string),
             )
         )
-        if "raw" in call and call["raw"]:
+        if call.get("raw"):
             g.add(
                 (
                     call_uri,
@@ -674,7 +743,7 @@ def write_calls(
                     Literal(call["raw"], datatype=XSD.string),
                 )
             )
-        if "start_line" in call:
+        if call.get("start_line") is not None:
             g.add(
                 (
                     call_uri,
@@ -682,7 +751,7 @@ def write_calls(
                     Literal(call["start_line"], datatype=XSD.integer),
                 )
             )
-        if "end_line" in call:
+        if call.get("end_line") is not None:
             g.add(
                 (
                     call_uri,
@@ -691,15 +760,25 @@ def write_calls(
                 )
             )
         for arg in call.get("arguments", []):
-            if isinstance(arg, dict):
-                arg_id = arg.get("name")
-            else:
-                arg_id = arg
+            arg_id = arg.get("name") if isinstance(arg, dict) else arg
             if not arg_id:
                 continue
             arg_uri = URIRef(f"{call_uri}/arg/{uri_safe_string(arg_id)}")
             g.add((call_uri, prop_cache["hasArgument"], arg_uri))
             g.add((arg_uri, prop_cache["isArgumentIn"], call_uri))
+            # Type the argument node as Argument
+            g.add((arg_uri, RDF.type, class_cache["Argument"]))
+            # Add rdfs:label with prefix for argument
+            g.add((arg_uri, RDFS.label, Literal(f"arg: {arg_id}", datatype=XSD.string)))
+            # If the argument is a variable and a VariableDeclaration exists, link them
+            var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(arg_id)}")
+            if any(
+                v.get("name") == arg_id
+                for v in constructs.get("VariableDeclaration", [])
+                + constructs.get("variables", [])
+            ):
+                g.add((arg_uri, prop_cache["refersToVariable"], var_uri))
+                g.add((var_uri, prop_cache["isReferredToByArgument"], arg_uri))
         if "calls" in call:
             for callee in call["calls"]:
                 if callee in func_uris:
@@ -713,7 +792,9 @@ def write_calls(
                     )
 
 
-def write_decorators(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_decorators(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write decorator entities to the ontology.
 
@@ -724,6 +805,7 @@ def write_decorators(g, constructs, file_uri, class_cache, prop_cache, uri_safe_
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
@@ -737,7 +819,7 @@ def write_decorators(g, constructs, file_uri, class_cache, prop_cache, uri_safe_
         dec_uri = URIRef(f"{file_uri}/decorator/{uri_safe_string(str(dec_id))}")
         decorator_class = class_cache.get("Decorator", RDFS.seeAlso)
         g.add((dec_uri, RDF.type, decorator_class))
-        g.add((dec_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add((dec_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
         g.add(
             (
                 dec_uri,
@@ -755,7 +837,9 @@ def write_decorators(g, constructs, file_uri, class_cache, prop_cache, uri_safe_
             )
 
 
-def write_types(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_types(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write type entities to the ontology.
 
@@ -766,6 +850,7 @@ def write_types(g, constructs, file_uri, class_cache, prop_cache, uri_safe_strin
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
@@ -812,8 +897,8 @@ def write_types(g, constructs, file_uri, class_cache, prop_cache, uri_safe_strin
             g.add(
                 (
                     typ_uri,
-                    prop_cache.get("isElementOf", RDFS.seeAlso),
-                    file_uri,
+                    prop_cache.get("isCodePartOf", RDFS.seeAlso),
+                    content_uri,
                 )
             )
             g.add(
@@ -833,7 +918,9 @@ def write_types(g, constructs, file_uri, class_cache, prop_cache, uri_safe_strin
                 )
 
 
-def write_imports(g, constructs, file_uri, class_cache, prop_cache, uri_safe_string):
+def write_imports(
+    g, constructs, file_uri, class_cache, prop_cache, uri_safe_string, content_uri
+):
     """
     Write import entities to the ontology.
 
@@ -844,6 +931,7 @@ def write_imports(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
         uri_safe_string: Function to make URI-safe strings.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
@@ -855,9 +943,15 @@ def write_imports(g, constructs, file_uri, class_cache, prop_cache, uri_safe_str
         imp_uri = URIRef(f"{file_uri}/import/{uri_safe_string(imp_id)}")
         import_class = class_cache.get("ImportDeclaration", RDFS.seeAlso)
         g.add((imp_uri, RDF.type, import_class))
-        g.add((imp_uri, prop_cache.get("isElementOf", RDFS.seeAlso), file_uri))
+        g.add((imp_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
+        label = f"import: {_truncate_label(str(imp_id))}"
+        g.add((imp_uri, RDFS.label, Literal(label, datatype=XSD.string)))
         g.add(
-            (imp_uri, prop_cache["hasTextValue"], Literal(imp_id, datatype=XSD.string))
+            (
+                imp_uri,
+                prop_cache["hasSourceCodeSnippet"],
+                Literal(imp_id, datatype=XSD.string),
+            )
         )
 
 
@@ -897,7 +991,9 @@ def write_database_schemas(
 
 
 # Helper functions for entity writing (add as needed)
-def _add_class_basic_triples(g, class_uri, class_id, class_cache, prop_cache):
+def _add_class_basic_triples(
+    g, class_uri, class_id, class_cache, prop_cache, content_uri
+):
     """
     Add basic RDF triples for a class entity.
 
@@ -907,14 +1003,15 @@ def _add_class_basic_triples(g, class_uri, class_id, class_cache, prop_cache):
         class_id: Class name.
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
     g.add((class_uri, RDF.type, class_cache["ClassDefinition"]))
-    g.add((class_uri, RDFS.label, Literal(class_id, datatype=XSD.string)))
     g.add(
         (class_uri, prop_cache["hasSimpleName"], Literal(class_id, datatype=XSD.string))
     )
+    g.add((class_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
 
 
 def _add_class_optional_properties(g, class_uri, cls, prop_cache):
@@ -1027,7 +1124,9 @@ def _add_class_method_relationships(
             g.add((method_uri, prop_cache["isMethodOf"], class_uri))
 
 
-def _add_function_basic_triples(g, func_uri, func_id, class_cache, prop_cache):
+def _add_function_basic_triples(
+    g, func_uri, func_id, class_cache, prop_cache, content_uri
+):
     """
     Add basic RDF triples for a function entity.
 
@@ -1037,14 +1136,15 @@ def _add_function_basic_triples(g, func_uri, func_id, class_cache, prop_cache):
         func_id: Function name.
         class_cache: Dict of ontology class URIs.
         prop_cache: Dict of ontology property URIs.
+        content_uri: URIRef for the content (e.g., a file or a class).
     Returns:
         None
     """
     g.add((func_uri, RDF.type, class_cache["FunctionDefinition"]))
-    g.add((func_uri, RDFS.label, Literal(func_id, datatype=XSD.string)))
     g.add(
         (func_uri, prop_cache["hasSimpleName"], Literal(func_id, datatype=XSD.string))
     )
+    g.add((func_uri, prop_cache.get("isCodePartOf", RDFS.seeAlso), content_uri))
 
 
 def _add_function_optional_properties(g, func_uri, func, prop_cache):
@@ -1182,7 +1282,7 @@ def _add_function_method_of(g, func_uri, func, class_uris, prop_cache):
 
 def _add_function_language(g, func_uri, language, prop_cache):
     """
-    Add RDF triple for a function's programming language.
+    Add RDF triple for a function's programming language. Language name is normalized to lowercase.
 
     Args:
         g: RDFLib Graph to add triples to.
@@ -1192,12 +1292,13 @@ def _add_function_language(g, func_uri, language, prop_cache):
     Returns:
         None
     """
-    if language and "programmingLanguage" in prop_cache:
+    if language and "hasProgrammingLanguage" in prop_cache:
+        normalized_language = language.lower()
         g.add(
             (
                 func_uri,
-                prop_cache["programmingLanguage"],
-                Literal(language, datatype=XSD.string),
+                prop_cache["hasProgrammingLanguage"],
+                Literal(normalized_language, datatype=XSD.string),
             )
         )
 
@@ -1229,3 +1330,21 @@ def create_canonical_type_individuals(g, class_cache, prop_cache, uri_safe_strin
         Empty dict.
     """
     return {}
+
+
+def _truncate_label(text: str, max_length: int = 60) -> str:
+    """Truncate a string to a maximum length, cutting at the last space before the limit if possible.
+
+    Args:
+        text: The string to truncate.
+        max_length: The maximum allowed length.
+
+    Returns:
+        Truncated string, not cutting words in half.
+    """
+    if len(text) <= max_length:
+        return text
+    cutoff = text.rfind(" ", 0, max_length)
+    if cutoff == -1:
+        return text[:max_length].rstrip() + "..."
+    return text[:cutoff].rstrip() + "..."

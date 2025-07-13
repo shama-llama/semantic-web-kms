@@ -7,7 +7,7 @@ from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, RDFS, XSD
 
 from app.core.namespaces import INST, WDO
-from app.core.paths import uri_safe_string
+from app.core.paths import uri_safe_file_path, uri_safe_string
 
 
 def add_repository_metadata(
@@ -35,6 +35,7 @@ def add_repository_metadata(
     """
     repo_uri = INST[repo_enc]
     g.add((repo_uri, RDF.type, WDO.Repository))
+    # Use only the clean repository name as rdfs:label
     g.add((repo_uri, RDFS.label, Literal(repo_name, datatype=XSD.string)))
     repo_metadata_uri = INST[f"{repo_enc}_metadata"]
     g.add((repo_metadata_uri, RDF.type, WDO.InformationContentEntity))
@@ -169,8 +170,8 @@ def add_file_triples(
     repo_clean = repo_name.replace(" ", "_")
     path_clean = record.path.replace(" ", "_")
     repo_enc = uri_safe_string(repo_clean)
-    path_enc = uri_safe_string(path_clean)
-    file_uri = INST[f"file_{repo_enc}_{path_enc}"]
+    path_enc = uri_safe_file_path(path_clean)
+    file_uri = INST[f"{repo_enc}/{path_enc}"]
     wdo_class_uri = record.class_uri
     if repo_enc not in processed_repos:
         add_repository_metadata(g, repo_enc, repo_name, input_dir, processed_repos)

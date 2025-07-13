@@ -186,7 +186,7 @@ def extract_function_variables(node: ast.AST) -> List[Dict[str, Any]]:
 
 
 def extract_function_calls(
-    node: ast.AST, summary: Dict[str, Any]
+    node: ast.AST, summary: Dict[str, Any], code: str = ""
 ) -> List[Dict[str, Any]]:
     """
     Extract function calls from a function AST node.
@@ -194,7 +194,7 @@ def extract_function_calls(
     Args:
         node: AST node.
         summary: Summary dict to append call info.
-
+        code: Source code string for extracting raw call text.
     Returns:
         List of call info dicts.
     """
@@ -208,6 +208,7 @@ def extract_function_calls(
             else:
                 call_name = ""
             if call_name:
+                prefixed_call_name = f"callsite: {call_name}"
                 args = []
                 for arg in subnode.args:
                     if isinstance(arg, ast.Name):
@@ -216,7 +217,22 @@ def extract_function_calls(
                         args.append(ast.unparse(arg))
                     else:
                         args.append(str(arg))
-                call_info = {"name": call_name, "arguments": args}
+                # Try to get the raw source code for the call
+                try:
+                    raw = (
+                        ast.get_source_segment(code, subnode)
+                        if code and hasattr(ast, "get_source_segment")
+                        else None
+                    )
+                except Exception:
+                    raw = None
+                call_info = {
+                    "name": prefixed_call_name,
+                    "arguments": args,
+                    "start_line": getattr(subnode, "lineno", None),
+                    "end_line": getattr(subnode, "end_lineno", None),
+                    "raw": raw,
+                }
                 calls.append(call_info)
                 summary.setdefault("calls", []).append(call_info)
     return calls

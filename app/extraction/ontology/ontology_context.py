@@ -32,6 +32,7 @@ class OntologyContext:
     INST: Namespace
     WDO: Namespace
     uri_safe_string: Callable[[str], str]
+    uri_safe_file_path: Callable[[str], str]
     TTL_PATH: Path
 
 
@@ -43,6 +44,7 @@ def create_ontology_context(
     INST: Namespace,
     WDO: Namespace,
     uri_safe_string: Callable[[str], str],
+    uri_safe_file_path: Callable[[str], str],
     TTL_PATH: Path,
 ) -> OntologyContext:
     """
@@ -55,6 +57,7 @@ def create_ontology_context(
         INST: Instance namespace.
         WDO: WDO namespace.
         uri_safe_string: Function to make URI-safe strings.
+        uri_safe_file_path: Function to make URI-safe file paths.
         TTL_PATH: Path to TTL file.
     Returns:
         OntologyContext object with all context fields set.
@@ -66,6 +69,7 @@ def create_ontology_context(
         INST=INST,
         WDO=WDO,
         uri_safe_string=uri_safe_string,
+        uri_safe_file_path=uri_safe_file_path,
         TTL_PATH=TTL_PATH,
     )
 
@@ -93,6 +97,7 @@ def initialize_context_and_graph(
     INST: Namespace,
     WDO: Namespace,
     uri_safe_string: Callable[[str], str],
+    uri_safe_file_path: Callable[[str], str],
 ):
     """
     Initialize the graph, caches, and OntologyContext.
@@ -102,6 +107,7 @@ def initialize_context_and_graph(
         INST: Instance namespace.
         WDO: WDO namespace.
         uri_safe_string: Function to make URI-safe strings.
+        uri_safe_file_path: Function to make URI-safe file paths.
     Returns:
         Tuple of (graph, class_cache, prop_cache, OntologyContext).
     """
@@ -113,12 +119,13 @@ def initialize_context_and_graph(
         INST=INST,
         WDO=WDO,
         uri_safe_string=uri_safe_string,
+        uri_safe_file_path=uri_safe_file_path,
         TTL_PATH=TTL_PATH,
     )
     return g, class_cache, prop_cache, ctx
 
 
-def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
+def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri, content_uri):
     """
     Return all entity URIs for a file, including classes, enums, interfaces, structs, traits, modules, and schemas.
 
@@ -126,6 +133,7 @@ def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
         ctx: OntologyContext object.
         constructs: Code constructs to extract URIs for.
         file_uri: URI of the file being processed.
+        content_uri: URI of the content entity.
     Returns:
         Tuple of (all entity URIs dict, interface URIs dict, module URIs dict).
     """
@@ -136,6 +144,7 @@ def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     enum_uris = write_enums(
         ctx.g,
@@ -144,6 +153,7 @@ def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     interface_uris = write_interfaces(
         ctx.g,
@@ -152,6 +162,7 @@ def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     struct_uris = write_structs(
         ctx.g,
@@ -160,6 +171,7 @@ def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     trait_uris = write_traits(
         ctx.g,
@@ -168,6 +180,7 @@ def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     module_uris = write_modules(
         ctx.g,
@@ -176,6 +189,7 @@ def get_file_entity_uris(ctx: OntologyContext, constructs, file_uri):
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     schema_uris = write_database_schemas(
         ctx.g,

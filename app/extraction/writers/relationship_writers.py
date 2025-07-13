@@ -27,7 +27,7 @@ def write_inheritance(g, constructs, class_uris, prop_cache):
                 g.add((class_uris[sup], prop_cache["isExtendedBy"], class_uris[sub]))
             else:
                 parent_uri = URIRef(
-                    f"http://semantic-web-kms.edu.et/wdo/external/{sup}"
+                    f"http://web-development-ontology.netlify.app/wdo/external/{sup}"
                 )
                 g.add((class_uris[sub], prop_cache["extendsType"], parent_uri))
 
@@ -245,7 +245,7 @@ def write_manipulation_relationships(
     g, constructs, file_uri, prop_cache, uri_safe_string
 ):
     """
-    Write isManipulatedBy/manipulates relationships between code constructs.
+    Write isManipulatedBy/manipulates relationships between code constructs using precomputed relationships.
 
     Args:
         g: RDFLib Graph to add triples to.
@@ -256,36 +256,19 @@ def write_manipulation_relationships(
     Returns:
         None
     """
-    for var in constructs.get("variables", []) + constructs.get(
-        "VariableDeclaration", []
-    ):
-        var_name = var.get("name")
-        if var_name:
-            var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(var_name)}")
-            for func in constructs.get("functions", []) + constructs.get(
-                "FunctionDefinition", []
-            ):
-                func_name = func.get("name")
-                raw_code = func.get("raw", "")
-                if func_name and raw_code and var_name in raw_code:
-                    func_uri = URIRef(
-                        f"{file_uri}/function/{uri_safe_string(func_name)}"
-                    )
-                    g.add(
-                        (func_uri, prop_cache.get("manipulates", RDFS.seeAlso), var_uri)
-                    )
-                    g.add(
-                        (
-                            var_uri,
-                            prop_cache.get("isManipulatedBy", RDFS.seeAlso),
-                            func_uri,
-                        )
-                    )
+    for rel in constructs.get("manipulation_relationships", []):
+        manipulator = rel.get("manipulator")
+        manipulatee = rel.get("manipulatee")
+        if manipulator and manipulatee:
+            func_uri = URIRef(f"{file_uri}/function/{uri_safe_string(manipulator)}")
+            var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(manipulatee)}")
+            g.add((func_uri, prop_cache.get("manipulates", RDFS.seeAlso), var_uri))
+            g.add((var_uri, prop_cache.get("isManipulatedBy", RDFS.seeAlso), func_uri))
 
 
 def write_styling_relationships(g, constructs, file_uri, prop_cache, uri_safe_string):
     """
-    Write isStyledBy/styles relationships between code constructs.
+    Write isStyledBy/styles relationships between code constructs using precomputed relationships.
 
     Args:
         g: RDFLib Graph to add triples to.
@@ -296,31 +279,14 @@ def write_styling_relationships(g, constructs, file_uri, prop_cache, uri_safe_st
     Returns:
         None
     """
-    for func in constructs.get("functions", []) + constructs.get(
-        "FunctionDefinition", []
-    ):
-        func_name = func.get("name")
-        raw_code = func.get("raw", "")
-        if func_name and raw_code:
-            styling_keywords = ["style", "css", "class", "className", "id"]
-            if any(keyword in raw_code.lower() for keyword in styling_keywords):
-                func_uri = URIRef(f"{file_uri}/function/{uri_safe_string(func_name)}")
-                for var in constructs.get("variables", []) + constructs.get(
-                    "VariableDeclaration", []
-                ):
-                    var_name = var.get("name")
-                    if var_name and "element" in var_name.lower():
-                        var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(var_name)}")
-                        g.add(
-                            (func_uri, prop_cache.get("styles", RDFS.seeAlso), var_uri)
-                        )
-                        g.add(
-                            (
-                                var_uri,
-                                prop_cache.get("isStyledBy", RDFS.seeAlso),
-                                func_uri,
-                            )
-                        )
+    for rel in constructs.get("styling_relationships", []):
+        styler = rel.get("styler")
+        stylee = rel.get("stylee")
+        if styler and stylee:
+            func_uri = URIRef(f"{file_uri}/function/{uri_safe_string(styler)}")
+            var_uri = URIRef(f"{file_uri}/var/{uri_safe_string(stylee)}")
+            g.add((func_uri, prop_cache.get("styles", RDFS.seeAlso), var_uri))
+            g.add((var_uri, prop_cache.get("isStyledBy", RDFS.seeAlso), func_uri))
 
 
 def extract_test_relationships(
