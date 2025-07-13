@@ -49,6 +49,13 @@ def discover_supported_files(
                             "abs_path": str(abs_path),
                         }
                     )
+    # Deduplicate supported_files by (repository, path)
+    unique_files = {}
+    for rec in supported_files:
+        key = (rec["repository"], rec["path"])
+        if key not in unique_files:
+            unique_files[key] = rec
+    supported_files = list(unique_files.values())
     return supported_files, repo_dirs
 
 
@@ -79,7 +86,7 @@ def get_input_and_output_paths() -> Tuple[Path, Path]:
         Tuple of (input directory Path, output TTL file Path).
     """
     input_dir = Path(get_input_dir())
-    ttl_path = Path(get_output_path("web_development_ontology.ttl"))
+    ttl_path = Path(get_output_path("wdkb.ttl"))
     return input_dir, ttl_path
 
 

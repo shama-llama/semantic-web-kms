@@ -466,7 +466,10 @@ def _extract_tree_sitter_entities_from_captures(
             elif child_capture == "type":
                 entity_info.setdefault("types", []).append(text)
             elif child_capture == "func":
-                entity_info.setdefault("calls", []).append(text)
+                # Add callsite: prefix to function call names
+                if text.strip():
+                    prefixed_text = f"callsite: {text}"
+                    entity_info.setdefault("calls", []).append(prefixed_text)
             elif child_capture == "comment":
                 entity_info.setdefault("comments", []).append(text)
         key = capture_to_key.get(capture_name)
@@ -506,5 +509,18 @@ def _extract_tree_sitter_entities_from_captures(
             }
             if capture_name == "name":
                 entity_info["name"] = _node_text(node, code_bytes)
-            summary.setdefault(key, []).append(entity_info)
+            # Add callsite: prefix for FunctionCall entities
+            if key == "FunctionCall":
+                callsite_name = entity_info.get("name", "")
+                # Only add if the name after 'callsite: ' is not empty or whitespace
+                if callsite_name.startswith("callsite: "):
+                    if callsite_name[len("callsite: ") :].strip():
+                        entity_info["name"] = callsite_name
+                        summary.setdefault("calls", []).append(entity_info)
+                else:
+                    if callsite_name.strip():
+                        entity_info["name"] = callsite_name
+                        summary.setdefault("calls", []).append(entity_info)
+            else:
+                summary.setdefault(key, []).append(entity_info)
             logger.info(f"Extracted {key} (tree-sitter, improved): {entity_info}")

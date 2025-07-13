@@ -6,6 +6,7 @@ from pathlib import Path
 from rdflib import Literal, URIRef
 from rdflib.namespace import RDF, RDFS, XSD
 
+from app.extraction.extractors.content_extractor import content_registry
 from app.extraction.ontology.ontology_context import (
     OntologyContext,
     create_ontology_context,
@@ -15,7 +16,6 @@ from app.extraction.ontology.ontology_utils import _is_complex_type
 from app.extraction.writers.entity_writers import (
     create_canonical_type_individuals,
     write_calls,
-    write_comments,
     write_decorators,
     write_functions,
     write_imports,
@@ -31,7 +31,6 @@ from app.extraction.writers.relationship_writers import (
     write_implements_interface,
     write_inheritance,
     write_manipulation_relationships,
-    write_module_import_relationships,
     write_styling_relationships,
     write_testing_relationships,
     write_type_relationships,
@@ -60,15 +59,20 @@ def process_file_for_ontology(
     """
     repo = rec["repository"]
     rel_path = rec["path"]
-    file_enc = ctx.uri_safe_string(rel_path)
-    repo_enc = ctx.uri_safe_string(repo)
+    # Use the same URI construction pattern as the content extractor
+    repo_clean = repo.replace(" ", "_")
+    path_clean = rel_path.replace(" ", "_")
+    file_enc = ctx.uri_safe_file_path(path_clean)
+    repo_enc = ctx.uri_safe_string(repo_clean)
     file_uri = ctx.INST[f"{repo_enc}/{file_enc}"]
+    # Ensure we use the same content registry key as the content extractor
+    content_uri = content_registry.get_or_create_content_uri(repo_enc, file_enc)
     summary_key = f"{repo}/{rel_path}"
     constructs = summary_data.get(summary_key, {})
     ext = Path(rel_path).suffix.lower()
     language = language_mapping[ext] if ext in language_mapping else None
     all_entity_uris, interface_uris, module_uris = get_file_entity_uris(
-        ctx, constructs, file_uri
+        ctx, constructs, file_uri, content_uri
     )
     func_uris = write_all_entities_for_file(
         ctx,
@@ -79,6 +83,7 @@ def process_file_for_ontology(
         module_uris,
         global_type_uris,
         language,
+        content_uri,
     )
     write_all_relationships(
         ctx,
@@ -170,6 +175,40 @@ def write_fields(
                 g.add((cls_uri, prop_cache["hasField"], field_uri))
 
 
+def add_declares_relationships(g, file_uri, construct_uris, prop_cache):
+    """
+    Add declares/isDeclaredBy relationships between the file (SoftwareCode) and its code constructs.
+
+    Args:
+        g: RDFLib Graph to add triples to.
+        file_uri: URIRef for the file entity (SoftwareCode).
+        construct_uris: Iterable of code construct URIs.
+        prop_cache: Dict of ontology property URIs.
+    Returns:
+        None
+    """
+    for construct_uri in construct_uris:
+        g.add((file_uri, prop_cache["declares"], construct_uri))
+        g.add((construct_uri, prop_cache["isDeclaredBy"], file_uri))
+
+
+def add_code_part_relationships(g, content_uri, construct_uris, prop_cache):
+    """
+    Add hasCodePart/isCodePartOf relationships between the content entity (SoftwareCode) and its code constructs.
+
+    Args:
+        g: RDFLib Graph to add triples to.
+        content_uri: URIRef for the content entity (SoftwareCode).
+        construct_uris: Iterable of code construct URIs.
+        prop_cache: Dict of ontology property URIs.
+    Returns:
+        None
+    """
+    for construct_uri in construct_uris:
+        g.add((content_uri, prop_cache["hasCodePart"], construct_uri))
+        g.add((construct_uri, prop_cache["isCodePartOf"], content_uri))
+
+
 def write_all_entities_for_file(
     ctx: OntologyContext,
     constructs,
@@ -179,9 +218,10 @@ def write_all_entities_for_file(
     module_uris,
     global_type_uris,
     language,
+    content_uri,
 ):
     """
-    Write all entity types for a single file.
+    Write all entity types for a single file, and map hasCodePart/isCodePartOf relationships.
 
     Args:
         ctx: OntologyContext object.
@@ -192,6 +232,7 @@ def write_all_entities_for_file(
         module_uris: Dict of module URIs for the file.
         global_type_uris: Dict mapping type names to URIs.
         language: Programming language string.
+        content_uri: URIRef for the content entity (SoftwareCode).
     Returns:
         Dict mapping function names to their URIs.
     """
@@ -204,6 +245,7 @@ def write_all_entities_for_file(
         ctx.uri_safe_string,
         all_entity_uris,
         global_type_uris,
+        content_uri,
         language,
     )
     write_parameters(
@@ -215,6 +257,7 @@ def write_all_entities_for_file(
         ctx.uri_safe_string,
         func_uris,
         global_type_uris,
+        content_uri,
     )
     write_variables(
         ctx.g,
@@ -225,6 +268,7 @@ def write_all_entities_for_file(
         ctx.uri_safe_string,
         func_uris,
         global_type_uris,
+        content_uri,
     )
     write_calls(
         ctx.g,
@@ -235,6 +279,7 @@ def write_all_entities_for_file(
         ctx.uri_safe_string,
         func_uris,
         global_type_uris,
+        content_uri,
     )
     write_decorators(
         ctx.g,
@@ -243,6 +288,7 @@ def write_all_entities_for_file(
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     write_types(
         ctx.g,
@@ -251,6 +297,7 @@ def write_all_entities_for_file(
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
     write_imports(
         ctx.g,
@@ -259,18 +306,48 @@ def write_all_entities_for_file(
         ctx.class_cache,
         ctx.prop_cache,
         ctx.uri_safe_string,
+        content_uri,
     )
-    write_module_import_relationships(
-        ctx.g, constructs, file_uri, ctx.prop_cache, ctx.uri_safe_string, module_uris
-    )
-    write_comments(
-        ctx.g,
-        constructs,
-        file_uri,
-        ctx.class_cache,
-        ctx.prop_cache,
-        ctx.uri_safe_string,
-    )
+    # --- Add hasCodePart/isCodePartOf relationships for all code constructs ---
+    # Use the content_uri that was already created with the same registry key as content extractor
+    construct_uris = set()
+    for entity_dict in [all_entity_uris, interface_uris, module_uris]:
+        if entity_dict:
+            construct_uris.update(entity_dict.values())
+    if "functions" in constructs:
+        for func in constructs["functions"]:
+            if "name" in func:
+                func_uri = URIRef(
+                    f"{file_uri}/function/{ctx.uri_safe_string(func['name'])}"
+                )
+                construct_uris.add(func_uri)
+    if "variables" in constructs:
+        for var in constructs["variables"]:
+            if "name" in var:
+                var_uri = URIRef(f"{file_uri}/var/{ctx.uri_safe_string(var['name'])}")
+                construct_uris.add(var_uri)
+    if "enums" in constructs:
+        for enum in constructs["enums"]:
+            if "name" in enum:
+                enum_uri = URIRef(
+                    f"{file_uri}/enum/{ctx.uri_safe_string(enum['name'])}"
+                )
+                construct_uris.add(enum_uri)
+    if "traits" in constructs:
+        for trait in constructs["traits"]:
+            if "name" in trait:
+                trait_uri = URIRef(
+                    f"{file_uri}/trait/{ctx.uri_safe_string(trait['name'])}"
+                )
+                construct_uris.add(trait_uri)
+    if "classes" in constructs:
+        for cls in constructs["classes"]:
+            if "name" in cls:
+                class_uri = URIRef(
+                    f"{file_uri}/class/{ctx.uri_safe_string(cls['name'])}"
+                )
+                construct_uris.add(class_uri)
+    add_code_part_relationships(ctx.g, content_uri, construct_uris, ctx.prop_cache)
     return func_uris
 
 
@@ -366,6 +443,9 @@ def write_ontology(
     Returns:
         None
     """
+    # Create a temporary context to get uri_safe_file_path
+    from app.core.paths import uri_safe_file_path
+
     ctx = create_ontology_context(
         g=g,
         class_cache=class_cache,
@@ -373,6 +453,7 @@ def write_ontology(
         INST=INST,
         WDO=WDO,
         uri_safe_string=uri_safe_string,
+        uri_safe_file_path=uri_safe_file_path,
         TTL_PATH=TTL_PATH,
     )
     global_type_uris = create_canonical_type_individuals(

@@ -1,7 +1,8 @@
-"""Extraction subpackage for Semantic Web KMS: code, ontology, and pipeline extractors."""
+"""Extraction pipeline subpackage for Semantic Web KMS."""
 
+# Centralized user-facing messages and error strings for pipeline operations
 MESSAGES = {
-    "extract_success": "Extraction completed successfully.",
-    "extract_failed": "Extraction failed: {error}",
-    "invalid_input": "Invalid input provided to extractor.",
+    "extractor_failed": "Extractor failed: {extractor_name}",
+    "pipeline_incomplete": "Extraction pipeline incomplete. Check logs for details.",
+    "output_saved": "Ontology output saved to: {output_path}",
 }
