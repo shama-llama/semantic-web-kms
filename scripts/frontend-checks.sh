@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Frontend-only local checks script
-# Quick checks for frontend development
-
-# Remove 'set -e' to allow the script to continue on errors
+# Uncomment 'set -e' to allow the script to stop on errors
+# set -e
 
 echo "Running frontend checks..."
 echo "==============================="
