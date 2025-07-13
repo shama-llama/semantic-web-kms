@@ -65,7 +65,7 @@
     },
     {
       "class": "ArchiveFile",
-      "regex": "\\.(zip|rar|7z|tar|gz|bz2|xz)$"
+      "regex": "\\.(zip|rar|7z|tar|gz|bz2|xz|jar|war|ear|tar\\.gz|tar\\.bz2|tar\\.xz)$"
     },
     {
       "class": "ConfigurationFile",
@@ -102,6 +102,14 @@
     {
       "class": "SourceCodeFile",
       "regex": "api-test\\.http$"
+    },
+    {
+      "class": "AssetFile",
+      "regex": "(?i)\\.(bin|dat|asset|res|resource|pak|pak\\.dat|pak\\.bin|pak\\.res|pak\\.resource)$"
+    },
+    {
+      "class": "ContainerImage",
+      "regex": "(?i)\\.(img|qcow2|vmdk|vdi|iso|ova|ovf)$"
     }
   ]
 }
