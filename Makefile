@@ -1,10 +1,14 @@
-# Makefile for local development checks
+# Makefile for Semantic Web Knowledge Management System
+# Group One, CoSc 6232 (Spring 2025)
 # Run with: make <target>
 
-.PHONY: help all backend frontend security lint test build clean
+.PHONY: help all backend frontend security lint test build clean install dev format type-check coverage audit
 
 # Default target
 help:
+	@echo "Semantic Web Knowledge Management System - Development Commands"
+	@echo "=============================================================="
+	@echo ""
 	@echo "Available targets:"
 	@echo "  all        - Run all checks (lint, test, build, security)"
 	@echo "  backend    - Run backend checks only"
@@ -14,12 +18,20 @@ help:
 	@echo "  test       - Run tests only"
 	@echo "  build      - Run build checks only"
 	@echo "  clean      - Clean build artifacts"
+	@echo "  install    - Install all dependencies"
+	@echo "  dev        - Quick development check (backend only, fast)"
+	@echo "  format     - Format code with black and isort"
+	@echo "  type-check - Run type checking with mypy and pyright"
+	@echo "  coverage   - Run tests with coverage report"
+	@echo "  audit      - Run security audit"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make all          # Run everything"
 	@echo "  make backend      # Quick backend check"
 	@echo "  make frontend     # Quick frontend check"
 	@echo "  make security     # Security audit"
+	@echo "  make format       # Format code"
+	@echo "  make type-check   # Type checking"
 
 # Run all checks
 all:
@@ -41,6 +53,16 @@ security:
 	@echo "\033[1;36mRunning security checks...\033[0m"
 	./scripts/security-checks.sh
 
+# Install all dependencies
+install:
+	@echo "\033[1;36mInstalling dependencies...\033[0m"
+	@if [ -d ".venv" ]; then source .venv/bin/activate; fi
+	@pip install -e .
+	@pip install -e ".[dev]"
+	@echo "Installing frontend dependencies..."
+	@cd portal && npm ci
+	@echo "\033[0;32mAll dependencies installed!\033[0m"
+
 # Linting only
 lint:
 	@echo "\033[1;36mRunning linting checks...\033[0m"
@@ -53,7 +75,25 @@ lint:
 	@isort --check-only app/
 	@echo "Frontend linting..."
 	@cd portal && npm run lint
-	@echo "All linting passed!"
+	@echo "\033[0;32mAll linting passed!\033[0m"
+
+# Format code
+format:
+	@echo "\033[1;36mFormatting code...\033[0m"
+	@if [ -d ".venv" ]; then source .venv/bin/activate; fi
+	@black app/
+	@isort app/
+	@echo "\033[0;32mCode formatted!\033[0m"
+
+# Type checking
+type-check:
+	@echo "\033[1;36mRunning type checks...\033[0m"
+	@if [ -d ".venv" ]; then source .venv/bin/activate; fi
+	@mypy app/
+	@pyright app/
+	@echo "Frontend type checking..."
+	@cd portal && npx tsc --noEmit
+	@echo "\033[0;32mAll type checks passed!\033[0m"
 
 # Tests only
 test:
@@ -64,6 +104,27 @@ test:
 	@echo "Frontend tests..."
 	@cd portal && npm run test:run
 	@echo "\033[0;32mAll tests passed!\033[0m"
+
+# Coverage report
+coverage:
+	@echo "\033[1;36mRunning tests with coverage...\033[0m"
+	@echo "Backend coverage..."
+	@if [ -d ".venv" ]; then source .venv/bin/activate; fi
+	PYTHONPATH=. pytest --cov=app --cov-report=term-missing --cov-report=html
+	@echo "Frontend coverage..."
+	@cd portal && npm run test:coverage
+	@echo "\033[0;32mCoverage reports generated!\033[0m"
+
+# Security audit
+audit:
+	@echo "\033[1;36mRunning security audit...\033[0m"
+	@if [ -d ".venv" ]; then source .venv/bin/activate; fi
+	@pip install pip-audit bandit > /dev/null 2>&1 || true
+	@pip-audit
+	@bandit -r app/
+	@echo "Frontend security audit..."
+	@cd portal && npm audit
+	@echo "\033[0;32mSecurity audit complete!\033[0m"
 
 # Build only
 build:
@@ -87,6 +148,8 @@ clean:
 	@rm -rf .coverage
 	@rm -rf .pytest_cache/
 	@rm -rf .mypy_cache/
+	@rm -rf htmlcov/
+	@rm -rf .pyright_cache/
 	@echo "\033[0;32mCleaned!\033[0m"
 
 # Quick development check (backend only, fast)
