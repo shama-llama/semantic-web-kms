@@ -20,7 +20,8 @@ def test_uri_safe_string():
     s = "My Document: 2024/07/09"
     safe = doc_extractor.uri_safe_string(s)
     assert isinstance(safe, str)
-    assert ":" not in safe and "/" not in safe
+    assert ":" not in safe  # Colons should be replaced
+    # Note: Forward slashes are now preserved for file paths
 
 
 # Add more tests for other helpers or pure functions as discovered
@@ -148,7 +149,9 @@ def test_add_triples_from_markdown(monkeypatch):
         tag="p",
     )
     root = MarkdownElement(type="document", children=[heading, para])
-    doc_extractor.add_triples_from_markdown(root, g, context, parent_uri, file_enc)
+    doc_extractor.add_triples_from_markdown(
+        root, g, context, parent_uri, file_enc, "repo1"
+    )
     assert len(g) > 0
 
 
@@ -287,7 +290,7 @@ def test_main_integration(tmp_path, monkeypatch):
         doc_extractor, "get_excluded_directories_path", lambda: str(excluded_path)
     )
     # Patch get_output_path to a dummy output file
-    output_path = tmp_path / "web_development_ontology.ttl"
+    output_path = tmp_path / "wdkb.ttl"
     monkeypatch.setattr(doc_extractor, "get_output_path", lambda _: str(output_path))
     # Patch get_log_path to a dummy log file
     log_path = tmp_path / "log.txt"

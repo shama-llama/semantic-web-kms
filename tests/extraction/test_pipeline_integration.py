@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import app.extraction.pipeline.main_extractor as me
+import app.extraction.main_extractor as me
 
 
 def test_pipeline_main_success(monkeypatch, tmp_path):

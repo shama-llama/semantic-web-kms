@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+import rdflib
 
 from app.extraction.writers import relationship_writers
 
@@ -82,24 +83,33 @@ def test_write_manipulation_relationships_runs():
         "manipulation_relationships": [{"manipulator": "foo", "manipulatee": "bar"}]
     }
     file_uri = "file://test.py"
-    prop_cache = {"manipulates": mock.Mock(), "isManipulatedBy": mock.Mock()}
+    prop_cache = {
+        "manipulates": "manipulates_uri",
+        "isManipulatedBy": "isManipulatedBy_uri",
+    }
     uri_safe_string = lambda s: s
-    # Should not raise
     relationship_writers.write_manipulation_relationships(
         g, constructs, file_uri, prop_cache, uri_safe_string
     )
+    func_uri = rdflib.URIRef(f"{file_uri}/function/foo")
+    var_uri = rdflib.URIRef(f"{file_uri}/var/bar")
+    g.add.assert_any_call((func_uri, "manipulates_uri", var_uri))
+    g.add.assert_any_call((var_uri, "isManipulatedBy_uri", func_uri))
 
 
 def test_write_styling_relationships_runs():
     g = mock.Mock()
     constructs = {"styling_relationships": [{"styler": "foo", "stylee": "bar"}]}
     file_uri = "file://test.py"
-    prop_cache = {"styles": mock.Mock(), "isStyledBy": mock.Mock()}
+    prop_cache = {"styles": "styles_uri", "isStyledBy": "isStyledBy_uri"}
     uri_safe_string = lambda s: s
-    # Should not raise
     relationship_writers.write_styling_relationships(
         g, constructs, file_uri, prop_cache, uri_safe_string
     )
+    func_uri = rdflib.URIRef(f"{file_uri}/function/foo")
+    var_uri = rdflib.URIRef(f"{file_uri}/var/bar")
+    g.add.assert_any_call((func_uri, "styles_uri", var_uri))
+    g.add.assert_any_call((var_uri, "isStyledBy_uri", func_uri))
 
 
 def test_write_testing_relationships_runs():
@@ -267,34 +277,15 @@ def test_write_embedding_relationships_with_calls():
     )
 
 
-def test_write_styling_relationships_with_keywords_and_element():
-    g = mock.Mock()
-    constructs = {
-        "functions": [{"name": "styleFunc", "raw": "element.style = 'color: red'"}],
-        "variables": [{"name": "elementDiv"}],
-    }
-    file_uri = "file://test.py"
-    prop_cache = {"styles": mock.Mock(), "isStyledBy": mock.Mock()}
-    uri_safe_string = lambda s: s
-    relationship_writers.write_styling_relationships(
-        g, constructs, file_uri, prop_cache, uri_safe_string
-    )
-    assert g.add.called
-
-
 def test_write_styling_relationships_no_keywords():
     g = mock.Mock()
-    constructs = {
-        "functions": [{"name": "noStyleFunc", "raw": "print('hello')"}],
-        "variables": [{"name": "elementDiv"}],
-    }
+    constructs = {"styling_relationships": []}
     file_uri = "file://test.py"
-    prop_cache = {"styles": mock.Mock(), "isStyledBy": mock.Mock()}
+    prop_cache = {"styles": "styles_uri", "isStyledBy": "isStyledBy_uri"}
     uri_safe_string = lambda s: s
     relationship_writers.write_styling_relationships(
         g, constructs, file_uri, prop_cache, uri_safe_string
     )
-    # Should not call g.add since no styling keywords
     g.add.assert_not_called()
 
 

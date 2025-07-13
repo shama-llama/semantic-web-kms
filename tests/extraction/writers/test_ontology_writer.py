@@ -8,11 +8,18 @@ from app.extraction.writers import ontology_writer
 def make_ctx():
     ctx = mock.Mock()
     ctx.uri_safe_string = lambda s: s
+    ctx.uri_safe_file_path = lambda s: s
     ctx.class_cache = {
         "FunctionDefinition": mock.Mock(),
         "AttributeDeclaration": mock.Mock(),
     }
-    ctx.prop_cache = {"hasSimpleName": mock.Mock(), "hasCanonicalName": mock.Mock()}
+    ctx.prop_cache = {
+        "hasSimpleName": mock.Mock(),
+        "hasCanonicalName": mock.Mock(),
+        "hasCodePart": mock.Mock(),
+        "isCodePartOf": mock.Mock(),
+        "isElementOf": mock.Mock(),
+    }
     ctx.WDO = mock.Mock()
     ctx.INST = {
         "repo1/file1.py": "file://repo1/file1.py",
@@ -69,6 +76,7 @@ def test_write_all_entities_for_file_runs():
     module_uris = {}
     global_type_uris = {}
     language = "python"
+    content_uri = "content://test.py"
     result = ontology_writer.write_all_entities_for_file(
         ctx,
         constructs,
@@ -78,6 +86,7 @@ def test_write_all_entities_for_file_runs():
         module_uris,
         global_type_uris,
         language,
+        content_uri,
     )
     assert isinstance(result, dict)
 

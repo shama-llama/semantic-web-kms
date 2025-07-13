@@ -6,12 +6,15 @@ from app.core import namespaces
 
 def test_wdo_namespace():
     """Test that WDO namespace is defined correctly."""
-    assert str(namespaces.WDO) == "http://semantic-web-kms.edu.et/wdo#"
+    assert str(namespaces.WDO) == "http://web-development-ontology.netlify.app/wdo#"
 
 
 def test_inst_namespace():
     """Test that INST namespace is defined correctly."""
-    assert str(namespaces.INST) == "http://semantic-web-kms.edu.et/wdo/instances/"
+    assert (
+        str(namespaces.INST)
+        == "http://web-development-ontology.netlify.app/wdo/instances/"
+    )
 
 
 def test_skos_namespace():

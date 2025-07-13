@@ -71,7 +71,7 @@ def test_uri_safe_string():
     assert paths.uri_safe_string("abc") == "abc"
     assert (
         paths.uri_safe_string(r"a b/c:d*e?f\ng<h>i|j\tk\l\m\n")
-        == "a_b_c_d_e_f_ng_h_i_j_tk_l_m_n"
+        == "a_b/c_d_e_f_ng_h_i_j_tk_l_m_n"
     )
     assert paths.uri_safe_string("__a__b__") == "a_b"
     assert paths.uri_safe_string("a   b") == "a_b"

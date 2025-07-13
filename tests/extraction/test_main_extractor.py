@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import app.extraction.pipeline.main_extractor as me
+import app.extraction.main_extractor as me
 
 
 def test_extraction_result_repr_and_str():

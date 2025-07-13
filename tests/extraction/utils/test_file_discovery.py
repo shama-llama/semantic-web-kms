@@ -48,7 +48,7 @@ def test_get_input_and_output_paths():
         paths.set_input_dir(tempdir)
         input_dir, ttl_path = file_discovery.get_input_and_output_paths()
         assert str(input_dir) == tempdir
-        assert str(ttl_path).endswith("web_development_ontology.ttl")
+        assert str(ttl_path).endswith("wdkb.ttl")
 
 
 def test_load_and_discover_files():
@@ -73,5 +73,5 @@ def test_load_and_discover_files():
             assert any(f["extension"] == ".py" for f in files)
             assert "repo1" in repos
             assert str(input_dir) == tempdir
-            assert str(ttl_path).endswith("web_development_ontology.ttl")
+            assert str(ttl_path).endswith("wdkb.ttl")
     os.remove(excl_path)

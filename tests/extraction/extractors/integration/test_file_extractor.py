@@ -121,7 +121,7 @@ def test_main_runs(monkeypatch, tmp_path):
     dummy_cache.write_text(json.dumps({"classes": ["TestClass"]}))
     dummy_ontology = tmp_path / "ontology.owl"
     dummy_ontology.write_text("")
-    dummy_output = tmp_path / "web_development_ontology.ttl"
+    dummy_output = tmp_path / "wdkb.ttl"
     monkeypatch.setattr(
         file_extractor, "get_web_dev_ontology_path", lambda: str(dummy_ontology)
     )
@@ -236,7 +236,7 @@ def test_main_error_handling(tmp_path, monkeypatch, caplog):
     dummy_cache.write_text(json.dumps({"classes": ["TestClass"]}))
     dummy_ontology = tmp_path / "ontology.owl"
     dummy_ontology.write_text("")
-    dummy_output = tmp_path / "web_development_ontology.ttl"
+    dummy_output = tmp_path / "wdkb.ttl"
     monkeypatch.setattr(
         file_extractor, "get_web_dev_ontology_path", lambda: str(dummy_ontology)
     )
