@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Local Build and Security Checks Script
-# This script runs the same checks as the GitHub workflows locally
-
-# Remove 'set -e' to allow the script to continue on errors
+# Uncomment 'set -e' to allow the script to stop on errors
+# set -e
 
 echo "Running local build and security checks..."
 echo "=============================================="

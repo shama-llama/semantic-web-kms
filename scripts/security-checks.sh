@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Security-only local checks script
-# Security checks for both backend and frontend
-
-# Remove 'set -e' to allow the script to continue on errors
+# Uncomment 'set -e' to allow the script to stop on errors
+# set -e
 
 echo "Running security checks..."
 echo "============================="

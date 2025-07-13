@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Script to regenerate the ontology cache
-# This is useful when the ontology has been updated and new mappings are needed
-
 echo "Regenerating ontology cache..."
 
 # Activate virtual environment if it exists
