@@ -6,7 +6,8 @@ from app.ontology.bfo import BFOOntology
 
 
 class WDOOntology(BaseOntology):
-    """Dynamic WDO ontology wrapper.
+    """
+    Web Development Ontology (WDO) handler for semantic annotation.
 
     Loads the WDO ontology from OWL and provides dynamic class/property lookup and superclass traversal.
     Integrates with BFOOntology for top-level ancestor resolution. If no bfo_ontology is provided, one is instantiated by default.
@@ -25,7 +26,8 @@ class WDOOntology(BaseOntology):
         """
         if owl_path is None:
             owl_path = get_web_dev_ontology_path()
-        super().__init__(owl_path)
+        if BaseOntology is not None:
+            super().__init__(owl_path)
         if bfo_ontology is None:
             bfo_ontology = BFOOntology()
         self.bfo_ontology = bfo_ontology

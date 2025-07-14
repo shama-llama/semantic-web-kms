@@ -18,14 +18,14 @@ from rich.progress import BarColumn, Progress, TextColumn, TimeElapsedColumn
 
 from app.core.namespaces import WDO
 from app.core.ontology_cache import get_extraction_properties, get_ontology_cache
-from app.core.paths import get_excluded_directories_path  # type: ignore
-from app.core.paths import get_log_path  # type: ignore
-from app.core.paths import get_output_path  # type: ignore
-from app.core.paths import get_web_dev_ontology_path  # type: ignore
-from app.core.paths import (  # type: ignore
+from app.core.paths import (
     get_carrier_types_path,
     get_content_types_path,
+    get_excluded_directories_path,
     get_input_dir,
+    get_log_path,
+    get_output_path,
+    get_web_dev_ontology_path,
     uri_safe_file_path,
     uri_safe_string,
 )
@@ -258,7 +258,8 @@ def parse_adr_documentation(
     prop_cache: Dict[str, Any],
     class_cache: Dict[str, Any],
 ) -> None:
-    """Parse Architectural Decision Record (ADR) documentation for semantic extraction.
+    """
+    Parse Architectural Decision Record (ADR) documentation for semantic extraction.
 
     Args:
         text: The ADR documentation text.
@@ -309,7 +310,8 @@ def parse_guideline_documentation(
     prop_cache: Dict[str, Any],
     class_cache: Dict[str, Any],
 ) -> None:
-    """Parse best practice guideline documentation for semantic extraction.
+    """
+    Parse best practice guideline documentation for semantic extraction.
 
     Args:
         text: The guideline documentation text.
@@ -354,7 +356,8 @@ def parse_guideline_documentation(
 
 
 def extract_code_comments(code: str, ext: str) -> List[Dict[str, Any]]:
-    """Extract code comments from source code based on file extension.
+    """
+    Extract code comments from source code based on file extension.
 
     Args:
         code: The source code as a string.
@@ -420,7 +423,8 @@ def extract_code_comments(code: str, ext: str) -> List[Dict[str, Any]]:
 
 # Helper: Check if a class is a subclass of another (by name)
 def _is_textual_element(class_name: str) -> bool:
-    """Check if the class name represents a textual element in the ontology.
+    """
+    Check if the class name represents a textual element in the ontology.
 
     Args:
         class_name: The ontology class name.
@@ -441,7 +445,8 @@ def _is_textual_element(class_name: str) -> bool:
 
 
 def _is_heading(class_name: str) -> bool:
-    """Check if the class name represents a heading element.
+    """
+    Check if the class name represents a heading element.
 
     Args:
         class_name: The ontology class name.
@@ -453,7 +458,8 @@ def _is_heading(class_name: str) -> bool:
 
 
 def _is_software_code(class_name: str) -> bool:
-    """Check if the class name represents a software code element.
+    """
+    Check if the class name represents a software code element.
 
     Args:
         class_name: The ontology class name.
@@ -484,7 +490,8 @@ def _is_software_code(class_name: str) -> bool:
 
 
 def _is_documentation(class_name: str) -> bool:
-    """Check if the class name represents a documentation element.
+    """
+    Check if the class name represents a documentation element.
 
     Args:
         class_name: The ontology class name.
@@ -515,7 +522,8 @@ def add_doc_file_triples(
     doc_type_class: Any,
     repo_uri: URIRef,
 ) -> None:
-    """Add RDF triples for a documentation file and its metadata.
+    """
+    Add RDF triples for a documentation file and its metadata.
 
     Args:
         file_rec: The file record for the documentation file.
@@ -551,7 +559,8 @@ def add_doc_file_triples(
 
 
 def parse_markdown(text: str) -> MarkdownElement:
-    """Parse markdown text into a tree of MarkdownElement objects.
+    """
+    Parse markdown text into a tree of MarkdownElement objects.
 
     Args:
         text: The markdown text to parse.
@@ -626,7 +635,8 @@ def add_triples_from_markdown(
     repo_enc: str,
     parent_stack: Optional[list] = None,
 ):
-    """Recursively add RDF triples for markdown elements to the graph.
+    """
+    Recursively add RDF triples for markdown elements to the graph.
 
     Args:
         element: The MarkdownElement to process.
@@ -732,7 +742,8 @@ def add_triples_from_markdown(
 
 
 def handle_special_doc_types(doc_type_class, text: str, doc_uri, g, context):
-    """Handle special parsing for API, ADR, and Guideline documentation types.
+    """
+    Handle special parsing for API, ADR, and Guideline documentation types.
 
     Args:
         doc_type_class: The ontology class for the documentation type.
@@ -756,7 +767,8 @@ def handle_special_doc_types(doc_type_class, text: str, doc_uri, g, context):
 def process_doc_files_with_context(
     doc_files: List[FileRecord], g: Graph, context: DocExtractionContext
 ) -> Iterator[int]:
-    """Process documentation files and add triples to the RDF graph.
+    """
+    Process documentation files and add triples to the RDF graph.
 
     Args:
         doc_files: List of documentation file records.
@@ -811,7 +823,8 @@ def process_doc_files_with_context(
 def process_code_files_with_context(
     code_files: List[FileRecord], g: Graph, context: DocExtractionContext
 ) -> Iterator[int]:
-    """Process code files and add code comment triples to the RDF graph.
+    """
+    Process code files and add code comment triples to the RDF graph.
 
     Args:
         code_files: List of code file records.
@@ -852,7 +865,8 @@ def process_code_files_with_context(
 def add_code_file_triples(
     file_rec: FileRecord, g: Graph, context: DocExtractionContext, file_uri: URIRef
 ) -> None:
-    """Add RDF triples for a code file and its metadata.
+    """
+    Add RDF triples for a code file and its metadata.
 
     Args:
         file_rec: The file record for the code file.
@@ -873,7 +887,8 @@ def process_code_comments(
     file_enc: str,
     file_rec: FileRecord,
 ) -> None:
-    """Process code comments and add RDF triples for each comment.
+    """
+    Process code comments and add RDF triples for each comment.
 
     Args:
         comments: List of code comment dictionaries.
@@ -945,7 +960,8 @@ def add_code_comment_triples(
     file_enc: str,
     file_rec: FileRecord,
 ) -> None:
-    """Add RDF triples for code comments and their relationships to code files.
+    """
+    Add RDF triples for code comments and their relationships to code files.
 
     Args:
         comments: List of code comment dictionaries.
@@ -959,7 +975,8 @@ def add_code_comment_triples(
 
 
 def process_doc_files(doc_files, g, class_cache, prop_cache, ontology, console):
-    """Create context and process documentation files, adding triples to the RDF graph.
+    """
+    Create context and process documentation files, adding triples to the RDF graph.
 
     Args:
         doc_files: List of documentation file records.
@@ -987,7 +1004,8 @@ def process_doc_files(doc_files, g, class_cache, prop_cache, ontology, console):
 
 
 def process_code_files(code_files, g, class_cache, prop_cache):
-    """Create context and process code files, adding triples to the RDF graph.
+    """
+    Create context and process code files, adding triples to the RDF graph.
 
     Args:
         code_files: List of code file records.
@@ -1013,7 +1031,8 @@ def process_code_files(code_files, g, class_cache, prop_cache):
 
 
 def run_extraction(context: DocExtractionContext, doc_files, code_files, g):
-    """Run the extraction process and write TTL with a progress bar.
+    """
+    Run the extraction process and write TTL with a progress bar.
 
     Args:
         context: The extraction context.
@@ -1136,7 +1155,8 @@ def run_extraction(context: DocExtractionContext, doc_files, code_files, g):
 
 
 def report_progress(context: DocExtractionContext, doc_files, repo_dirs):
-    """Report extraction progress to the console.
+    """
+    Report extraction progress to the console.
 
     Args:
         context: The extraction context.
@@ -1156,7 +1176,8 @@ def report_progress(context: DocExtractionContext, doc_files, repo_dirs):
 
 
 def _setup_ontology_and_cache():
-    """Set up ontology and cache for extraction process.
+    """
+    Set up ontology and cache for extraction process.
 
     Returns:
         Tuple containing ontology, ontology cache, class cache, and property cache.
@@ -1188,7 +1209,8 @@ def _setup_ontology_and_cache():
 
 
 def _create_context(console, ontology, ontology_cache, class_cache, prop_cache):
-    """Create a DocExtractionContext object for the extraction process.
+    """
+    Create a DocExtractionContext object for the extraction process.
 
     Args:
         console: Rich console for output.
@@ -1219,7 +1241,8 @@ def _create_context(console, ontology, ontology_cache, class_cache, prop_cache):
 def discover_files(
     context: DocExtractionContext,
 ) -> Tuple[List[FileRecord], List[FileRecord], List[str]]:
-    """Discover documentation and code files in input repositories using file_utils helpers.
+    """
+    Discover documentation and code files in input repositories using file_utils helpers.
 
     Args:
         context: The extraction context.
@@ -1253,7 +1276,8 @@ def discover_files(
 
 
 def setup_graph(context: DocExtractionContext) -> Graph:
-    """Set up and return an RDF graph for extraction.
+    """
+    Set up and return an RDF graph for extraction.
 
     Args:
         context: The extraction context.

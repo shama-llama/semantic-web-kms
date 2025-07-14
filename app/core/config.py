@@ -2,11 +2,14 @@
 
 import os
 
-APP_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Always resolve project root as the parent of the 'app' directory
+APP_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if os.path.basename(APP_ROOT) == "app":
+    APP_ROOT = os.path.dirname(APP_ROOT)
+OUTPUT_DIR = os.path.join(APP_ROOT, "output")
+LOGS_DIR = os.path.join(APP_ROOT, "logs")
 
 # Main directories
-LOG_DIR = os.path.join(APP_ROOT, "logs")
-OUTPUT_DIR = os.path.join(APP_ROOT, "output")
 MAPPINGS_DIR = os.path.join(APP_ROOT, "mappings")
 ONTOLOGIES_DIR = os.path.join(APP_ROOT, "ontologies")
 

@@ -625,7 +625,7 @@ def extract_image_metadata(file_path: str) -> Dict[str, Any]:
 
             # Extract EXIF data if available
             try:
-                exif = img._getexif()  # type: ignore
+                exif = img.getexif() if hasattr(img, "getexif") else None
                 if exif:
                     # Common EXIF tags
                     exif_tags = {

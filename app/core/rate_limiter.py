@@ -10,7 +10,8 @@ logger = logging.getLogger("rate_limiter")
 
 
 class RateLimiter:
-    """Thread-safe rate limiter for API calls.
+    """
+    Rate limiter for API calls with retry and backoff logic.
 
     This class provides rate limiting functionality with configurable limits,
     automatic retry logic, and exponential backoff for failed requests.
@@ -24,7 +25,8 @@ class RateLimiter:
         max_delay: float = 60.0,
         jitter: bool = True,
     ):
-        """Initialize the rate limiter.
+        """
+        Initialize the RateLimiter.
 
         Args:
             requests_per_minute: Maximum requests allowed per minute
@@ -97,7 +99,8 @@ class RateLimiter:
         error_handler: Optional[Callable[..., Any]] = None,
         **kwargs,
     ) -> Any:
-        """Call a function with rate limiting and automatic retry logic.
+        """
+        Call a function with retry logic for rate limiting.
 
         Args:
             func: Function to call
@@ -161,7 +164,8 @@ class RateLimiter:
         raise ValueError("Unexpected error in rate-limited API call")
 
     def _is_rate_limit_error(self, error_msg: str) -> bool:
-        """Check if an error message indicates a rate limit error.
+        """
+        Check if an error is a rate limit error.
 
         Args:
             error_msg: Error message to check
@@ -182,7 +186,8 @@ class RateLimiter:
         return any(keyword in error_msg.lower() for keyword in rate_limit_keywords)
 
     def _calculate_retry_delay(self, error_msg: str, attempt: int) -> float:
-        """Calculate retry delay from error message or use exponential backoff.
+        """
+        Calculate the retry delay for rate limiting.
 
         Args:
             error_msg: Error message from API
@@ -210,7 +215,8 @@ class RateLimiter:
         return float(delay)
 
     def _calculate_backoff_delay(self, attempt: int) -> float:
-        """Calculate exponential backoff delay.
+        """
+        Calculate the backoff delay for rate limiting.
 
         Args:
             attempt: Current attempt number
@@ -226,7 +232,8 @@ class RateLimiter:
         return float(delay)
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get current rate limiter statistics.
+        """
+        Get statistics for the rate limiter.
 
         Returns:
             Dictionary with rate limiter statistics
@@ -258,7 +265,8 @@ _gemini_limiter = RateLimiter(
 
 
 def get_gemini_limiter() -> RateLimiter:
-    """Get the global Gemini API rate limiter.
+    """
+    Get a rate limiter for Gemini API calls.
 
     Returns:
         RateLimiter instance configured for Gemini API
@@ -273,7 +281,8 @@ def create_limiter(
     max_delay: float = 60.0,
     jitter: bool = True,
 ) -> RateLimiter:
-    """Create a new rate limiter with custom configuration.
+    """
+    Create a new rate limiter instance.
 
     Args:
         requests_per_minute: Maximum requests allowed per minute

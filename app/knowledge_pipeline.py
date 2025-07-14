@@ -58,10 +58,25 @@ if args.input_dir:
 # Now import the rest
 # Remove: from typing import List (duplicate)
 
+# Paths
+from app.core.paths import get_output_path
+
 # Import progress tracking
 from app.core.progress_tracker import get_current_tracker
 from app.triplestore.agraph_connection import AllegroGraphRESTClient
 
+APP_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if os.path.basename(APP_ROOT) == "app":
+    APP_ROOT = os.path.dirname(APP_ROOT)
+# Remove all assignments to OUTPUT_DIR and TTL_PATH
+EXTRACTION_CMD = [sys.executable, "-m", "app.extraction.main_extractor"]
+ANNOTATION_CMD = [sys.executable, "-m", "app.annotation.semantic_annotator"]
+TEMPLATE_GENERATION_CMD = [
+    sys.executable,
+    "-m",
+    "app.annotation.generate_class_templates",
+]
+# Always use absolute path for output
 # Paths
 EXTRACTION_CMD = [sys.executable, "-m", "app.extraction.main_extractor"]
 ANNOTATION_CMD = [sys.executable, "-m", "app.annotation.semantic_annotator"]
@@ -70,7 +85,9 @@ TEMPLATE_GENERATION_CMD = [
     "-m",
     "app.annotation.generate_class_templates",
 ]
-TTL_PATH = os.path.join("output", "wdkb.ttl")
+# Always use absolute path for output
+OUTPUT_DIR = os.path.abspath("output")
+TTL_PATH = get_output_path("wdkb.ttl")
 
 # If input_dir is set, add it to the subprocess commands
 if args.input_dir:

@@ -34,10 +34,11 @@ def enrich_description_with_links(
     nlp=None,
     base_url: str = "https://your-kg.org/entity/",
 ) -> str:
-    """Enrich a description with HTML links to entities (optimized version).
+    """
+    Enrich a description with entity links using the RDF graph.
 
     Args:
-        graph: The RDF graph containing entities.
+        graph: The RDF graph.
         description: The description text to enrich.
         label_map: Optional pre-computed label to URI mapping.
         nlp: Pre-loaded spaCy model for performance.
@@ -108,10 +109,11 @@ def enrich_description_with_links(
 
 
 def check_grammaticality(description: str) -> bool:
-    """Check if a description is grammatically correct.
+    """
+    Check the grammaticality of a text using language tools.
 
     Args:
-        description: The description text to check.
+        text: The text to check.
 
     Returns:
         True if the description is grammatical, False otherwise.
@@ -134,10 +136,11 @@ def check_grammaticality(description: str) -> bool:
 
 
 def get_readability_score(description: str) -> float:
-    """Calculate the readability score of a description.
+    """
+    Compute the readability score for a given text.
 
     Args:
-        description: The description text to analyze.
+        text: The text to score.
 
     Returns:
         The Flesch reading ease score.
@@ -171,10 +174,11 @@ def get_readability_score(description: str) -> float:
 
 
 def get_sentiment(description: str) -> Dict[str, float]:
-    """Analyze the sentiment of a description.
+    """
+    Analyze the sentiment of a text and return a sentiment score.
 
     Args:
-        description: The description text to analyze.
+        text: The text to analyze.
 
     Returns:
         Dictionary containing sentiment scores (negative, neutral, positive, compound).
@@ -207,7 +211,8 @@ def enrich_and_validate_summary(
     summary: str,
     label_map: Optional[Dict[str, URIRef]] = None,
 ) -> Tuple[str, Dict]:
-    """Enrich and validate a summary for an instance.
+    """
+    Enrich and validate a summary for an instance.
 
     Args:
         graph: The RDF graph containing the instance.

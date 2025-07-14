@@ -151,7 +151,7 @@ def handle_classdef(
     Returns:
         None
     """
-    class_info: dict[str, Any] = {
+    class_info: Dict[str, Any] = {
         "raw": f"class {node.name}(...):",
         "name": node.name,
         "start_line": node.lineno,
@@ -247,7 +247,7 @@ def handle_functiondef(
     Returns:
         None
     """
-    func_info: dict[str, Any] = {
+    func_info: Dict[str, Any] = {
         "raw": f"def {node.name}(...):",
         "name": node.name,
         "start_line": node.lineno,
