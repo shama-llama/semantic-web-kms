@@ -51,6 +51,10 @@ jobs:
           node-version: '18'
           cache: 'pnpm'
           cache-dependency-path: portal/pnpm-lock.yaml
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
       
       - name: Install dependencies
         run: |
