@@ -49,10 +49,11 @@ static/
 
 # Test/coverage
 .coverage
-htmlcov/
 .tox/
 .pytest_cache/
+htmlcov/
 pytest_cache/
+coverage.xml
 
 # Model/data
 model/*.tmp
