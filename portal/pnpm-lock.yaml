@@ -136,7 +136,7 @@ importers:
         version: 19.1.0(react@19.1.0)
       react-force-graph:
         specifier: ^1.48.0
-        version: 1.48.0(aframe@1.7.1)(react@19.1.0)(three@0.164.1)
+        version: 1.48.0(aframe@1.7.1)(react@19.1.0)(three@0.178.0)
       react-force-graph-2d:
         specifier: ^1.28.0
         version: 1.28.0(react@19.1.0)
@@ -173,7 +173,7 @@ importers:
     devDependencies:
       '@next/bundle-analyzer':
         specifier: ^15.3.5
-        version: 15.3.5
+        version: 15.4.0
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.6.3
@@ -751,8 +751,8 @@ packages:
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
 
-  '@next/bundle-analyzer@15.3.5':
-    resolution: {integrity: sha512-r1tlg7N4IUWpdqdy8/6bf7pvo2yeN9Oc6OHEiMsMfIooJ5k37Odi9HC1qBS4soULNE7FiQ18JP/TdmQKiaIkoA==}
+  '@next/bundle-analyzer@15.4.0':
+    resolution: {integrity: sha512-F7XPf71xSZiBJQYMeei+0Ov/Mo19Cq9Nq+i6uV55oHBXlQnPmgz3cPRsz21ZRVDLlYJTg/MbPRl6CHW4y+utYg==}
 
   '@next/env@15.2.4':
     resolution: {integrity: sha512-+SFtMgoiYP3WoSswuNmxJOCwi06TdWE733D+WPjpXIe4LXGULwEaofiiAy6kbS0+XjM5xF5n3lKuBwN2SnqD9g==}
@@ -4537,20 +4537,20 @@ packages:
 
 snapshots:
 
-  3d-force-graph-ar@1.10.0(aframe@1.7.1)(three@0.164.1):
+  3d-force-graph-ar@1.10.0(aframe@1.7.1)(three@0.178.0):
     dependencies:
-      aframe-forcegraph-component: 3.3.0(aframe@1.7.1)(three@0.164.1)
+      aframe-forcegraph-component: 3.3.0(aframe@1.7.1)(three@0.178.0)
       kapsule: 1.16.3
     transitivePeerDependencies:
       - aframe
       - three
 
-  3d-force-graph-vr@3.1.1(aframe@1.7.1)(three@0.164.1):
+  3d-force-graph-vr@3.1.1(aframe@1.7.1)(three@0.178.0):
     dependencies:
       accessor-fn: 1.5.3
       aframe: 1.7.1
       aframe-extras: 7.6.0
-      aframe-forcegraph-component: 3.3.0(aframe@1.7.1)(three@0.164.1)
+      aframe-forcegraph-component: 3.3.0(aframe@1.7.1)(three@0.178.0)
       kapsule: 1.16.3
       polished: 4.3.1
     transitivePeerDependencies:
@@ -5000,7 +5000,7 @@ snapshots:
       '@tybys/wasm-util': 0.10.0
     optional: true
 
-  '@next/bundle-analyzer@15.3.5':
+  '@next/bundle-analyzer@15.4.0':
     dependencies:
       webpack-bundle-analyzer: 4.10.1
     transitivePeerDependencies:
@@ -6326,10 +6326,10 @@ snapshots:
       three: 0.164.1
       three-pathfinding: 1.3.0(three@0.164.1)
 
-  aframe-forcegraph-component@3.3.0(aframe@1.7.1)(three@0.164.1):
+  aframe-forcegraph-component@3.3.0(aframe@1.7.1)(three@0.178.0):
     dependencies:
       aframe: 1.7.1
-      three-forcegraph: 1.43.0(three@0.164.1)
+      three-forcegraph: 1.43.0(three@0.178.0)
     transitivePeerDependencies:
       - three
 
@@ -8190,11 +8190,11 @@ snapshots:
       react: 19.1.0
       react-kapsule: 2.5.7(react@19.1.0)
 
-  react-force-graph@1.48.0(aframe@1.7.1)(react@19.1.0)(three@0.164.1):
+  react-force-graph@1.48.0(aframe@1.7.1)(react@19.1.0)(three@0.178.0):
     dependencies:
       3d-force-graph: 1.78.2
-      3d-force-graph-ar: 1.10.0(aframe@1.7.1)(three@0.164.1)
-      3d-force-graph-vr: 3.1.1(aframe@1.7.1)(three@0.164.1)
+      3d-force-graph-ar: 1.10.0(aframe@1.7.1)(three@0.178.0)
+      3d-force-graph-vr: 3.1.1(aframe@1.7.1)(three@0.178.0)
       force-graph: 1.50.1
       prop-types: 15.8.1
       react: 19.1.0
@@ -8696,20 +8696,6 @@ snapshots:
       layout-bmfont-text: 1.3.4
       nice-color-palettes: 3.0.0
       quad-indices: 2.0.1
-
-  three-forcegraph@1.43.0(three@0.164.1):
-    dependencies:
-      accessor-fn: 1.5.3
-      d3-array: 3.2.4
-      d3-force-3d: 3.0.6
-      d3-scale: 4.0.2
-      d3-scale-chromatic: 3.1.0
-      data-bind-mapper: 1.0.3
-      kapsule: 1.16.3
-      ngraph.forcelayout: 3.3.1
-      ngraph.graph: 20.0.1
-      three: 0.164.1
-      tinycolor2: 1.6.0
 
   three-forcegraph@1.43.0(three@0.178.0):
     dependencies:

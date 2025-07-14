@@ -88,7 +88,12 @@
   "pnpm": {
     "overrides": {
       "got": "^11.8.5"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^15.3.5",
