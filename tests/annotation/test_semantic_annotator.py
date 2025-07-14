@@ -6,10 +6,12 @@ from app.annotation.generate_class_templates import analyze_class_structure
 from app.annotation.semantic_annotator import (
     analyze_class_structure,
     build_label_to_uri_map,
+)
+from app.annotation.utils import (
+    build_label_to_uri_map,
     find_uri_by_label_fast,
     render_template_with_jinja2,
 )
-from app.annotation.utils import build_label_to_uri_map, render_template_with_jinja2
 
 
 class TestTemplateRenderingFix:
