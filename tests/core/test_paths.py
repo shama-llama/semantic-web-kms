@@ -18,7 +18,7 @@ def test_get_log_path():
     """Test get_log_path returns correct path."""
     filename = "log.txt"
     result = paths.get_log_path(filename)
-    assert result.endswith(os.path.join(paths.LOG_DIR, filename))
+    assert result.endswith(os.path.join(paths.LOGS_DIR, filename))
 
 
 def test_get_language_mapping_path():
