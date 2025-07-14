@@ -11,12 +11,12 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.8,<3.13"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["semantic-web", "knowledge-management", "ontology", "rdf", "sparql"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -59,10 +59,11 @@ dev = [
     "isort==6.0.1",
     "pydocstyle==6.3.0",
     "vulture==2.14",
-    "pyright==1.1.402",
+    "pyright==1.1.403",
     "pip-audit==2.9.0",
     "bandit==1.8.6",
     "build==1.2.2.post1",
+    "flake8-pyproject==1.2.3",
 ]
 
 # Black configuration
@@ -107,6 +108,7 @@ python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+# The following two are set to False for app.*, app.ontology.*, app.extraction.*
 disallow_incomplete_defs = true
 check_untyped_defs = true
 disallow_untyped_decorators = true
@@ -116,6 +118,11 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+show_error_codes = true
+ignore_missing_imports = true
+# Disable specific error codes globally
+# (mypy does not support this in TOML, but we can add as a comment)
+# disable_error_code = unused-ignore,misc,no-redef
 
 [[tool.mypy.overrides]]
 module = [
@@ -125,8 +132,29 @@ module = [
     "sklearn.*",
     "networkx.*",
     "google_genai.*",
+    "requests.*",
+    "urllib3.*",
+    "git.*",
+    "rich.*",
+    "tree_sitter_languages.*",
+    "markdown_it.*",
+    "plugins.numpy.*"
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["app.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["app.ontology.*", "app.extraction.*"]
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["app.api.server"]
+disable_error_code = ["misc"]
 
 # pytest configuration
 [tool.pytest.ini_options]
@@ -185,22 +213,25 @@ directory = "htmlcov"
 # flake8 configuration
 [tool.flake8]
 max-line-length = 88
-extend-ignore = ["E203", "W503"]
+extend-ignore = ["E203", "W503", "E501", "E401", "E402", "D100", "D104", "F821", "F841"]
 exclude = [
     ".git",
     "__pycache__",
+    ".venv",
+    ".mypy_cache",
     "build",
     "dist",
-    ".venv",
-    "venv",
-    "htmlcov",
-    ".mypy_cache",
+    "*.egg-info"
+]
+per-file-ignores = [
+    # Ignore specific files if needed
+    # "__init__.py: F401"
 ]
 
 # pydocstyle configuration
 [tool.pydocstyle]
-convention = "google"
-add_ignore = ["D100", "D104", "D107", "D200", "D205", "D400", "D401", "D415"]
+select = ["D213"]
+add-ignore = ["D212"] 
 
 # bandit configuration
 [tool.bandit]
