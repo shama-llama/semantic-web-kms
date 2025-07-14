@@ -218,7 +218,7 @@ else
 
     # Install frontend dependencies
     print_status "Installing frontend dependencies..."
-    if npm ci; then
+    if pnpm install --frozen-lockfile; then
         print_success "Frontend dependencies installed"
         CHECK_RESULTS[frontend_deps]="SUCCESS"
     else
@@ -230,7 +230,7 @@ else
     echo ""
     print_header "FRONTEND LINTING"
     print_step "Running frontend linting..."
-    if npm run lint; then
+    if pnpm run lint; then
         print_success "Frontend linting passed"
         CHECK_RESULTS[frontend_lint]="SUCCESS"
     else
@@ -240,7 +240,7 @@ else
 
     # TypeScript type checking
     print_status "Running TypeScript type checking..."
-    if npx tsc --noEmit; then
+    if pnpm exec tsc --noEmit; then
         print_success "TypeScript type checking passed"
         CHECK_RESULTS[tsc]="SUCCESS"
     else
@@ -252,7 +252,7 @@ else
     echo ""
     print_header "FRONTEND TESTS"
     print_step "Running frontend tests..."
-    if npm run test:run; then
+    if pnpm exec vitest run; then
         print_success "Frontend tests passed"
         CHECK_RESULTS[frontend_tests]="SUCCESS"
     else
@@ -262,7 +262,7 @@ else
 
     # Frontend tests with coverage
     print_step "Running frontend tests with coverage..."
-    if npm run test:coverage; then
+    if pnpm exec vitest run --coverage; then
         print_success "Frontend tests with coverage passed"
         CHECK_RESULTS[frontend_coverage]="SUCCESS"
     else
@@ -274,7 +274,7 @@ else
     echo ""
     print_header "FRONTEND BUILD"
     print_step "Building frontend..."
-    if npm run build; then
+    if pnpm run build; then
         print_success "Frontend build successful"
         CHECK_RESULTS[frontend_build]="SUCCESS"
     else
@@ -287,7 +287,7 @@ else
     print_header "FRONTEND SECURITY"
     print_step "Running frontend security checks..."
     print_status "Running npm audit..."
-    if npm audit --audit-level=moderate; then
+    if pnpm audit --audit-level=moderate; then
         print_success "No moderate or higher vulnerabilities found"
         CHECK_RESULTS[frontend_audit]="SUCCESS"
     else
@@ -296,7 +296,7 @@ else
     fi
 
     print_step "Checking for outdated dependencies..."
-    if npm outdated; then
+    if pnpm outdated; then
         print_warning "Some dependencies are outdated"
         CHECK_RESULTS[frontend_outdated]="FAIL"
     else
