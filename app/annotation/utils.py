@@ -17,10 +17,11 @@ _SPACY_NLP = None
 
 
 def get_spacy_nlp():
-    """Get spaCy NLP model, loading it only once for performance.
+    """
+    Get a cached spaCy NLP model for English.
 
     Returns:
-        Loaded spaCy model
+        The spaCy language model.
     """
     global _SPACY_NLP
     if _SPACY_NLP is None:
@@ -29,10 +30,10 @@ def get_spacy_nlp():
 
 
 def find_uri_by_label(graph: Graph, label: str) -> Optional[URIRef]:
-    """Find a URI by its label in the graph.
+    """
+    Find a URI in the label-to-URI map by label (case-insensitive).
 
     Args:
-        graph: The RDF graph to search in.
         label: The label to search for.
 
     Returns:
@@ -48,10 +49,11 @@ def find_uri_by_label(graph: Graph, label: str) -> Optional[URIRef]:
 
 
 def build_label_to_uri_map(graph: Graph) -> Dict[str, URIRef]:
-    """Build a fast lookup dictionary from label to URI.
+    """
+    Build a mapping from labels to URIs for all entities in the graph.
 
     Args:
-        graph: RDF graph to process
+        graph: The RDF graph.
 
     Returns:
         Dictionary mapping lowercase labels to URIs
@@ -69,7 +71,8 @@ def build_label_to_uri_map(graph: Graph) -> Dict[str, URIRef]:
 def find_uri_by_label_fast(
     label_map: Dict[str, URIRef], label: str
 ) -> Union[URIRef, None]:
-    """Fast lookup of URI by label using pre-computed map.
+    """
+    Quickly find a URI by label using a pre-built map.
 
     Args:
         label_map: Pre-computed dictionary mapping lowercase labels to URIs
@@ -82,7 +85,8 @@ def find_uri_by_label_fast(
 
 
 def _make_gemini_api_call(prompt: str, api_key: str, model: str) -> str:
-    """Make a single Gemini API call.
+    """
+    Make an API call to Gemini for text generation.
 
     Args:
         prompt: The prompt to send to Gemini
@@ -138,7 +142,8 @@ def _make_gemini_api_call(prompt: str, api_key: str, model: str) -> str:
 def get_gemini_template(
     prompt: str, api_key: str, model: str = "gemini-2.5-flash-lite-preview-06-17"
 ) -> str:
-    """Generate a template using the Gemini API with comprehensive rate limiting.
+    """
+    Get a Gemini template for a given class and properties.
 
     Args:
         prompt: The prompt to send to Gemini.
@@ -162,7 +167,8 @@ def get_gemini_template(
 
 
 def extract_class_name(class_uri: str) -> str:
-    """Extract short class name from URI.
+    """
+    Extract the class name from a URI or string.
 
     Args:
         class_uri: Full class URI
@@ -174,7 +180,8 @@ def extract_class_name(class_uri: str) -> str:
 
 
 def convert_property_to_snake_case(prop_uri: str) -> str:
-    """Convert property URI to snake_case for Jinja2 context.
+    """
+    Convert a property name to snake_case.
 
     Args:
         prop_uri: Property URI
@@ -186,7 +193,8 @@ def convert_property_to_snake_case(prop_uri: str) -> str:
 
 
 def render_template_with_jinja2(template: str, properties: Dict) -> str:
-    """Render a Jinja2 template with the given properties.
+    """
+    Render a template using Jinja2 with the provided context.
 
     Args:
         template: Jinja2 template string

@@ -170,7 +170,8 @@ def extract_files(
 
 
 def _truncate_label(text: str, max_length: int = 60) -> str:
-    """Truncate a string to a maximum length, cutting at the last space before the limit if possible.
+    """
+    Truncate a label to a maximum length for display or storage.
 
     Args:
         text: The string to truncate.

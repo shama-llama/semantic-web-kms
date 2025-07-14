@@ -11,7 +11,7 @@ from app.core.config import (
     CONTENT_TYPES_PATH,
     EXCLUDED_DIRECTORIES_PATH,
     LANGUAGE_MAPPING_PATH,
-    LOG_DIR,
+    LOGS_DIR,
     MAPPINGS_DIR,
     ONTOLOGY_CACHE_FILENAME,
     OUTPUT_DIR,
@@ -69,13 +69,13 @@ def get_input_path(filename: str) -> str:
 
 def get_output_path(filename: str) -> str:
     """
-    Return the absolute path for a file in the output directory.
+    Return the absolute path to a file in the output directory, always relative to project root.
 
     Args:
-        filename (str): The name of the file.
+        filename (str): The file name or relative path inside output/
 
     Returns:
-        str: The absolute path to the file in the output directory.
+        str: Absolute path to the file in the output directory
     """
     return os.path.join(OUTPUT_DIR, filename)
 
@@ -90,7 +90,7 @@ def get_log_path(filename: str) -> str:
     Returns:
         str: The absolute path to the log file in the logs directory.
     """
-    return os.path.join(LOG_DIR, filename)
+    return os.path.join(LOGS_DIR, filename)
 
 
 def get_language_mapping_path() -> str:

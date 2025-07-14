@@ -11,10 +11,11 @@ from app.annotation.utils import extract_class_name, get_gemini_template
 
 
 def get_classes_and_properties(graph) -> dict:
-    """Extract classes and their properties from an RDF graph.
+    """
+    Retrieve all classes and their properties from the ontology graph.
 
     Args:
-        graph: The RDF graph to extract from.
+        graph: The ontology RDF graph.
 
     Returns:
         Dictionary mapping class URIs to their property URIs.
@@ -36,11 +37,12 @@ def get_classes_and_properties(graph) -> dict:
 def build_template_prompt(
     class_name, properties, include_statistics=False, properties_with_stats=None
 ):
-    """Build a prompt for generating class templates.
+    """
+    Build a prompt for generating a class description template.
 
     Args:
-        class_name: The name of the class to generate a template for.
-        properties: List of property URIs for the class.
+        class_name: The name of the class.
+        properties: List of property names.
         include_statistics: Whether to include statistical information in the prompt.
         properties_with_stats: List of property dictionaries with statistics.
 

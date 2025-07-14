@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Dict
 
 from rdflib import Literal, URIRef
 from rdflib.namespace import RDF, RDFS, XSD
@@ -40,10 +41,10 @@ from app.extraction.writers.relationship_writers import (
 def process_file_for_ontology(
     *,
     ctx: OntologyContext,
-    rec: dict[str, str],
-    summary_data: dict[str, dict],
-    global_type_uris: dict[str, str],
-    language_mapping: dict[str, str],
+    rec: Dict[str, str],
+    summary_data: Dict[str, Dict],
+    global_type_uris: Dict[str, str],
+    language_mapping: Dict[str, str],
 ) -> None:
     """
     Process a single file's constructs and write entities and relationships to the ontology graph.

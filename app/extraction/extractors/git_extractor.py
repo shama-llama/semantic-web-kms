@@ -197,7 +197,7 @@ def get_issue_uri(repo_name: str, issue_id: str) -> URIRef:
     return URIRef(str(INST[f"{repo_enc}/issue/{issue_enc}"]))
 
 
-def extract_issue_references(message: str) -> list[str]:
+def extract_issue_references(message: str) -> List[str]:
     """
     Extract referenced issue numbers from a commit message.
 
@@ -359,8 +359,8 @@ def extract_commit_data(
     for repo_name, commits in repo_commit_map.items():
         repo_path = os.path.join(input_dir, repo_name)
         try:
-            for commit in commits:
-                commit: Commit
+            for commit_obj in commits:
+                commit: Commit = commit_obj
                 commit_hash = commit.hexsha
                 commit_message = commit.message.strip()
                 issue_refs = extract_issue_references(str(commit_message))
@@ -428,13 +428,13 @@ def write_ttl(
     Returns:
         Tuple of (repos_added, commits_added, issues_added, file_mod_count).
     """
-    processed_repos: set[str] = set()
-    processed_issues: set[str] = set()
+    processed_repos: Set[str] = set()
+    processed_issues: Set[str] = set()
     repos_added = 0
     commits_added = 0
     issues_added = 0
     file_mod_count = 0
-    referenced_issue_uris: set = set()
+    referenced_issue_uris: Set = set()
     for commit_data in all_commit_data:
         repo_name: str = commit_data["repo_name"]
         repo_uri = get_repo_uri(repo_name)
@@ -724,8 +724,8 @@ def main() -> None:
         all_commit_data = []
         file_mod_count = 0  # Initialize file_mod_count
         for repo, commits in repo_commit_map.items():
-            for commit in commits:
-                commit: Commit
+            for commit_obj in commits:
+                commit: Commit = commit_obj
                 commit_hash = commit.hexsha
                 commit_message = commit.message.strip()
                 issue_refs = extract_issue_references(str(commit_message))

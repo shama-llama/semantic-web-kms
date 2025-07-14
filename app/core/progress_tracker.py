@@ -274,9 +274,9 @@ class RichProgressAdapter:
         """
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self):
         """Exit the context manager."""
-        pass
+        return None
 
     def add_task(self, description: str, total: int) -> TaskID:
         """
