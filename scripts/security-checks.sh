@@ -118,7 +118,7 @@ else
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
         print_status "Installing frontend dependencies..."
-        if npm ci; then
+        if pnpm install --frozen-lockfile; then
             print_success "Frontend dependencies installed"
             CHECK_RESULTS[frontend_deps]="SUCCESS"
         else
@@ -128,19 +128,19 @@ else
     fi
 
     print_status "Running npm audit..."
-    if npm audit --audit-level=moderate; then
+    if pnpm audit --audit-level=moderate; then
         print_success "No moderate or higher vulnerabilities found"
         CHECK_RESULTS[frontend_audit]="SUCCESS"
     else
-        print_warning "Vulnerabilities found in npm dependencies"
-        print_status "Run 'npm audit' for details"
+        print_warning "Vulnerabilities found in pnpm dependencies"
+        print_status "Run 'pnpm audit' for details"
         CHECK_RESULTS[frontend_audit]="FAIL"
     fi
 
     print_status "Checking for outdated dependencies..."
-    if npm outdated; then
+    if pnpm outdated; then
         print_warning "Some dependencies are outdated"
-        print_status "Run 'npm outdated' for details"
+        print_status "Run 'pnpm outdated' for details"
         CHECK_RESULTS[frontend_outdated]="FAIL"
     else
         print_success "All dependencies are up to date"

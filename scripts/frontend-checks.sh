@@ -64,7 +64,7 @@ fi
 
 # Install dependencies
 print_status "Installing frontend dependencies..."
-if npm ci; then
+if pnpm install --frozen-lockfile; then
     print_success "Frontend dependencies installed"
     CHECK_RESULTS[frontend_deps]="SUCCESS"
 else
@@ -76,7 +76,7 @@ fi
 echo ""
 print_header "FRONTEND LINTING"
 print_step "Running frontend linting..."
-if npm run lint; then
+if pnpm run lint; then
     print_success "Frontend linting passed"
     CHECK_RESULTS[frontend_lint]="SUCCESS"
 else
@@ -86,7 +86,7 @@ fi
 
 # TypeScript type checking
 print_status "Running TypeScript type checking..."
-if npx tsc --noEmit; then
+if pnpm exec tsc --noEmit; then
     print_success "TypeScript type checking passed"
     CHECK_RESULTS[tsc]="SUCCESS"
 else
@@ -98,7 +98,7 @@ fi
 echo ""
 print_header "FRONTEND TESTS"
 print_step "Running frontend tests..."
-if npm run test:run; then
+if pnpm exec vitest run; then
     print_success "Frontend tests passed"
     CHECK_RESULTS[frontend_tests]="SUCCESS"
 else
@@ -107,10 +107,10 @@ else
 fi
 
 # Quick build check
-echo ""
+echo ""s
 print_header "FRONTEND BUILD"
 print_step "Building frontend..."
-if npm run build; then
+if pnpm run build; then
     print_success "Frontend build successful"
     CHECK_RESULTS[frontend_build]="SUCCESS"
 else
