@@ -32,30 +32,37 @@
 
 ```mermaid
 flowchart TD
-    %% Style Definitions for a Two-Tone, Light/Dark Mode Compatible Theme
+    %% Style Definitions for a Versatile, Light/Dark Mode Compatible Theme
+    %% Palette: Blue, Green, Purple
 
-    %% Outer Container Styles (Darker)
-    classDef backend-container fill:#818cf8,stroke:#4f46e5,color:#1e1b4b,stroke-width:2px;
-    classDef frontend-container fill:#fabb55,stroke:#ca8a04,color:#78350f,stroke-width:2px;
+    %% Backend Containers (Darker Blue)
+    classDef backend-container fill:#1e40af,stroke:#60a5fa,color:#eff6ff,stroke-width:2px;
+    %% Backend Inner Nodes (Lighter Blue)
+    classDef backend-inner fill:#1d4ed8,stroke:#93c5fd,color:#eff6ff,stroke-width:2px;
 
-    %% Inner Node Styles (Lighter)
-    classDef backend-inner fill:#c7d2fe,stroke:#6366f1,color:#1e1b4b,stroke-width:2px;
-    classDef frontend-inner fill:#fde047,stroke:#eab308,color:#78350f,stroke-width:2px;
+    %% Frontend Containers (Darker Green)
+    classDef frontend-container fill:#047857,stroke:#34d399,color:#f0fdf4,stroke-width:2px;
+    %% Frontend Inner Nodes (Lighter Green)
+    classDef frontend-inner fill:#059669,stroke:#6ee7b7,color:#f0fdf4,stroke-width:2px;
+
+    %% Ontology Containers (Darker Purple)
+    classDef ontology-container fill:#5b21b6,stroke:#a78bfa,color:#f5f3ff,stroke-width:2px;
+    %% Ontology Inner Nodes (Lighter Purple)
+    classDef ontology-inner fill:#6d28d9,stroke:#c4b5fd,color:#f5f3ff,stroke-width:2px;
     
-    %% External Node Style (Single Tone)
-    classDef external fill:#d8b4fe,stroke:#9333ea,color:#4a044e,stroke-width:2px;
+    %% External Node Style (Neutral Gray)
+    classDef external fill:#4b5563,stroke:#9ca3af,color:#f3f4f6,stroke-width:2px;
 
-    %% Link style with BLUE arrows for high contrast in both modes
-    linkStyle default stroke:#605fa,stroke-width:2px;
+    %% A single, default link style is more robust
+    linkStyle default stroke:#38bdf8,stroke-width:2px;
 
-    %% External Actors & Data Sources
+    %% Define All Modules First
+    
+    %% External Actor & Inputs
     user([User])
     repo[(Code Repository)]
-    allegrograph[(AllegroGraph<br>Triplestore)]
 
-    %% Main Vertical Flow
-    user -->|"Uploads repo, queries, explores"| Portal
-    
+    %% Central Pipeline Modules
     subgraph Portal["Portal (Next.js)"]
         direction TB
         upload[Upload UI]
@@ -64,25 +71,15 @@ flowchart TD
         graphviz[Graph Visualization]
     end
 
-    Portal -->|"REST/GraphQL API Calls"| API
-
     subgraph API["API Server"]
         api_server[FastAPI Server]
     end
-    
-    repo -->|"Source code, docs, git"| Extraction
-    API -->|"Triggers Extraction"| Extraction
 
     subgraph Extraction["Extraction Module"]
         direction TB
         ext_main[Main Extractor]
-        ext_main --> ext_code[Code Extractor]
-        ext_main --> ext_doc[Doc Extractor]
-        ext_main --> ext_git[Git Extractor]
-        ext_main --> ext_content[Content Extractor]
+        ext_main --> ext_code[Code Extractor] & ext_doc[Doc Extractor] & ext_git[Git Extractor] & ext_content[Content Extractor]
     end
-
-    Extraction -->|"Extracted Entities"| Annotation
 
     subgraph Annotation["Annotation Module"]
         direction TB
@@ -92,48 +89,53 @@ flowchart TD
         annotator --> sim_calc --> postproc
     end
 
-    Annotation -->|"Clean RDF Triples"| KnowledgeGraph
-
     subgraph KnowledgeGraph["Knowledge Graph Core"]
         direction TB
         graph_manager[Graph Manager]
         namespaces[Namespaces]
-        triplestore[Triplestore API]
-        graph_manager --> namespaces
-        graph_manager --> triplestore
+        triplestore_api[Triplestore API]
+        graph_manager --> namespaces & triplestore_api
     end
-
-    %% Side Modules (Supporting)
+    
+    %% Supporting Side Modules
+    allegrograph[(AllegroGraph<br>Triplestore)]
     subgraph Ontology["Ontology Module"]
         direction TB
         ontology_cache[Ontology Cache]
-        wdo[WDO]
-        bfo[BFO]
-        dcterms[DCTERMS]
-        wdo & bfo & dcterms --> ontology_cache
+        wdo[WDO] & bfo[BFO] & dcterms[DCTERMS] --> ontology_cache
     end
+
+    %% Define Connections for Symmetrical Layout
     
-    %% Connections to External/Side Modules
+    %% Main vertical spine
+    user --> Portal --> API --> Extraction --> Annotation --> KnowledgeGraph
+    
+    %% Inputs from the left
+    repo -->|"Source code, docs, git"| Extraction
+    
+    %% Supporting resources on the right
     Annotation -->|"Links entities to ontology"| Ontology
     KnowledgeGraph -->|"Ontology Lookups"| Ontology
-    triplestore <-->|"SPARQL Endpoint"| allegrograph
+    triplestore_api <-->|"SPARQL Endpoint"| allegrograph
     
-    %% API Feedback Loop
-    API <-->|"Queries & Manages KG"| KnowledgeGraph
+    %% Feedback loop on the left. The <.-> syntax creates a dotted line automatically.
+    API <.->|"Queries & Manages KG"| KnowledgeGraph
 
 
-    %% Apply Styling to Containers and Nodes Separately
+    %% Apply Styling
     
     %% 1. Style external elements
     class user,repo,allegrograph external;
     
-    %% 2. Style the INNER nodes with the lighter classes
+    %% 2. Style the INNER nodes
     class upload,dashboard,search,graphviz frontend-inner;
-    class api_server,ext_main,ext_code,ext_doc,ext_git,ext_content,annotator,sim_calc,postproc,graph_manager,namespaces,triplestore,ontology_cache,wdo,bfo,dcterms backend-inner;
+    class api_server,ext_main,ext_code,ext_doc,ext_git,ext_content,annotator,sim_calc,postproc,graph_manager,namespaces,triplestore_api backend-inner;
+    class ontology_cache,wdo,bfo,dcterms ontology-inner;
 
-    %% 3. Style the OUTER subgraph containers with the darker classes
+    %% 3. Style the OUTER subgraph containers
     class Portal frontend-container;
-    class API,Extraction,Annotation,KnowledgeGraph,Ontology backend-container;
+    class API,Extraction,Annotation,KnowledgeGraph backend-container;
+    class Ontology ontology-container;
 ```
 
 ## License
