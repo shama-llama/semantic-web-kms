@@ -7,7 +7,8 @@ black==25.1.0
 isort==6.0.1
 pydocstyle==6.3.0
 vulture==2.14
-pyright==1.1.402
+pyright==1.1.403
 pip-audit==2.9.0
 bandit==1.8.6
 build==1.2.2.post1
+flake8-pyproject==1.2.3
