@@ -23,16 +23,19 @@ jobs:
           node-version: '18'
           cache: 'pnpm'
           cache-dependency-path: portal/pnpm-lock.yaml
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - name: Check pnpm version
+        run: pnpm --version
 
       - name: Run flake8
         # Use flake8-pyproject to ensure pyproject.toml config is respected
