@@ -15,7 +15,7 @@ export function useAnalytics(organizationId: string) {
     setError(null)
 
     try {
-      const data = await analyticsApi.getData(organizationId)
+      const data = await analyticsApi.getData()
       setAnalyticsData(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load analytics")
@@ -29,7 +29,7 @@ export function useAnalytics(organizationId: string) {
     setError(null)
 
     try {
-      const repos = await analyticsApi.getData(organizationId)
+      const repos = await analyticsApi.getData()
       setRepositories([]) // Repositories are now part of the main analytics data
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load repositories")
@@ -41,7 +41,7 @@ export function useAnalytics(organizationId: string) {
   const loadQualityTrends = useCallback(
     async (timeRange: "7d" | "30d" | "90d" = "30d") => {
       try {
-        const data = await analyticsApi.getData(organizationId)
+        const data = await analyticsApi.getData()
         return data.trends
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load trends")

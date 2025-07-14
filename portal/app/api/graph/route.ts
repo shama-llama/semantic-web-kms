@@ -1,6 +1,29 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { buildApiUrl } from "@/lib/config"
 
+// Define local types for clarity and type safety
+interface GraphNode {
+  id: string;
+  name: string;
+  type: "repository" | "file" | "function" | "class" | "concept";
+  size: number;
+  color: string;
+  repository?: string;
+  language?: string;
+}
+interface GraphEdge {
+  source: string;
+  target: string;
+  type: "depends_on" | "imports" | "calls" | "extends" | "implements" | "contains" | "defines";
+  weight: number;
+}
+interface GraphCluster {
+  id: string;
+  name: string;
+  nodes: string[];
+  color: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -30,22 +53,22 @@ export async function GET(request: NextRequest) {
     
     // Transform backend data to match frontend interface
     const result = {
-      nodes: data.nodes.map((node: any) => ({
+      nodes: data.nodes.map((node: GraphNode) => ({
         id: node.id,
         name: node.name,
-        type: node.type as "repository" | "file" | "function" | "class" | "concept",
+        type: node.type,
         size: node.size,
         color: node.color,
         repository: node.repository,
         language: node.language,
       })),
-      edges: data.edges.map((edge: any) => ({
+      edges: data.edges.map((edge: GraphEdge) => ({
         source: edge.source,
         target: edge.target,
-        type: edge.type as "depends_on" | "imports" | "calls" | "extends" | "implements" | "contains" | "defines",
+        type: edge.type,
         weight: edge.weight,
       })),
-      clusters: data.clusters.map((cluster: any) => ({
+      clusters: data.clusters.map((cluster: GraphCluster) => ({
         id: cluster.id,
         name: cluster.name,
         nodes: cluster.nodes,

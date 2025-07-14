@@ -1,6 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { buildApiUrl } from "@/lib/config"
 
+// Define a local type for entity transformation
+interface Entity {
+  id: string;
+  name: string;
+  type: "function" | "class" | "component" | "interface" | "variable";
+  repository: string;
+  description?: string;
+  editorialNote?: string;
+  enrichedDescription?: string;
+  confidence: number;
+  snippet: string;
+  file: string;
+  line: number;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -36,7 +51,7 @@ export async function GET(request: NextRequest) {
     
     // Transform backend data to match frontend interface
     const result = {
-      entities: data.entities.map((entity: any) => ({
+      entities: data.entities.map((entity: Entity) => ({
         id: entity.id,
         name: entity.name,
         type: entity.type as "function" | "class" | "component" | "interface" | "variable",

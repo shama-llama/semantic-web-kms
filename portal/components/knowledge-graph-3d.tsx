@@ -39,7 +39,7 @@ interface GraphData {
 const Knowledge_graph_3d: React.FC = () => {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const fgRef = useRef<any>(null);
+  // ref to ForceGraph3D is not used, so removed
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
 
@@ -67,29 +67,37 @@ const Knowledge_graph_3d: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleNodeClick = (node: any, event?: MouseEvent) => {
-    // Type guard: check if node has 'name' and 'type'
-    if (node && typeof node.name === 'string' && typeof node.type === 'string') {
-      setSelectedNode(node as Node);
+  const handleNodeClick = (node: object) => {
+    // Type guard for Node
+    if (
+      node &&
+      typeof (node as Node).name === 'string' &&
+      typeof (node as Node).type === 'string' &&
+      typeof (node as Node).id === 'string'
+    ) {
+      setSelectedNode(node as Node)
     }
-  };
+  }
 
   return (
     <div className="flex w-full h-full" style={{ minHeight: 0 }}>
       <div ref={containerRef} className="flex-1 min-w-0 h-full relative">
         {graphData && (
           <ForceGraph3D
-            ref={fgRef}
+            // ref removed
             graphData={{ nodes: graphData.nodes, links: graphData.edges }}
             width={dimensions.width}
             height={dimensions.height}
             nodeAutoColorBy="type"
-            nodeLabel={(node: any) => `${node.name} (${node.type})`}
+            nodeLabel={(node: object) => {
+              const n = node as Node;
+              return n.name && n.type ? `${n.name} (${n.type})` : '';
+            }}
             nodeThreeObjectExtend={true}
             onNodeClick={handleNodeClick}
             linkDirectionalParticles={2}
             linkDirectionalParticleWidth={2}
-            linkColor={(link: any) => '#aaa'}
+            linkColor={() => '#aaa'}
             nodeOpacity={0.85}
             linkOpacity={0.5}
             backgroundColor="#18181b"

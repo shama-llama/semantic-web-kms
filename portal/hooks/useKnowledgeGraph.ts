@@ -19,7 +19,7 @@ export function useKnowledgeGraph(organizationId: string) {
       setError(null)
 
       try {
-        const data = await graphApi.getData(organizationId, options)
+        const data = await graphApi.getData(options)
         setGraphData(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load graph")
@@ -33,7 +33,7 @@ export function useKnowledgeGraph(organizationId: string) {
   const exportGraph = useCallback(
     async (format: "json" | "graphml" | "gexf") => {
       try {
-        const blob = await graphApi.export(organizationId, format)
+        const blob = await graphApi.export(format)
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url

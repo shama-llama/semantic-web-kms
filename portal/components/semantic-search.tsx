@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,21 +22,21 @@ export function SemanticSearch() {
   const [suggestions, setSuggestions] = useState<{ query: string; category: string }[]>([])
   const { organization } = useOrganization()
 
-  useEffect(() => {
-    if (organization) {
-      loadSuggestions()
-    }
-  }, [organization])
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     if (!organization) return
     try {
-      const suggestionData = await searchApi.suggestions(organization.id)
+      const suggestionData = await searchApi.suggestions()
       setSuggestions(suggestionData)
     } catch (error) {
       console.error("Failed to load suggestions:", error)
     }
-  }
+  }, [organization])
+
+  useEffect(() => {
+    if (organization) {
+      loadSuggestions()
+    }
+  }, [organization, loadSuggestions])
 
   const handleSearch = async (searchQuery: string = query) => {
     if (!searchQuery.trim() || !organization) return

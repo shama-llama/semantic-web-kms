@@ -13,14 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ZoomIn, ZoomOut, RotateCcw, Download, Filter, Settings, Info, Network, Eye, EyeOff } from "lucide-react"
-import type { KnowledgeGraphNode, KnowledgeGraphEdge, GraphData } from "@/lib/sparql"
+import type { KnowledgeGraphNode, GraphData } from "@/lib/sparql"
 import { GraphProcessor, type GraphFilter, type GraphLayout } from "@/lib/graph-processing"
 
 interface InteractiveGraphProps {
   data: GraphData | null
   isLoading: boolean
   onNodeClick?: (node: KnowledgeGraphNode) => void
-  onEdgeClick?: (edge: KnowledgeGraphEdge) => void
   onExport?: (format: string) => void
   className?: string
 }
@@ -29,7 +28,6 @@ export function InteractiveGraph({
   data,
   isLoading,
   onNodeClick,
-  onEdgeClick,
   onExport,
   className,
 }: InteractiveGraphProps) {
@@ -81,7 +79,7 @@ export function InteractiveGraph({
       const filtered = newProcessor.applyFilter(filter)
       setFilteredData(filtered)
     }
-  }, [data])
+  }, [data, filter])
 
   // Apply filter when filter changes
   useEffect(() => {
@@ -106,7 +104,7 @@ export function InteractiveGraph({
 
       setFilteredData(layoutData)
     }
-  }, [currentLayout])
+  }, [currentLayout, filteredData, processor])
 
   // Canvas drawing
   const drawGraph = useCallback(() => {
@@ -276,18 +274,9 @@ export function InteractiveGraph({
   }, [])
 
   // Control functions
-  const resetView = () => {
-    setZoom(1)
-    setPanX(0)
-    setPanY(0)
-  }
-
-  const zoomIn = () => setZoom((prev) => Math.min(5, prev * 1.2))
-  const zoomOut = () => setZoom((prev) => Math.max(0.1, prev / 1.2))
-
   const handleExport = (format: string) => {
     if (processor) {
-      const exportData = processor.exportGraph(format as any)
+      const exportData = processor.exportGraph(format as 'json' | 'gexf' | 'graphml' | 'cytoscape')
       const blob = new Blob([exportData], { type: "text/plain" })
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
@@ -368,13 +357,13 @@ export function InteractiveGraph({
                   <SelectItem value="cluster">Cluster</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" aria-label="Zoom in">
+              <Button variant="outline" size="sm" aria-label="Zoom in" onClick={() => setZoom((prev) => Math.min(5, prev * 1.2))}>
                 <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" aria-label="Zoom out">
+              <Button variant="outline" size="sm" aria-label="Zoom out" onClick={() => setZoom((prev) => Math.max(0.1, prev / 1.2))}>
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" aria-label="Reset view">
+              <Button variant="outline" size="sm" aria-label="Reset view" onClick={() => { setZoom(1); setPanX(0); setPanY(0); }}>
                 <RotateCcw className="h-4 w-4" />
               </Button>
               <Select onValueChange={handleExport}>
@@ -546,10 +535,10 @@ export function InteractiveGraph({
                     <label className="text-sm font-medium mb-2 block">Algorithm</label>
                     <Select
                       value={currentLayout.algorithm}
-                      onValueChange={(value: any) =>
+                      onValueChange={(value: string) =>
                         setCurrentLayout((prev) => ({
                           ...prev,
-                          algorithm: value,
+                          algorithm: value as GraphLayout["algorithm"],
                         }))
                       }
                     >

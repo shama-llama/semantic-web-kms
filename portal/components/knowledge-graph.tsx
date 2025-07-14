@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Network, Download, ZoomIn, ZoomOut, RotateCcw, Maximize2, Settings, Database } from "lucide-react"
 import { graphApi } from "@/lib/api"
-import type { GraphData, GraphNode } from "@/lib/api"
+import type { GraphData } from "@/lib/api"
 import { useOrganization } from "@/components/organization-provider"
 import Link from "next/link"
 
@@ -18,24 +18,18 @@ export function KnowledgeGraph() {
   const [selectedLayout, setSelectedLayout] = useState("force-directed")
   const [selectedFilter, setSelectedFilter] = useState("all")
   const [maxNodes, setMaxNodes] = useState([100])
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null)
+  // Removed unused selectedNode state
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { organization } = useOrganization()
 
-  useEffect(() => {
-    if (organization) {
-      loadGraphData()
-    }
-  }, [organization, selectedLayout, selectedFilter, maxNodes])
-
-  const loadGraphData = async () => {
+  const loadGraphData = useCallback(async (): Promise<void> => {
     if (!organization) return
 
     setIsLoading(true)
     try {
-      const data = await graphApi.getData(organization.id, {
-        layout: selectedLayout as any,
-        filter: selectedFilter as any,
+      const data = await graphApi.getData({
+        layout: selectedLayout as "force-directed" | "hierarchical" | "circular" | "grid",
+        filter: selectedFilter as "all" | "classes" | "functions" | "components",
         maxNodes: maxNodes[0],
       })
       setGraphData(data)
@@ -45,7 +39,13 @@ export function KnowledgeGraph() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [organization, selectedLayout, selectedFilter, maxNodes])
+
+  useEffect(() => {
+    if (organization) {
+      loadGraphData()
+    }
+  }, [organization, loadGraphData])
 
   const renderGraph = (data: GraphData) => {
     const canvas = canvasRef.current
@@ -62,7 +62,7 @@ export function KnowledgeGraph() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     // Simple force-directed layout simulation
-    const nodes = data.nodes.map((node, index) => ({
+    const nodes = data.nodes.map((node) => ({
       ...node,
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -103,7 +103,7 @@ export function KnowledgeGraph() {
     if (!organization) return
 
     try {
-      const blob = await graphApi.export(organization.id, format)
+      const blob = await graphApi.export(format)
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
@@ -293,7 +293,7 @@ export function KnowledgeGraph() {
             </CardContent>
           </Card>
 
-          {selectedNode && (
+          {/* selectedNode && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Selected Node</CardTitle>
@@ -313,7 +313,7 @@ export function KnowledgeGraph() {
                 )}
               </CardContent>
             </Card>
-          )}
+          ) */}
 
           {graphData && graphData.clusters.length > 0 && (
             <Card>

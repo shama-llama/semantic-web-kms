@@ -1,5 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { buildApiUrl, handleApiError } from "@/lib/config"
+import { buildApiUrl } from "@/lib/config"
+
+// Define a local type for repository transformation
+interface Repository {
+  id: string;
+  name?: string;
+  lastUpdated?: string;
+  complexity?: { total: number; average: number };
+  files?: number;
+  language?: string;
+  contributors?: number;
+  entities?: number;
+  size?: number;
+  description?: string;
+  editorialNote?: string;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +40,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
     
     // Transform backend data to match frontend interface
-    const repositories = data.map((repo: any) => ({
+    const repositories = data.map((repo: Repository) => ({
       id: repo.id,
       name: repo.name || "Unnamed Repository",
       lastUpdated: repo.lastUpdated || "",

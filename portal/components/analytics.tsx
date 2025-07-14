@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { TrendingUp, Code, Shield, FileText, Users, Target, BarChart3, Database } from "lucide-react"
+import { TrendingUp, Code, FileText, Users, Target, BarChart3, Database } from "lucide-react"
 import { analyticsApi } from "@/lib/api"
 import type { AnalyticsData } from "@/lib/api"
 import { useOrganization } from "@/components/organization-provider"
@@ -21,25 +20,24 @@ export function Analytics() {
   console.log("Analytics component - organization:", organization)
   console.log("Analytics component - analyticsData:", analyticsData)
 
-  useEffect(() => {
-    if (organization) {
-      loadAnalyticsData()
-    }
-  }, [organization])
-
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     if (!organization) return
-
     setIsLoading(true)
     try {
-      const data = await analyticsApi.getData(organization.id)
+      const data = await analyticsApi.getData()
       setAnalyticsData(data)
     } catch (error) {
       console.error("Failed to load analytics data:", error)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [organization])
+
+  useEffect(() => {
+    if (organization) {
+      loadAnalyticsData()
+    }
+  }, [organization, loadAnalyticsData])
 
   // Check if we have meaningful data
   const hasData = analyticsData && (

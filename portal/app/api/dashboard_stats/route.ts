@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { buildApiUrl, handleApiError } from "@/lib/config"
+import { buildApiUrl } from "@/lib/config"
 
 export async function GET(request: NextRequest) {
   try {

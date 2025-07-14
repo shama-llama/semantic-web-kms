@@ -125,7 +125,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       // First, get the organization details
       const orgResponse = await fetch(`/api/organizations/${encodedOrgId}`)
       if (orgResponse.ok) {
-        const orgData = await orgResponse.json()
+        setOrganization({ ...(await orgResponse.json()), totalFiles: organization.totalFiles || 0 })
         
         // Fetch repositories for this organization
         const reposResponse = await fetch(`/api/repositories?organization=${encodedOrgId}`)
@@ -180,11 +180,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           const encodedOrgId = encodeURIComponent(firstOrg.id)
           const orgDetailsResponse = await fetch(`/api/organizations/${encodedOrgId}`)
           if (orgDetailsResponse.ok) {
-            const orgData = await orgDetailsResponse.json()
-            setOrganization({
-              ...orgData,
-              totalFiles: orgData.totalFiles || 0,
-            })
+            const orgDetails = await orgDetailsResponse.json()
+            setOrganization({ ...orgDetails, totalFiles: orgDetails.totalFiles || 0 })
           }
         }
       }
