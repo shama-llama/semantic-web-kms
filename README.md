@@ -32,10 +32,21 @@
 
 ```mermaid
 flowchart TD
-    %% Style Definitions
-    classDef backend fill:#e3f2fd,stroke:#1976d2,stroke-width:2px;
-    classDef frontend fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
-    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    %% Style Definitions for a Two-Tone, Light/Dark Mode Compatible Theme
+
+    %% Outer Container Styles (Darker)
+    classDef backend-container fill:#818cf8,stroke:#4f46e5,color:#1e1b4b,stroke-width:2px;
+    classDef frontend-container fill:#fabb55,stroke:#ca8a04,color:#78350f,stroke-width:2px;
+
+    %% Inner Node Styles (Lighter)
+    classDef backend-inner fill:#c7d2fe,stroke:#6366f1,color:#1e1b4b,stroke-width:2px;
+    classDef frontend-inner fill:#fde047,stroke:#eab308,color:#78350f,stroke-width:2px;
+    
+    %% External Node Style (Single Tone)
+    classDef external fill:#d8b4fe,stroke:#9333ea,color:#4a044e,stroke-width:2px;
+
+    %% Link style with BLUE arrows for high contrast in both modes
+    linkStyle default stroke:#605fa,stroke-width:2px;
 
     %% External Actors & Data Sources
     user([User])
@@ -45,7 +56,7 @@ flowchart TD
     %% Main Vertical Flow
     user -->|"Uploads repo, queries, explores"| Portal
     
-    subgraph Portal["Portal (Next.js/React)"]
+    subgraph Portal["Portal (Next.js)"]
         direction TB
         upload[Upload UI]
         dashboard[Dashboard & Analytics]
@@ -111,10 +122,18 @@ flowchart TD
     API <-->|"Queries & Manages KG"| KnowledgeGraph
 
 
-    %% Apply Styling
-    class Extraction,Annotation,Ontology,KnowledgeGraph,API backend;
-    class Portal frontend;
-    class repo,allegrograph,user external;
+    %% Apply Styling to Containers and Nodes Separately
+    
+    %% 1. Style external elements
+    class user,repo,allegrograph external;
+    
+    %% 2. Style the INNER nodes with the lighter classes
+    class upload,dashboard,search,graphviz frontend-inner;
+    class api_server,ext_main,ext_code,ext_doc,ext_git,ext_content,annotator,sim_calc,postproc,graph_manager,namespaces,triplestore,ontology_cache,wdo,bfo,dcterms backend-inner;
+
+    %% 3. Style the OUTER subgraph containers with the darker classes
+    class Portal frontend-container;
+    class API,Extraction,Annotation,KnowledgeGraph,Ontology backend-container;
 ```
 
 ## License
