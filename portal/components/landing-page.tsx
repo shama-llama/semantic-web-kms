@@ -1,26 +1,13 @@
 "use client"
-import { useRouter } from "next/navigation"
+import { useOrganization } from "@/components/organization-provider"
+import { Brain, Github, Search, BarChart3, Network, Database } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DataInputPanel } from "@/components/data-input-panel"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { useOrganization } from "@/components/organization-provider"
-import { Brain, Github, Search, BarChart3, Network, Database } from "lucide-react"
 
 export function LandingPage() {
-  const router = useRouter()
-  const { analyzeOrganization, isLoading, processingStages, error, clearError } = useOrganization()
-
-  const handleGitHubSubmit = async (orgName: string) => {
-    await analyzeOrganization(orgName)
-    router.push("/dashboard")
-  }
-
-  const handleFolderUpload = async (files: FileList) => {
-    // Mock implementation for folder upload
-    console.log("Uploading files:", files)
-    router.push("/dashboard")
-  }
+  useOrganization()
 
   const features = [
     {
@@ -55,7 +42,7 @@ export function LandingPage() {
               <Brain className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">SemanticKMS</h1>
+              <h1 className="text-xl font-bold">SemanticWeb</h1>
               <p className="text-xs text-muted-foreground">Knowledge Management System</p>
             </div>
           </div>
@@ -107,7 +94,7 @@ export function LandingPage() {
         {/* Benefits Section */}
         <section className="py-12">
           <div className="text-center space-y-4 mb-12">
-            <h3 className="text-3xl font-bold">Why Choose SemanticKMS?</h3>
+            <h3 className="text-3xl font-bold">Why Choose SemanticWeb?</h3>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Unlock the hidden knowledge in your codebase with AI-powered analysis
             </p>
@@ -152,7 +139,7 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t bg-muted/50 py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2024 SemanticKMS. Transforming code into knowledge.</p>
+          <p>&copy; 2024 SemanticWeb. Transforming code into knowledge.</p>
         </div>
       </footer>
     </div>

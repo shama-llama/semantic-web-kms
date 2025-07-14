@@ -1,15 +1,21 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getRepositories } from "@/lib/api"
+import { getRepositories, Repository } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Database, GitBranch, Clock } from "lucide-react"
 import Link from "next/link"
 
+// Extend Repository to include optional fields that may be present in backend data
+interface RepositoryWithExtras extends Repository {
+  description?: string;
+  files?: number;
+}
+
 export default function RepositoriesPage() {
-  const [repositories, setRepositories] = useState<any[]>([])
+  const [repositories, setRepositories] = useState<RepositoryWithExtras[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -20,8 +26,9 @@ export default function RepositoriesPage() {
       try {
         const repos = await getRepositories()
         setRepositories(repos)
-      } catch (err: any) {
-        setError(err.message || "Failed to load repositories")
+      } catch (err) {
+        const errorMsg = (err instanceof Error) ? err.message : "Failed to load repositories"
+        setError(errorMsg)
       } finally {
         setLoading(false)
       }
@@ -143,7 +150,7 @@ export default function RepositoriesPage() {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Files</p>
-                  <p className="font-medium break-words">{repo.files ?? 0}</p>
+                  <p className="font-medium break-words">{repo.files ?? "-"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Complexity</p>

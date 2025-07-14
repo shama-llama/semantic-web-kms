@@ -3,7 +3,7 @@ import type { KnowledgeGraphNode, KnowledgeGraphEdge, GraphData } from "./sparql
 export interface GraphLayout {
   name: string
   algorithm: "force" | "hierarchical" | "circular" | "grid" | "cluster"
-  parameters: Record<string, any>
+  parameters: Record<string, unknown>
 }
 
 export interface GraphFilter {
@@ -137,11 +137,11 @@ export class GraphProcessor {
     }
   }
 
-  private applyForceLayout(nodes: KnowledgeGraphNode[], params: any): KnowledgeGraphNode[] {
+  private applyForceLayout(nodes: KnowledgeGraphNode[], params: Record<string, unknown>): KnowledgeGraphNode[] {
     // Simplified force-directed layout
-    const width = params.width || 800
-    const height = params.height || 600
-    const iterations = params.iterations || 100
+    const width = typeof params.width === 'number' ? params.width : 800;
+    const height = typeof params.height === 'number' ? params.height : 600;
+    const iterations = typeof params.iterations === 'number' ? params.iterations : 100;
 
     // Initialize positions randomly
     nodes.forEach((node) => {
@@ -194,9 +194,9 @@ export class GraphProcessor {
     return nodes
   }
 
-  private applyHierarchicalLayout(nodes: KnowledgeGraphNode[], params: any): KnowledgeGraphNode[] {
-    const width = params.width || 800
-    const height = params.height || 600
+  private applyHierarchicalLayout(nodes: KnowledgeGraphNode[], params: Record<string, unknown>): KnowledgeGraphNode[] {
+    const width = typeof params.width === 'number' ? params.width : 800;
+    const height = typeof params.height === 'number' ? params.height : 600;
 
     // Group nodes by type for hierarchical layout
     const typeGroups = new Map<string, KnowledgeGraphNode[]>()
@@ -223,10 +223,12 @@ export class GraphProcessor {
     return nodes
   }
 
-  private applyCircularLayout(nodes: KnowledgeGraphNode[], params: any): KnowledgeGraphNode[] {
-    const centerX = (params.width || 800) / 2
-    const centerY = (params.height || 600) / 2
-    const radius = Math.min(centerX, centerY) * 0.8
+  private applyCircularLayout(nodes: KnowledgeGraphNode[], params: Record<string, unknown>): KnowledgeGraphNode[] {
+    const width = typeof params.width === 'number' ? params.width : 800;
+    const height = typeof params.height === 'number' ? params.height : 600;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = Math.min(centerX, centerY) * 0.8;
 
     nodes.forEach((node, index) => {
       const angle = (2 * Math.PI * index) / nodes.length
@@ -237,9 +239,9 @@ export class GraphProcessor {
     return nodes
   }
 
-  private applyGridLayout(nodes: KnowledgeGraphNode[], params: any): KnowledgeGraphNode[] {
-    const width = params.width || 800
-    const height = params.height || 600
+  private applyGridLayout(nodes: KnowledgeGraphNode[], params: Record<string, unknown>): KnowledgeGraphNode[] {
+    const width = typeof params.width === 'number' ? params.width : 800;
+    const height = typeof params.height === 'number' ? params.height : 600;
     const cols = Math.ceil(Math.sqrt(nodes.length))
     const rows = Math.ceil(nodes.length / cols)
     const cellWidth = width / cols
@@ -255,9 +257,9 @@ export class GraphProcessor {
     return nodes
   }
 
-  private applyClusterLayout(nodes: KnowledgeGraphNode[], params: any): KnowledgeGraphNode[] {
-    const width = params.width || 800
-    const height = params.height || 600
+  private applyClusterLayout(nodes: KnowledgeGraphNode[], params: Record<string, unknown>): KnowledgeGraphNode[] {
+    const width = typeof params.width === 'number' ? params.width : 800;
+    const height = typeof params.height === 'number' ? params.height : 600;
 
     // Group nodes by cluster
     const clusterGroups = new Map<string, KnowledgeGraphNode[]>()

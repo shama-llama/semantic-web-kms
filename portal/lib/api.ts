@@ -206,7 +206,7 @@ export const searchApi = {
     return response.json()
   },
 
-  suggestions: async (organizationId: string): Promise<{ query: string; category: string }[]> => {
+  suggestions: async (): Promise<{ query: string; category: string }[]> => {
     // Mock suggestions for now - could be enhanced with backend integration
     return [
       { query: "authentication patterns", category: "Security" },
@@ -221,7 +221,6 @@ export const searchApi = {
 
 export const graphApi = {
   getData: async (
-    organizationId: string,
     options?: {
       layout?: "force-directed" | "hierarchical" | "circular" | "grid"
       filter?: "all" | "classes" | "functions" | "components"
@@ -240,7 +239,7 @@ export const graphApi = {
     return response.json()
   },
 
-  getClusterDetails: async (organizationId: string, clusterId: string): Promise<GraphCluster> => {
+  getClusterDetails: async (clusterId: string): Promise<GraphCluster> => {
     // Mock cluster details for now
     return {
       id: clusterId,
@@ -250,7 +249,7 @@ export const graphApi = {
     }
   },
 
-  export: async (organizationId: string, format: "json" | "graphml" | "gexf"): Promise<Blob> => {
+  export: async (format: "json" | "graphml" | "gexf"): Promise<Blob> => {
     const response = await fetch(`/api/graph/export?format=${format}`)
     if (!response.ok) {
       throw new ApiError(`Export failed: ${response.statusText}`, response.status)
@@ -260,7 +259,7 @@ export const graphApi = {
 }
 
 export const analyticsApi = {
-  getData: async (organizationId: string): Promise<AnalyticsData> => {
+  getData: async (): Promise<AnalyticsData> => {
     const response = await fetch("/api/analytics")
     if (!response.ok) {
       throw new ApiError(`Failed to load analytics: ${response.statusText}`, response.status)
@@ -286,7 +285,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   return response.json()
 }
 
-export async function runSparqlQuery(query: string): Promise<any> {
+export async function runSparqlQuery(query: string): Promise<unknown> {
   const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
   const res = await fetch(`${baseUrl}/api/sparql`, {
     method: "POST",

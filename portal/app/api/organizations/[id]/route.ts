@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { buildApiUrl } from "@/lib/config"
 
+// Define a local type for organization lookup
+interface Organization {
+  id: string;
+  name: string;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -19,7 +25,7 @@ export async function GET(
       const orgsResponse = await fetch(buildApiUrl('/api/organizations'))
       if (orgsResponse.ok) {
         const orgs = await orgsResponse.json()
-        const org = orgs.find((o: any) => o.name === orgId || o.id.endsWith(orgId))
+        const org = orgs.find((o: Organization) => o.name === orgId || o.id.endsWith(orgId))
         if (org) {
           backendUrl = buildApiUrl(`/api/organizations/${encodeURIComponent(org.id)}`)
         } else {

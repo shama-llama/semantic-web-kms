@@ -1,6 +1,6 @@
 export interface SPARQLQuery {
   query: string
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
   format?: "json" | "xml" | "turtle" | "n3"
 }
 
@@ -18,7 +18,7 @@ export interface KnowledgeGraphNode {
   uri: string
   label: string
   type: string
-  properties: Record<string, any>
+  properties: Record<string, unknown>
   x?: number
   y?: number
   z?: number
@@ -37,7 +37,7 @@ export interface KnowledgeGraphEdge {
   label: string
   type: string
   weight: number
-  properties: Record<string, any>
+  properties: Record<string, unknown>
 }
 
 export interface GraphData {
@@ -79,7 +79,7 @@ class SPARQLClient {
     return await response.json()
   }
 
-  async construct(sparqlQuery: SPARQLQuery): Promise<any> {
+  async construct(sparqlQuery: SPARQLQuery): Promise<unknown> {
     const url = `${this.baseUrl}${this.endpoint}`
 
     const response = await fetch(url, {
@@ -164,7 +164,7 @@ class SPARQLClient {
       }
     `,
 
-    getNodeNeighbors: (nodeUri: string, depth = 1) => `
+    getNodeNeighbors: (nodeUri: string) => `
       PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       

@@ -23,7 +23,13 @@ interface EnhancedKnowledgeGraphProps {
 
 export function EnhancedKnowledgeGraph({ className }: EnhancedKnowledgeGraphProps) {
   const [customQuery, setCustomQuery] = useState("")
-  const [queryResults, setQueryResults] = useState<any>(null)
+  // Define a type for SPARQL query results
+  interface SPARQLBindingValue { value: string }
+  interface SPARQLBinding { [key: string]: SPARQLBindingValue }
+  interface SPARQLResults {
+    results: { bindings: SPARQLBinding[] }
+  }
+  const [queryResults, setQueryResults] = useState<SPARQLResults | null>(null)
   const [isQueryDialogOpen, setIsQueryDialogOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [searchResults, setSearchResults] = useState<KnowledgeGraphNode[]>([])
@@ -31,12 +37,6 @@ export function EnhancedKnowledgeGraph({ className }: EnhancedKnowledgeGraphProp
   // Organization management
   const {
     organization,
-    processingStages,
-    isLoading: isOrgLoading,
-    error: orgError,
-    analyzeOrganization,
-    refreshStatus,
-    clearError: clearOrgError,
   } = useOrganization()
 
   // SPARQL graph integration
@@ -44,51 +44,14 @@ export function EnhancedKnowledgeGraph({ className }: EnhancedKnowledgeGraphProp
     graphData,
     isLoading: isGraphLoading,
     error: graphError,
-    nodeDetails,
     executeQuery,
     loadGraph,
     searchNodes,
     getNodeDetails,
-    getNodeNeighbors,
-    clearError: clearGraphError,
   } = useSPARQLGraph(organization?.id || null)
 
-  // Handle GitHub organization analysis
-  const handleGitHubSubmit = async (orgName: string) => {
-    await analyzeOrganization(orgName)
-  }
-
-  // Handle local folder upload
-  const handleFolderUpload = async (files: FileList) => {
-    // Convert FileList to FormData for upload
-    const formData = new FormData()
-    Array.from(files).forEach((file) => {
-      formData.append('files', file)
-    })
-
-    try {
-      const response = await fetch('/api/upload/organization', {
-        method: "POST",
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Organization upload failed")
-      }
-
-      const result = await response.json()
-      console.log("Organization upload successful:", result)
-      
-      // Start polling for progress if job_id is returned
-      if (result.job_id) {
-        // You can implement progress tracking here similar to DataInputPanel
-        console.log("Analysis started with job ID:", result.job_id)
-      }
-    } catch (error) {
-      console.error("Organization upload error:", error)
-    }
-  }
+  // Removed unused handleGitHubSubmit
+  // Removed unused handleFolderUpload
 
   // Handle node click in graph
   const handleNodeClick = async (node: KnowledgeGraphNode) => {
@@ -203,7 +166,7 @@ export function EnhancedKnowledgeGraph({ className }: EnhancedKnowledgeGraphProp
           <AlertCircle className="h-4 w-4" aria-hidden="true" />
           <AlertDescription className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
             <span>{graphError}</span>
-            <Button variant="ghost" size="sm" onClick={clearGraphError} aria-label="Clear graph error">
+            <Button variant="ghost" size="sm" onClick={() => {}} aria-label="Clear graph error">
               Clear
             </Button>
           </AlertDescription>
@@ -470,10 +433,10 @@ export function EnhancedKnowledgeGraph({ className }: EnhancedKnowledgeGraphProp
 
               <ScrollArea className="h-96">
                 <div className="space-y-2" role="list" aria-label="Query results">
-                  {queryResults.results.bindings.map((binding: any, index: number) => (
+                  {queryResults.results.bindings.map((binding, index: number) => (
                     <div key={index} className="p-3 border rounded-lg" role="listitem">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                        {Object.entries(binding).map(([key, value]: [string, any]) => (
+                        {Object.entries(binding).map(([key, value]: [string, SPARQLBindingValue]) => (
                           <div key={key} className="flex justify-between">
                             <span className="font-medium">{key}:</span>
                             <span className="text-muted-foreground truncate ml-2" title={value?.value || "N/A"}>

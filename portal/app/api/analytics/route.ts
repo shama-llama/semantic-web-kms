@@ -1,7 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { buildApiUrl } from "@/lib/config"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const backendUrl = buildApiUrl("/api/analytics")
     
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
         variables: data.entityDistribution?.variables || 0,
         parameters: data.entityDistribution?.parameters || 0,
       },
-      languageDistribution: data.languageDistribution?.map((lang: any) => ({
+      languageDistribution: data.languageDistribution?.map((lang: { language: string; entities?: number; percentage?: number }) => ({
         language: lang.language,
         entities: lang.entities,
         percentage: lang.percentage,

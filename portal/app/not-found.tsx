@@ -14,7 +14,7 @@ export default function NotFound() {
             <span className="text-2xl font-bold text-muted-foreground">404</span>
           </div>
           <CardTitle>Page Not Found</CardTitle>
-          <CardDescription>The page you're looking for doesn't exist or has been moved.</CardDescription>
+          <CardDescription>The page you&#39;re looking for does not exist or has been moved.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">

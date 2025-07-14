@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
-import { BarChart3, Database, GitBranch, Network, Search, TrendingUp, Code, Users, Clock, Activity, FileText, BarChart } from "lucide-react"
+import { BarChart3, Database, GitBranch, Network, Search, TrendingUp, Users, Clock, FileText, BarChart } from "lucide-react"
 import Link from "next/link"
 import { useOrganization } from "@/components/organization-provider"
 import React, { type JSX } from "react";
@@ -152,7 +152,7 @@ function formatUserFriendlyDate(dateString: string): string {
 }
 
 export function Dashboard() {
-  const { organization, processingStages } = useOrganization()
+  const { processingStages } = useOrganization()
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
   const [repositories, setRepositories] = useState<Repository[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -317,17 +317,6 @@ export function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">{dashboardStats.totalRelationships.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Relationships in knowledge graph</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Imports</CardTitle>
-            <Code className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(dashboardStats.totalImports || 0).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Module imports</p>
           </CardContent>
         </Card>
 

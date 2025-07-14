@@ -1,6 +1,7 @@
 // Backend API Configuration
 export const API_CONFIG = {
   // Backend API base URL - defaults to localhost:8000 (current backend port)
+  // In production, this should be set to your Render backend URL
   BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000",
   
   // API endpoints
@@ -36,7 +37,7 @@ export function buildApiUrl(endpoint: string): string {
 }
 
 // Helper function to handle API errors
-export function handleApiError(error: any, context: string): never {
+export function handleApiError(error: unknown, context: string): never {
   console.error(`API Error in ${context}:`, error)
   
   if (error instanceof Response) {

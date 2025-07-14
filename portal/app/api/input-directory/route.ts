@@ -1,7 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { buildApiUrl } from "@/lib/config"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Forward the request to the backend input directory API
     const backendUrl = buildApiUrl("/api/input-directory")

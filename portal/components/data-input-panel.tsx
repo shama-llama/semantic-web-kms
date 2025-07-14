@@ -60,6 +60,12 @@ export function DataInputPanel() {
     { key: "semanticAnnotation", label: "Semantic Processing", description: "Creating web development knowledge graph" },
   ]
 
+  // Reset job state on mount to prevent polling on page load
+  useEffect(() => {
+    setCurrentJobId(null)
+    setIsProcessing(false)
+  }, [])
+
   // Polling effect for progress updates
   useEffect(() => {
     if (!currentJobId || !isProcessing) return
@@ -326,7 +332,7 @@ export function DataInputPanel() {
                 <input
                   ref={el => {
                     if (el) {
-                      (el as any).webkitdirectory = true;
+                      (el as HTMLInputElement).webkitdirectory = true;
                       if (folderInputRef) folderInputRef.current = el;
                     }
                   }}

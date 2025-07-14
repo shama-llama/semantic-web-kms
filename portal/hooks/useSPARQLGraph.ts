@@ -256,7 +256,7 @@ export function useSPARQLGraph(organizationId: string | null): UseSPARQLGraphRet
 
       try {
         const result = await sparqlClient.query({
-          query: SPARQLClient.queries.getNodeNeighbors(nodeUri, depth),
+          query: SPARQLClient.queries.getNodeNeighbors(nodeUri),
         })
 
         return result.results.bindings.map((binding, index) => {
