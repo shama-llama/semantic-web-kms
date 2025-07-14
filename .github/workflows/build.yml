@@ -24,8 +24,7 @@ jobs:
           pip install build
       
       - name: Build Python package
-        run: |
-          python -m build
+        run: python -m build
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -35,28 +34,31 @@ jobs:
 
   build-frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./portal
     steps:
       - uses: actions/checkout@v4
       
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: '22'
           cache-dependency-path: portal/pnpm-lock.yaml
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+      
       - name: Install dependencies
-        run: |
-          cd portal
-          pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       
       - name: Build frontend
-        run: |
-          cd portal
-          pnpm run build
+        run: pnpm run build
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: portal/dist/ 
+          path: portal/dist/

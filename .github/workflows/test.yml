@@ -20,6 +20,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov
+      - name: Download NLTK VADER lexicon
+        run: python -m nltk.downloader vader_lexicon
       - name: Run tests with coverage
         run: pytest --cov=app --cov=tests --cov-report=xml --cov-report=term
       - name: Upload coverage report
@@ -30,36 +32,35 @@ jobs:
 
   test-frontend:
     runs-on: ubuntu-latest
+    # Set a default working directory for all run steps in this job
+    defaults:
+      run:
+        working-directory: ./portal
     steps:
       - uses: actions/checkout@v4
+      
+      # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'pnpm'
+          node-version: '22'
           cache-dependency-path: portal/pnpm-lock.yaml
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
       - name: Install dependencies
-        run: |
-          cd portal
-          pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Run TypeScript type checking
-        run: |
-          cd portal
-          pnpm exec tsc --noEmit
+        run: pnpm exec tsc --noEmit
       - name: Run frontend tests
-        run: |
-          cd portal
-          pnpm exec vitest run
+        run: pnpm exec vitest run
       - name: Run frontend tests with coverage
-        run: |
-          cd portal
-          pnpm exec vitest run --coverage
+        run: pnpm exec vitest run --coverage
       - name: Upload frontend coverage report
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
           path: portal/coverage/
       - name: Run frontend linting
-        run: |
-          cd portal
-          pnpm run lint 
+        run: pnpm run lint
