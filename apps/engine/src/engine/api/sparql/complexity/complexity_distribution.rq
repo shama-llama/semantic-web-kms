@@ -1,0 +1,16 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT ?complexityRange (COUNT(?func) AS ?count)
+WHERE {
+    ?func a wdo:FunctionDefinition .
+    ?func wdo:hasCyclomaticComplexity ?complexity .
+    BIND(
+        CASE
+            WHEN (?complexity <= 5) THEN "Low (1-5)"
+            WHEN (?complexity <= 10) THEN "Medium (6-10)"
+            WHEN (?complexity <= 20) THEN "High (11-20)"
+            ELSE "Very High (>20)"
+        END AS ?complexityRange
+    )
+}
+GROUP BY ?complexityRange
+ORDER BY ?complexityRange 

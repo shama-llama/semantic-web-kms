@@ -1,0 +1,44 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT ?fileName ?totalComplexity ?avgComplexity ?functionCount ?lineCount ?tokenCount
+WHERE {
+    {
+        SELECT ?fileName (SUM(?complexity) AS ?totalComplexity)
+               (AVG(?complexity) AS ?avgComplexity)
+               (COUNT(?func) AS ?functionCount)
+        WHERE {
+            ?func a wdo:FunctionDefinition .
+            ?func wdo:hasCyclomaticComplexity ?complexity .
+            ?func wdo:isCodePartOf ?codeContent .
+            ?file wdo:bearerOfInformation ?codeContent .
+            ?file a wdo:SourceCodeFile .
+            BIND(REPLACE(STR(?file), ".*/([^/]+)$", "$1") AS ?fileName)
+        }
+        GROUP BY ?fileName
+    }
+    {
+        SELECT ?fileName (SUM(?lines) AS ?lineCount)
+        WHERE {
+            ?func a wdo:FunctionDefinition .
+            ?func wdo:hasLineCount ?lines .
+            ?func wdo:isCodePartOf ?codeContent .
+            ?file wdo:bearerOfInformation ?codeContent .
+            ?file a wdo:SourceCodeFile .
+            BIND(REPLACE(STR(?file), ".*/([^/]+)$", "$1") AS ?fileName)
+        }
+        GROUP BY ?fileName
+    }
+    {
+        SELECT ?fileName (SUM(?tokens) AS ?tokenCount)
+        WHERE {
+            ?func a wdo:FunctionDefinition .
+            ?func wdo:hasTokenCount ?tokens .
+            ?func wdo:isCodePartOf ?codeContent .
+            ?file wdo:bearerOfInformation ?codeContent .
+            ?file a wdo:SourceCodeFile .
+            BIND(REPLACE(STR(?file), ".*/([^/]+)$", "$1") AS ?fileName)
+        }
+        GROUP BY ?fileName
+    }
+}
+ORDER BY DESC(?totalComplexity)
+LIMIT 50 

@@ -1,0 +1,7 @@
+SELECT ?org ?name ?repo ?repoName WHERE {
+    <{org_id}> a <http://web-development-ontology.netlify.app/wdo#Organization> .
+    OPTIONAL { <{org_id}> <http://www.w3.org/2000/01/rdf-schema#label> ?name . }
+    <{org_id}> <http://web-development-ontology.netlify.app/wdo#hasRepository> ?repo .
+    ?repo a <http://web-development-ontology.netlify.app/wdo#Repository> .
+    OPTIONAL { ?repo <http://www.w3.org/2000/01/rdf-schema#label> ?repoName . }
+} 

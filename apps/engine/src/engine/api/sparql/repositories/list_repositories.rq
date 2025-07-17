@@ -1,0 +1,10 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?repo ?name (MAX(?mod) AS ?lastUpdated)
+WHERE {
+  ?repo a wdo:Repository .
+  OPTIONAL { ?repo rdfs:label ?name. }
+  ?repo wdo:hasFile ?file .
+  ?file wdo:hasModificationTimestamp ?mod .
+}
+GROUP BY ?repo ?name 

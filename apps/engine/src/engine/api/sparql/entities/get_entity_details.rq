@@ -1,0 +1,9 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/1994/02/skos/core#>
+SELECT ?entity ?type ?label ?editorialNote
+WHERE {
+    ?entity a ?type .
+    OPTIONAL { ?entity rdfs:label ?label }
+    OPTIONAL { ?entity skos:editorialNote ?editorialNote }
+    FILTER(?entity = <{entity_id}>)
+} 

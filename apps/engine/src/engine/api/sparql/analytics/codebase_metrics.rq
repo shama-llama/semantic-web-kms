@@ -1,0 +1,24 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT (COUNT(DISTINCT ?repo) AS ?totalRepositories)
+       (COUNT(DISTINCT ?file) AS ?totalFiles)
+       (COUNT(DISTINCT ?sourceFile) AS ?sourceCodeFiles)
+       (COUNT(DISTINCT ?docFile) AS ?documentationFiles)
+       (COUNT(DISTINCT ?assetFile) AS ?assetFiles)
+WHERE {
+  ?repo a wdo:Repository .
+  ?file a ?fileType .
+  ?fileType rdfs:subClassOf* wdo:DigitalInformationCarrier .
+  OPTIONAL {
+    ?sourceFile a ?sourceType .
+    ?sourceType rdfs:subClassOf* wdo:SourceCodeFile .
+  }
+  OPTIONAL {
+    ?docFile a ?docType .
+    ?docType rdfs:subClassOf* wdo:DocumentationFile .
+  }
+  OPTIONAL {
+    ?assetFile a ?assetType .
+    ?assetType rdfs:subClassOf* wdo:AssetFile .
+  }
+} 

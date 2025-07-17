@@ -1,0 +1,34 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT (COUNT(DISTINCT ?func) AS ?functions)
+       (COUNT(DISTINCT ?class) AS ?classes)
+       (COUNT(DISTINCT ?interface) AS ?interfaces)
+       (COUNT(DISTINCT ?attr) AS ?attributes)
+       (COUNT(DISTINCT ?var) AS ?variables)
+       (COUNT(DISTINCT ?param) AS ?parameters)
+WHERE {
+  OPTIONAL {
+    ?func a ?funcType .
+    ?funcType rdfs:subClassOf* wdo:FunctionDefinition .
+  }
+  OPTIONAL {
+    ?class a ?classType .
+    ?classType rdfs:subClassOf* wdo:ClassDefinition .
+  }
+  OPTIONAL {
+    ?interface a ?interfaceType .
+    ?interfaceType rdfs:subClassOf* wdo:InterfaceDefinition .
+  }
+  OPTIONAL {
+    ?attr a ?attrType .
+    ?attrType rdfs:subClassOf* wdo:AttributeDeclaration .
+  }
+  OPTIONAL {
+    ?var a ?varType .
+    ?varType rdfs:subClassOf* wdo:VariableDeclaration .
+  }
+  OPTIONAL {
+    ?param a ?paramType .
+    ?paramType rdfs:subClassOf* wdo:Parameter .
+  }
+} 

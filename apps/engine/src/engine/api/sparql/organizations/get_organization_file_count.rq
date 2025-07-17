@@ -1,0 +1,8 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT (COUNT(DISTINCT ?file) AS ?totalFiles)
+WHERE {
+    <{org_id}> wdo:hasRepository ?repo .
+    ?repo wdo:hasFile ?file .
+    ?file a ?fileType .
+    ?fileType rdfs:subClassOf* <http://web-development-ontology.netlify.app/wdo#DigitalInformationCarrier> .
+} 

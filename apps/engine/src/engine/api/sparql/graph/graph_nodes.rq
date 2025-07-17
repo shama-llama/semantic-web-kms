@@ -1,0 +1,10 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?entity ?name ?entityType ?repo ?language
+WHERE {
+    ?entity a ?entityType .
+    OPTIONAL { ?entity rdfs:label ?name . }
+    OPTIONAL { ?entity wdo:belongsToRepository ?repo . }
+    OPTIONAL { ?entity wdo:hasProgrammingLanguage ?language . }
+}
+LIMIT {max_nodes} 

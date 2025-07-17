@@ -1,0 +1,10 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?org ?name ?repo ?repoName
+WHERE {
+    ?org a wdo:Organization .
+    OPTIONAL { ?org rdfs:label ?name . }
+    ?org wdo:hasRepository ?repo .
+    ?repo a wdo:Repository .
+    OPTIONAL { ?repo rdfs:label ?repoName . }
+} 

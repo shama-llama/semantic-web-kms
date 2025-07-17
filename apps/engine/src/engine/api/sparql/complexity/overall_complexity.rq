@@ -1,0 +1,6 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT (AVG(?complexity) AS ?avgComplexity) (COUNT(?func) AS ?totalFunctions)
+WHERE {
+    ?func a wdo:FunctionDefinition .
+    ?func wdo:hasCyclomaticComplexity ?complexity .
+} 

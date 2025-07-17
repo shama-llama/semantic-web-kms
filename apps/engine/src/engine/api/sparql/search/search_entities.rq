@@ -1,0 +1,28 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/1994/02/skos/core#>
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT DISTINCT
+    ?entity
+    ?name
+    ?entityType
+    ?editorialNote
+    ?file
+    ?line
+    ?repo
+    ?confidence
+WHERE {
+    ?entity a ?entityType .
+    OPTIONAL { ?entity rdfs:label ?name . }
+    OPTIONAL { ?entity skos:editorialNote ?editorialNote . }
+    OPTIONAL { ?entity wdo:hasSourceFile ?file . }
+    OPTIONAL { ?entity wdo:hasLineNumber ?line . }
+    OPTIONAL { ?entity wdo:belongsToRepository ?repo . }
+    OPTIONAL { ?entity wdo:hasConfidence ?confidence . }
+    {type_filter}
+    {repo_filter}
+    FILTER(
+        REGEX(?name, "{query}", "i") ||
+        REGEX(?editorialNote, "{query}", "i")
+    )
+}
+LIMIT {limit} 

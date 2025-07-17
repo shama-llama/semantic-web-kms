@@ -1,0 +1,23 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT ?relationshipType (COUNT(*) AS ?count)
+WHERE {
+    ?s ?relationshipType ?o .
+    FILTER(?relationshipType IN (
+        wdo:invokes,
+        wdo:callsFunction,
+        wdo:extendsType,
+        wdo:implementsInterface,
+        wdo:declaresCode,
+        wdo:hasField,
+        wdo:hasMethod,
+        wdo:isRelatedTo,
+        wdo:usesFramework,
+        wdo:tests,
+        wdo:documentsEntity,
+        wdo:modifies,
+        wdo:imports,
+        wdo:isImportedBy
+    ))
+}
+GROUP BY ?relationshipType
+ORDER BY DESC(?count) 

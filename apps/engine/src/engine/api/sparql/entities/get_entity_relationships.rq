@@ -1,0 +1,12 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?relatedEntity ?relationshipType ?relatedLabel
+WHERE {
+    {
+        <{entity_id}> ?relationshipType ?relatedEntity .
+    }
+    UNION
+    {
+        ?relatedEntity ?relationshipType <{entity_id}> .
+    }
+    OPTIONAL { ?relatedEntity rdfs:label ?relatedLabel }
+} 

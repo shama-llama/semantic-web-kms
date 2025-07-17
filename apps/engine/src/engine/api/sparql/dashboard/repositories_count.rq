@@ -1,0 +1,5 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT (COUNT(DISTINCT ?repo) AS ?count)
+WHERE {
+    ?repo a wdo:Repository .
+} 

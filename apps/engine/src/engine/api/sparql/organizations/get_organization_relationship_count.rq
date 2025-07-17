@@ -1,0 +1,10 @@
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+SELECT (COUNT(*) AS ?totalRelationships)
+WHERE {
+    ?org wdo:hasRepository ?repo .
+    ?repo wdo:hasFile ?file .
+    ?file wdo:bearerOfInformation ?entity .
+    ?entity ?rel ?target .
+    FILTER(isIRI(?target))
+    VALUES ?org { <{org_id}> }
+} 
