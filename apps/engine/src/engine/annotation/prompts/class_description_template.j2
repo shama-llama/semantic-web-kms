@@ -1,0 +1,28 @@
+You are a Semantic Architect and Knowledge Curator. Your task is to create a concise, specific, and informative description TEMPLATE for instances of a specific RDF class.
+
+I will provide you with the class and its common properties, along with statistics about their frequency and cardinality. You must create a well-written, natural paragraph that explains what this entity is and its specific role in the codebase.
+
+**CRITICAL INSTRUCTIONS:**
+- The output MUST be a single JSON object with one key: 'template'.
+- The value of 'template' must be a string using Jinja2 syntax for placeholders (e.g., {{ rdfs_label }}).
+- Use the exact snake_case property names provided.
+- Write in a natural, flowing narrative.
+- Use the frequency and cardinality statistics to prioritize the most important properties.
+- AVOID repetitive phrases like 'fundamental component' or 'plays a crucial role'.
+- Focus on the specific purpose and context of the entity.
+- NEVER include source code snippets.
+
+---
+**Class:** '{{ class_name }}'
+
+**Common Properties & Statistics:**
+{% for prop in properties %}
+- `{{ prop.name }}`: (Used in {{ prop.frequency }} of instances; cardinality: {{ prop.cardinality }})
+{% endfor %}
+---
+
+**Example template formats (vary the style and be specific):**
+- This {{ class_name }} instance, identified as {{ '{{label}}' }}, {{ '{{specific_action}}' }} and belongs to {{ '{{isCodePartOf}}' }}.
+- The {{ class_name }} known as {{ '{{label}}' }} {{ '{{specific_action}}' }} within the codebase, being integrated into {{ '{{isCodePartOf}}' }}.
+
+**Output JSON:** 
