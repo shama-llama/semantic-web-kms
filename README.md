@@ -138,6 +138,128 @@ flowchart TD
     class Ontology ontology-container;
 ```
 
+## Setting Up
+
+### Prerequisites
+
+- **Python 3.12**
+- **Node.js 18+** and pnpm
+- **Git**
+- **Python Virtual Environment** (make sure it is 3.12)
+
+### Backend Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/shama-llama/semantic-web-kms.git
+   cd semantic-web-kms
+   ```
+
+2. **Set up Python virtual environment**
+
+   ```bash
+   # Create and activate virtual environment
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. **Install Python dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Install development dependencies (optional)**
+
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+5. **Set up environment variables**
+
+   Create a `.env` file in the project root with the following variables:
+
+   ```bash
+   # AllegroGraph configuration
+   AGRAPH_SERVER_URL=https://xyz.allegrograph.cloud
+   AGRAPH_CLOUD_URL=https://xyz.allegrograph.cloud/repositories/semantic-web-kms
+   AGRAPH_USER=admin
+   AGRAPH_PASSWORD=password # the server password, NOT your ag account password
+   AGRAPH_REPOSITORY=semantic-web-kms
+   AGRAPH_USE_SSL=true
+   
+   # Google Gemini API Key (for semantic annotation)
+   GOOGLE_API_KEY=api_key
+   ```
+
+### Frontend Setup
+
+1. **Navigate to the portal directory**
+
+   ```bash
+   cd portal
+   ```
+
+2. **Install Node.js dependencies**
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up frontend environment variables**
+
+   Create a `.env.local` file in the `portal` directory with:
+
+   ```bash
+   NEXT_PUBLIC_API_URL=http://localhost:8000/api
+   ```
+
+### Running the Application
+
+1. **Start the backend server** (from project root)
+
+   ```bash
+   flask run
+   # or for production:
+   # gunicorn --bind 0.0.0.0:5000 wsgi:app
+   ```
+
+2. **Start the frontend development server** (from portal directory)
+
+   ```bash
+   pnpm dev
+   ```
+
+3. **Access the application**
+
+   - Frontend: http://localhost:3000
+   - API: http://localhost:8000
+
+### Development Tools
+
+- **Linting & Formatting**
+
+  ```bash
+  # Python
+  black .
+  isort .
+  flake8
+  
+  # JavaScript/TypeScript (from portal directory)
+  pnpm lint
+  ```
+
+- **Testing**
+
+  ```bash
+  # Python tests
+  pytest
+  
+  # Frontend tests (from portal directory)
+  pnpm test
+  ```
+
 ## License
 
 This project is licensed under the terms of the [MIT License](LICENSE)
