@@ -233,8 +233,8 @@ flowchart TD
 
 3. **Access the application**
 
-   - Frontend: http://localhost:3000
-   - API: http://localhost:8000
+   - Frontend: [http://localhost:3000]
+   - API: [http://localhost:8000]
 
 ### Development Tools
 
