@@ -1,0 +1,315 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="https://schema.org/"
+     xml:base="https://schema.org/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+    <owl:Ontology rdf:about="https://schema.org/"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#comment -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#comment"/>
+    
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#isDefinedBy -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#isDefinedBy"/>
+    
+
+
+    <!-- http://www.w3.org/2000/01/rdf-schema#label -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#label"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://schema.org/APIReference -->
+
+    <owl:Class rdf:about="https://schema.org/APIReference">
+        <rdfs:subClassOf rdf:resource="https://schema.org/TechArticle"/>
+        <rdfs:comment xml:lang="en">Reference documentation for application programming interfaces (APIs).</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/APIReference"/>
+        <rdfs:label xml:lang="en">APIReference</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Action -->
+
+    <owl:Class rdf:about="https://schema.org/Action">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Thing"/>
+        <rdfs:comment xml:lang="en">An action performed by a direct agent and indirect participants upon a direct object. Optionally happens at a location with the help of an inanimate instrument. The execution of the action may produce a result. Specific action sub-type documentation specifies the exact expectation of each argument/role.&lt;br/&gt;&lt;br/&gt;
+
+See also &lt;a href=&quot;http://blog.schema.org/2014/04/announcing-schemaorg-actions.html&quot;&gt;blog post&lt;/a&gt; and &lt;a href=&quot;https://schema.org/docs/actions.html&quot;&gt;Actions overview document&lt;/a&gt;.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Action"/>
+        <rdfs:label xml:lang="en">Action</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/ArchiveComponent -->
+
+    <owl:Class rdf:about="https://schema.org/ArchiveComponent">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">An intangible type to be applied to any archive content, carrying with it a set of properties required to describe archival items and collections.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://pending.schema.org/ArchiveComponent"/>
+        <rdfs:label xml:lang="en">ArchiveComponent</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Article -->
+
+    <owl:Class rdf:about="https://schema.org/Article">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">An article, such as a news article or piece of investigative report. Newspapers and magazines have articles of many different types and this is intended to cover them all.&lt;br/&gt;&lt;br/&gt;
+
+See also &lt;a href=&quot;http://blog.schema.org/2014/09/schemaorg-support-for-bibliographic_2.html&quot;&gt;blog post&lt;/a&gt;.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Article"/>
+        <rdfs:label xml:lang="en">Article</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Comment -->
+
+    <owl:Class rdf:about="https://schema.org/Comment">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">A comment on an item - for example, a comment on a blog post. The comment&apos;s content is expressed via the &lt;a class=&quot;localLink&quot; href=&quot;/text&quot;&gt;text&lt;/a&gt; property, and its topic via &lt;a class=&quot;localLink&quot; href=&quot;/about&quot;&gt;about&lt;/a&gt;, properties shared with all CreativeWorks.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Comment"/>
+        <rdfs:label xml:lang="en">Comment</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/CreativeWork -->
+
+    <owl:Class rdf:about="https://schema.org/CreativeWork">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Thing"/>
+        <rdfs:comment xml:lang="en">The most generic kind of creative work, including books, movies, photographs, software programs, etc.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:label xml:lang="en">CreativeWork</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/DigitalDocument -->
+
+    <owl:Class rdf:about="https://schema.org/DigitalDocument">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">An electronic file or document.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/DigitalDocument"/>
+        <rdfs:label xml:lang="en">DigitalDocument</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Enumeration -->
+
+    <owl:Class rdf:about="https://schema.org/Enumeration">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Intangible"/>
+        <rdfs:comment xml:lang="en">Lists or enumerations—for example, a list of cuisines or music genres, etc.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Enumeration"/>
+        <rdfs:label xml:lang="en">Enumeration</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/HowTo -->
+
+    <owl:Class rdf:about="https://schema.org/HowTo">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">Instructions that explain how to achieve a result by performing a sequence of steps.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/HowTo"/>
+        <rdfs:label xml:lang="en">HowTo</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Intangible -->
+
+    <owl:Class rdf:about="https://schema.org/Intangible">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Thing"/>
+        <rdfs:comment xml:lang="en">A utility class that serves as the umbrella for a number of &apos;intangible&apos; things such as quantities, structured values, etc.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Intangible"/>
+        <rdfs:label xml:lang="en">Intangible</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/ItemList -->
+
+    <owl:Class rdf:about="https://schema.org/ItemList">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Intangible"/>
+        <rdfs:comment xml:lang="en">A list of items of any sort&amp;#x2014;for example, Top 10 Movies About Weathermen, or Top 100 Party Songs. Not to be confused with HTML lists, which are often used only for formatting.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/ItemList"/>
+        <rdfs:label xml:lang="en">ItemList</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/MediaObject -->
+
+    <owl:Class rdf:about="https://schema.org/MediaObject">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">A media object, such as an image, video, audio, or text object embedded in a web page or a downloadable dataset i.e. DataDownload. Note that a creative work may have many media objects associated with it on the same web page. For example, a page about a single song (MusicRecording) may have a music video (VideoObject), and a high and low bandwidth audio stream (2 AudioObject&apos;s).</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/MediaObject"/>
+        <rdfs:label xml:lang="en">MediaObject</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Message -->
+
+    <owl:Class rdf:about="https://schema.org/Message">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">A single message from a sender to one or more organizations or people.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Message"/>
+        <rdfs:label xml:lang="en">Message</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/PropertyValue -->
+
+    <owl:Class rdf:about="https://schema.org/PropertyValue">
+        <rdfs:subClassOf rdf:resource="https://schema.org/StructuredValue"/>
+        <rdfs:comment xml:lang="en">A property-value pair, e.g. representing a feature of a product or place. Use the &apos;name&apos; property for the name of the property. If there is an additional human-readable version of the value, put that into the &apos;description&apos; property.&lt;br/&gt;&lt;br/&gt;
+
+Always use specific schema.org properties when a) they exist and b) you can populate them. Using PropertyValue as a substitute will typically not trigger the same effect as using the original, specific property.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/PropertyValue"/>
+        <rdfs:label xml:lang="en">PropertyValue</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/SoftwareApplication -->
+
+    <owl:Class rdf:about="https://schema.org/SoftwareApplication">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">A software application.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/SoftwareApplication"/>
+        <rdfs:label xml:lang="en">SoftwareApplication</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/SoftwareSourceCode -->
+
+    <owl:Class rdf:about="https://schema.org/SoftwareSourceCode">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">Computer programming source code. Example: Full (compile ready) solutions, code snippet samples, scripts, templates.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/SoftwareSourceCode"/>
+        <rdfs:label xml:lang="en">SoftwareSourceCode</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/StructuredValue -->
+
+    <owl:Class rdf:about="https://schema.org/StructuredValue">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Intangible"/>
+        <rdfs:comment xml:lang="en">Structured values are used when the value of a property has a more complex structure than simply being a textual value or a reference to another thing.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/StructuredValue"/>
+        <rdfs:label xml:lang="en">StructuredValue</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Table -->
+
+    <owl:Class rdf:about="https://schema.org/Table">
+        <rdfs:subClassOf rdf:resource="https://schema.org/WebPageElement"/>
+        <rdfs:comment xml:lang="en">A table on a Web page.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Table"/>
+        <rdfs:label xml:lang="en">Table</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/TechArticle -->
+
+    <owl:Class rdf:about="https://schema.org/TechArticle">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Article"/>
+        <rdfs:comment xml:lang="en">A technical article - Example: How-to (task) topics, step-by-step, procedural troubleshooting, specifications, etc.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/TechArticle"/>
+        <rdfs:label xml:lang="en">TechArticle</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/Thing -->
+
+    <owl:Class rdf:about="https://schema.org/Thing">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+        <rdfs:comment xml:lang="en">The most generic type of item.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/Thing"/>
+        <rdfs:label xml:lang="en">Thing</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/UpdateAction -->
+
+    <owl:Class rdf:about="https://schema.org/UpdateAction">
+        <rdfs:subClassOf rdf:resource="https://schema.org/Action"/>
+        <rdfs:comment xml:lang="en">The act of managing by changing/editing the state of the object.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/UpdateAction"/>
+        <rdfs:label xml:lang="en">UpdateAction</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/WebPageElement -->
+
+    <owl:Class rdf:about="https://schema.org/WebPageElement">
+        <rdfs:subClassOf rdf:resource="https://schema.org/CreativeWork"/>
+        <rdfs:comment xml:lang="en">A web page element, like a table or an image.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://schema.org/WebPageElement"/>
+        <rdfs:label xml:lang="en">WebPageElement</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- https://schema.org/3DModel -->
+
+    <owl:Class rdf:about="https://schema.org/3DModel">
+        <rdfs:subClassOf rdf:resource="https://schema.org/MediaObject"/>
+        <rdfs:comment xml:lang="en">A 3D model represents some kind of 3D content, which may have &lt;a class=&quot;localLink&quot; href=&quot;/encoding&quot;&gt;encoding&lt;/a&gt;s in one or more &lt;a class=&quot;localLink&quot; href=&quot;/MediaObject&quot;&gt;MediaObject&lt;/a&gt;s. Many 3D formats are available (e.g. see &lt;a href=&quot;https://en.wikipedia.org/wiki/Category:3D_graphics_file_formats&quot;&gt;Wikipedia&lt;/a&gt;); specific encoding formats can be represented using the &lt;a class=&quot;localLink&quot; href=&quot;/encodingFormat&quot;&gt;encodingFormat&lt;/a&gt; property applied to the relevant &lt;a class=&quot;localLink&quot; href=&quot;/MediaObject&quot;&gt;MediaObject&lt;/a&gt;. For the
+case of a single file published after Zip compression, the convention of appending &apos;+zip&apos; to the &lt;a class=&quot;localLink&quot; href=&quot;/encodingFormat&quot;&gt;encodingFormat&lt;/a&gt; can be used. Geospatial, AR/VR, artistic/animation, gaming, engineering and scientific content can all be represented using &lt;a class=&quot;localLink&quot; href=&quot;/3DModel&quot;&gt;3DModel&lt;/a&gt;.</rdfs:comment>
+        <rdfs:isDefinedBy rdf:resource="https://pending.schema.org/3DModel"/>
+        <rdfs:label xml:lang="en">3DModel</rdfs:label>
+    </owl:Class>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.29) https://github.com/owlcs/owlapi -->
+

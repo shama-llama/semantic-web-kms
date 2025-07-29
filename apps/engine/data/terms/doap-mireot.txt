@@ -1,0 +1,2 @@
+http://usefulinc.com/ns/doap#Project
+http://usefulinc.com/ns/doap#Repository 

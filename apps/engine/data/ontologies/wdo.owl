@@ -2,7 +2,8 @@
 <rdf:RDF xmlns="http://web-development-ontology.netlify.app/wdo/"
      xml:base="http://web-development-ontology.netlify.app/wdo/"
      xmlns:dc="http://purl.org/dc/elements/1.1/"
-     xmlns:bfo="http://purl.obolibrary.org/obo/"
+     xmlns:ns="http://www.w3.org/2003/06/sw-vocab-status/ns#"
+     xmlns:bfo="http://purl.obolibrary.org/obo/bfo/"
      xmlns:owl="http://www.w3.org/2002/07/owl#"
      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:wdo="http://web-development-ontology.netlify.app/wdo#"
@@ -16,7 +17,11 @@
      xmlns:schema="https://schema.org/">
     <owl:Ontology rdf:about="http://web-development-ontology.netlify.app/wdo/">
         <owl:versionIRI rdf:resource="http://web-development-ontology.netlify.app/wdo/1.0.0"/>
-        <owl:imports rdf:resource="http://purl.obolibrary.org/obo/bfo/2020/bfo-core.owl"/>
+        <owl:imports rdf:resource="http://purl.obolibrary.org/obo/bfo.owl"/>
+        <owl:imports rdf:resource="http://usefulinc.com/ns/doap#"/>
+        <owl:imports rdf:resource="http://xmlns.com/foaf/0.1/"/>
+        <owl:imports rdf:resource="http://purl.org/dc/terms/"/>
+        <owl:imports rdf:resource="https://schema.org/"/>
         <dc:creator xml:lang="en">Group One, CoSc 6232 (Spring 2025)</dc:creator>
         <dc:description xml:lang="en">An ontology designed to support semantic-based explicit knowledge management for web development projects. WDO provides a structured vocabulary for representing artifacts like codebase components (classes, functions, attributes), documentation, licensing information, READMEs, best practices, and various digital assets extracted from local repositories or github oranizations. Its goal is to simplify the management, retrieval, and understanding of explicit knowledge within web development projects.</dc:description>
         <dc:identifier>WDO</dc:identifier>
@@ -95,6 +100,12 @@
     
 
 
+    <!-- http://www.w3.org/2000/01/rdf-schema#isDefinedBy -->
+
+    <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#isDefinedBy"/>
+    
+
+
     <!-- http://www.w3.org/2000/01/rdf-schema#label -->
 
     <owl:AnnotationProperty rdf:about="http://www.w3.org/2000/01/rdf-schema#label"/>
@@ -139,7 +150,6 @@
     ///////////////////////////////////////////////////////////////////////////////////////
      -->
 
-    
 
 
     <!-- http://web-development-ontology.netlify.app/wdo#accesses -->
@@ -151,6 +161,7 @@
             <owl:Class>
                 <owl:unionOf rdf:parseType="Collection">
                     <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#AttributeDeclaration"/>
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#Parameter"/>
                     <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#VariableDeclaration"/>
                 </owl:unionOf>
             </owl:Class>
@@ -315,20 +326,6 @@
         <dc:identifier>WDO_OP:0000010</dc:identifier>
         <rdfs:label xml:lang="en">extends type</rdfs:label>
         <skos:definition xml:lang="en">A relation indicating that a Complex Type inherits from or extends another Complex Type.</skos:definition>
-    </owl:ObjectProperty>
-    
-
-
-    <!-- http://web-development-ontology.netlify.app/wdo#fixesIssue -->
-
-    <owl:ObjectProperty rdf:about="http://web-development-ontology.netlify.app/wdo#fixesIssue">
-        <rdfs:subPropertyOf rdf:resource="http://web-development-ontology.netlify.app/wdo#addressesIssue"/>
-        <owl:inverseOf rdf:resource="http://web-development-ontology.netlify.app/wdo#isFixedBy"/>
-        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#Commit"/>
-        <rdfs:range rdf:resource="http://web-development-ontology.netlify.app/wdo#Issue"/>
-        <dc:identifier>WDO_OP:0000043</dc:identifier>
-        <rdfs:label xml:lang="en">fixes issue</rdfs:label>
-        <skos:definition xml:lang="en">A relation that is a sub-property of &apos;addressesIssue&apos;, specifically indicating that a commit resolves or closes an issue.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -546,10 +543,18 @@
     <owl:ObjectProperty rdf:about="http://web-development-ontology.netlify.app/wdo#implementsInterface">
         <owl:inverseOf rdf:resource="http://web-development-ontology.netlify.app/wdo#isImplementedBy"/>
         <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#ClassDefinition"/>
-        <rdfs:range rdf:resource="http://web-development-ontology.netlify.app/wdo#InterfaceDefinition"/>
+        <rdfs:range>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#InterfaceDefinition"/>
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#TraitDefinition"/>
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#StructDefinition"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:range>
         <dc:identifier>WDO_OP:0000011</dc:identifier>
         <rdfs:label xml:lang="en">implements interface</rdfs:label>
-        <skos:definition xml:lang="en">A relation indicating that a ClassDefinition implements an InterfaceDefinition.</skos:definition>
+        <skos:definition xml:lang="en">A relation indicating that a ClassDefinition implements an InterfaceDefinition, TraitDefinition, or StructDefinition.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -612,6 +617,7 @@
             <owl:Class>
                 <owl:unionOf rdf:parseType="Collection">
                     <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#AttributeDeclaration"/>
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#Parameter"/>
                     <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#VariableDeclaration"/>
                 </owl:unionOf>
             </owl:Class>
@@ -853,19 +859,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#isFixedBy -->
-
-    <owl:ObjectProperty rdf:about="http://web-development-ontology.netlify.app/wdo#isFixedBy">
-        <rdfs:subPropertyOf rdf:resource="http://web-development-ontology.netlify.app/wdo#isAddressedBy"/>
-        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#Issue"/>
-        <rdfs:range rdf:resource="http://web-development-ontology.netlify.app/wdo#Commit"/>
-        <dc:identifier>WDO_OP:0000056</dc:identifier>
-        <rdfs:label xml:lang="en">is fixed by</rdfs:label>
-        <skos:definition xml:lang="en">A relation from an issue to the commit that resolves it.</skos:definition>
-    </owl:ObjectProperty>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#isFrameworkFor -->
 
     <owl:ObjectProperty rdf:about="http://web-development-ontology.netlify.app/wdo#isFrameworkFor">
@@ -894,11 +887,19 @@
     <!-- http://web-development-ontology.netlify.app/wdo#isImplementedBy -->
 
     <owl:ObjectProperty rdf:about="http://web-development-ontology.netlify.app/wdo#isImplementedBy">
-        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#InterfaceDefinition"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#InterfaceDefinition"/>
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#TraitDefinition"/>
+                    <rdf:Description rdf:about="http://web-development-ontology.netlify.app/wdo#StructDefinition"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
         <rdfs:range rdf:resource="http://web-development-ontology.netlify.app/wdo#ClassDefinition"/>
         <dc:identifier>WDO_OP:0000064</dc:identifier>
         <rdfs:label xml:lang="en">is implemented by</rdfs:label>
-        <skos:definition xml:lang="en">A relation from an interface to a class that implements it.</skos:definition>
+        <skos:definition xml:lang="en">A relation from an interface, trait, or struct to a class that implements it.</skos:definition>
     </owl:ObjectProperty>
     
 
@@ -1236,18 +1237,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#endsAtLine -->
-
-    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#endsAtLine">
-        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#InformationContentEntity"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
-        <dc:identifier>WDO_DP:0000003</dc:identifier>
-        <rdfs:label xml:lang="en">ends at line</rdfs:label>
-        <skos:definition xml:lang="en">A data property that specifies the ending line number of an information entity within its source file.</skos:definition>
-    </owl:DatatypeProperty>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#hasAccessModifier -->
 
     <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#hasAccessModifier">
@@ -1275,6 +1264,30 @@
         <dc:identifier>WDO_DP:0000004</dc:identifier>
         <rdfs:label xml:lang="en">has canonical name</rdfs:label>
         <skos:definition xml:lang="en">A data property that specifies the fully qualified or canonical name of a code element (e.g., package.class.method).</skos:definition>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://web-development-ontology.netlify.app/wdo#hasCodeSnippet -->
+
+    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#hasCodeSnippet">
+        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#CodeConstruct"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <dc:identifier>WDO_DP:0000001</dc:identifier>
+        <rdfs:label xml:lang="en">has code snippet</rdfs:label>
+        <skos:definition xml:lang="en">A data property that holds the literal source code string of a code construct.</skos:definition>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://web-development-ontology.netlify.app/wdo#hasCommitDate -->
+
+    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#hasCommitDate">
+        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#Commit"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+        <dc:identifier>WDO_DP:0000040</dc:identifier>
+        <rdfs:label xml:lang="en">has commit date</rdfs:label>
+        <skos:definition xml:lang="en">A data property that specifies the date and time when a commit was created or recorded in the repository.</skos:definition>
     </owl:DatatypeProperty>
     
 
@@ -1330,6 +1343,18 @@
         <dc:identifier>WDO_DP:0000031</dc:identifier>
         <rdfs:label xml:lang="en">has cyclomatic complexity</rdfs:label>
         <skos:definition xml:lang="en">A data property that specifies the quantitative measure of the number of linearly independent paths through a function&apos;s source code.</skos:definition>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://web-development-ontology.netlify.app/wdo#hasEndLine -->
+
+    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#hasEndLine">
+        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#InformationContentEntity"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+        <dc:identifier>WDO_DP:0000003</dc:identifier>
+        <rdfs:label xml:lang="en">ends at line</rdfs:label>
+        <skos:definition xml:lang="en">A data property that specifies the ending line number of an information entity within its source file.</skos:definition>
     </owl:DatatypeProperty>
     
 
@@ -1600,18 +1625,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#hasSourceCodeSnippet -->
-
-    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#hasSourceCodeSnippet">
-        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#CodeConstruct"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
-        <dc:identifier>WDO_DP:0000001</dc:identifier>
-        <rdfs:label xml:lang="en">has source code snippet</rdfs:label>
-        <skos:definition xml:lang="en">A data property that holds the literal source code string of a code construct.</skos:definition>
-    </owl:DatatypeProperty>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#hasSourceRepositoryURL -->
 
     <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#hasSourceRepositoryURL">
@@ -1620,6 +1633,18 @@
         <dc:identifier>WDO_DP:0000028</dc:identifier>
         <rdfs:label xml:lang="en">has source repository URL</rdfs:label>
         <skos:definition xml:lang="en">A data property that specifies the URL of the remote repository.</skos:definition>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://web-development-ontology.netlify.app/wdo#hasStartLine -->
+
+    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#hasStartLine">
+        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#InformationContentEntity"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
+        <dc:identifier>WDO_DP:0000002</dc:identifier>
+        <rdfs:label xml:lang="en">starts at line</rdfs:label>
+        <skos:definition xml:lang="en">A data property that specifies the starting line number of an information entity within its source file.</skos:definition>
     </owl:DatatypeProperty>
     
 
@@ -1710,6 +1735,18 @@
     
 
 
+    <!-- http://web-development-ontology.netlify.app/wdo#isRemoved -->
+
+    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#isRemoved">
+        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#DigitalInformationCarrier"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+        <dc:identifier>WDO_DP:0000041</dc:identifier>
+        <rdfs:label xml:lang="en">is removed</rdfs:label>
+        <skos:definition xml:lang="en">A data property that indicates whether a digital information carrier was removed (deleted or moved) in a commit.</skos:definition>
+    </owl:DatatypeProperty>
+    
+
+
     <!-- http://web-development-ontology.netlify.app/wdo#isStatic -->
 
     <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#isStatic">
@@ -1729,18 +1766,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#startsAtLine -->
-
-    <owl:DatatypeProperty rdf:about="http://web-development-ontology.netlify.app/wdo#startsAtLine">
-        <rdfs:domain rdf:resource="http://web-development-ontology.netlify.app/wdo#InformationContentEntity"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#nonNegativeInteger"/>
-        <dc:identifier>WDO_DP:0000002</dc:identifier>
-        <rdfs:label xml:lang="en">starts at line</rdfs:label>
-        <skos:definition xml:lang="en">A data property that specifies the starting line number of an information entity within its source file.</skos:definition>
-    </owl:DatatypeProperty>
-    
-
-
     <!-- 
     ///////////////////////////////////////////////////////////////////////////////////////
     //
@@ -1749,15 +1774,6 @@
     ///////////////////////////////////////////////////////////////////////////////////////
      -->
 
-    
-
-
-    <!-- http://purl.org/dc/terms/LicenseDocument -->
-
-    <owl:Class rdf:about="http://purl.org/dc/terms/LicenseDocument">
-        <owl:equivalentClass rdf:resource="http://web-development-ontology.netlify.app/wdo#License"/>
-    </owl:Class>
-    
 
 
     <!-- http://web-development-ontology.netlify.app/wdo#APIDocumentation -->
@@ -1841,19 +1857,6 @@
         <dc:identifier>WDO:0000026</dc:identifier>
         <rdfs:label xml:lang="en">Audio Description</rdfs:label>
         <skos:definition xml:lang="en">An Audio Description is a Digital Asset Description that represents the informational nature of an audio recording, such as its duration, sample rate, and encoding.</skos:definition>
-    </owl:Class>
-    
-
-
-    <!-- http://web-development-ontology.netlify.app/wdo#AudioFile -->
-
-    <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#AudioFile">
-        <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#AssetFile"/>
-        <rdfs:subClassOf rdf:resource="https://schema.org/AudioObject"/>
-        <dc:identifier>WDO:0000039</dc:identifier>
-        <rdfs:label xml:lang="en">Audio File</rdfs:label>
-        <skos:definition xml:lang="en">An Audio File is an Asset File that bears an Audio Description.</skos:definition>
-        <skos:example xml:lang="en">A file named &apos;ui_click.wav&apos; or &apos;theme_song.ogg&apos;.</skos:example>
     </owl:Class>
     
 
@@ -2232,18 +2235,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#FontFile -->
-
-    <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#FontFile">
-        <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#AssetFile"/>
-        <dc:identifier>WDO:0000040</dc:identifier>
-        <rdfs:label xml:lang="en">Font File</rdfs:label>
-        <skos:definition xml:lang="en">A Font File is an Asset File that bears a Font Description.</skos:definition>
-        <skos:example xml:lang="en">A file named &apos;MyCustomFont.otf&apos; or &apos;webfont.woff2&apos;.</skos:example>
-    </owl:Class>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#FunctionCallSite -->
 
     <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#FunctionCallSite">
@@ -2333,19 +2324,6 @@
         <dc:identifier>WDO:0000024</dc:identifier>
         <rdfs:label xml:lang="en">Image Description</rdfs:label>
         <skos:definition xml:lang="en">An Image Description is a Digital Asset Description that defines the characteristics of a raster or vector image, such as its dimensions and format.</skos:definition>
-    </owl:Class>
-    
-
-
-    <!-- http://web-development-ontology.netlify.app/wdo#ImageFile -->
-
-    <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#ImageFile">
-        <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#AssetFile"/>
-        <rdfs:subClassOf rdf:resource="https://schema.org/ImageObject"/>
-        <dc:identifier>WDO:0000037</dc:identifier>
-        <rdfs:label xml:lang="en">Image File</rdfs:label>
-        <skos:definition xml:lang="en">An Image File is an Asset File that bears an Image Description.</skos:definition>
-        <skos:example xml:lang="en">A file named &apos;icon.svg&apos; or &apos;background.png&apos;.</skos:example>
     </owl:Class>
     
 
@@ -2471,6 +2449,7 @@
 
     <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#License">
         <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#InformationContentEntity"/>
+        <owl:equivalentClass rdf:resource="http://purl.org/dc/terms/LicenseDocument"/>
         <dc:identifier>WDO:0000020</dc:identifier>
         <rdfs:label xml:lang="en">License</rdfs:label>
         <skos:definition xml:lang="en">A License is an Information Content Entity that specifies the terms and conditions for software use, modification, and distribution.</skos:definition>
@@ -2611,18 +2590,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#PackageDeclaration -->
-
-    <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#PackageDeclaration">
-        <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#ComplexType"/>
-        <dc:identifier>WDO:0000115</dc:identifier>
-        <rdfs:label xml:lang="en">Package Declaration</rdfs:label>
-        <skos:definition xml:lang="en">A Package Declaration is a Complex Type that is a statement defining the namespace to which a particular code file belongs.</skos:definition>
-        <skos:example xml:lang="en">The statement `package com.example.service;` at the top of a Java file.</skos:example>
-    </owl:Class>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#Paragraph -->
 
     <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#Paragraph">
@@ -2708,8 +2675,8 @@
     <!-- http://web-development-ontology.netlify.app/wdo#Repository -->
 
     <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#Repository">
-        <owl:equivalentClass rdf:resource="http://usefulinc.com/ns/doap#Repository"/>
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000027"/>
+        <rdfs:subClassOf rdf:resource="http://usefulinc.com/ns/doap#Repository"/>
         <dc:identifier>WDO:0000107</dc:identifier>
         <rdfs:label xml:lang="en">Repository</rdfs:label>
         <skos:definition xml:lang="en">A Repository is an Object Aggregate whose parts are a collection of digital information carriers (files) and their revision history, managed by a version control system.</skos:definition>
@@ -2909,18 +2876,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#ThreeDimensionalModelFile -->
-
-    <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#ThreeDimensionalModelFile">
-        <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#AssetFile"/>
-        <dc:identifier>WDO:0000041</dc:identifier>
-        <rdfs:label xml:lang="en">Three-Dimensional Model File</rdfs:label>
-        <skos:definition xml:lang="en">A Three-Dimensional Model File is an Asset File that bears a Three-Dimensional Model Description.</skos:definition>
-        <skos:example xml:lang="en">A file named &apos;product_model.glb&apos; or &apos;character.fbx&apos;.</skos:example>
-    </owl:Class>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#TraitDefinition -->
 
     <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#TraitDefinition">
@@ -2990,18 +2945,6 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#UserInterfaceDesignFile -->
-
-    <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#UserInterfaceDesignFile">
-        <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#AssetFile"/>
-        <dc:identifier>WDO:0000042</dc:identifier>
-        <rdfs:label xml:lang="en">User Interface Design File</rdfs:label>
-        <skos:definition xml:lang="en">A User Interface Design File is an Asset File that bears a User Interface Design Description.</skos:definition>
-        <skos:example xml:lang="en">A file named &apos;homepage_mockup.fig&apos; or &apos;app_prototype.sketch&apos;.</skos:example>
-    </owl:Class>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#VariableDeclaration -->
 
     <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#VariableDeclaration">
@@ -3026,24 +2969,11 @@
     
 
 
-    <!-- http://web-development-ontology.netlify.app/wdo#VideoFile -->
-
-    <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#VideoFile">
-        <rdfs:subClassOf rdf:resource="http://web-development-ontology.netlify.app/wdo#AssetFile"/>
-        <rdfs:subClassOf rdf:resource="https://schema.org/VideoObject"/>
-        <dc:identifier>WDO:0000038</dc:identifier>
-        <rdfs:label xml:lang="en">Video File</rdfs:label>
-        <skos:definition xml:lang="en">A Video File is an Asset File that bears a Video Description.</skos:definition>
-        <skos:example xml:lang="en">A file named &apos;tutorial.mp4&apos; or &apos;promo.webm&apos;.</skos:example>
-    </owl:Class>
-    
-
-
     <!-- http://web-development-ontology.netlify.app/wdo#WebDevelopmentProject -->
 
     <owl:Class rdf:about="http://web-development-ontology.netlify.app/wdo#WebDevelopmentProject">
-        <owl:equivalentClass rdf:resource="http://usefulinc.com/ns/doap#Project"/>
         <rdfs:subClassOf rdf:resource="http://purl.obolibrary.org/obo/BFO_0000015"/>
+        <rdfs:subClassOf rdf:resource="http://usefulinc.com/ns/doap#Project"/>
         <dc:identifier>WDO:0000001</dc:identifier>
         <rdfs:label xml:lang="en">Web Development Project</rdfs:label>
         <skos:definition xml:lang="en">A Web Development Project is a process that encompasses all activities involved in creating, deploying, or maintaining a web-based software system.</skos:definition>
@@ -3085,153 +3015,6 @@
     
 
 
-    <!-- http://usefulinc.com/ns/doap#Project -->
-
-    <owl:Class rdf:about="http://usefulinc.com/ns/doap#Project"/>
-    
-
-
-    <!-- http://usefulinc.com/ns/doap#Repository -->
-
-    <owl:Class rdf:about="http://usefulinc.com/ns/doap#Repository"/>
-    
-
-
-    <!-- http://xmlns.com/foaf/0.1/Organization -->
-
-    <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Organization"/>
-    
-
-
-    <!-- http://xmlns.com/foaf/0.1/Person -->
-
-    <owl:Class rdf:about="http://xmlns.com/foaf/0.1/Person"/>
-    
-
-
-    <!-- https://schema.org/APIReference -->
-
-    <owl:Class rdf:about="https://schema.org/APIReference"/>
-    
-
-
-    <!-- https://schema.org/ArchiveComponent -->
-
-    <owl:Class rdf:about="https://schema.org/ArchiveComponent"/>
-    
-
-
-    <!-- https://schema.org/AudioObject -->
-
-    <owl:Class rdf:about="https://schema.org/AudioObject"/>
-    
-
-
-    <!-- https://schema.org/Comment -->
-
-    <owl:Class rdf:about="https://schema.org/Comment"/>
-    
-
-
-    <!-- https://schema.org/CreativeWork -->
-
-    <owl:Class rdf:about="https://schema.org/CreativeWork"/>
-    
-
-
-    <!-- https://schema.org/DigitalDocument -->
-
-    <owl:Class rdf:about="https://schema.org/DigitalDocument"/>
-    
-
-
-    <!-- https://schema.org/Enumeration -->
-
-    <owl:Class rdf:about="https://schema.org/Enumeration"/>
-    
-
-
-    <!-- https://schema.org/Function -->
-
-    <owl:Class rdf:about="https://schema.org/Function"/>
-    
-
-
-    <!-- https://schema.org/HowTo -->
-
-    <owl:Class rdf:about="https://schema.org/HowTo"/>
-    
-
-
-    <!-- https://schema.org/ImageObject -->
-
-    <owl:Class rdf:about="https://schema.org/ImageObject"/>
-    
-
-
-    <!-- https://schema.org/ItemList -->
-
-    <owl:Class rdf:about="https://schema.org/ItemList"/>
-    
-
-
-    <!-- https://schema.org/MediaObject -->
-
-    <owl:Class rdf:about="https://schema.org/MediaObject"/>
-    
-
-
-    <!-- https://schema.org/Message -->
-
-    <owl:Class rdf:about="https://schema.org/Message"/>
-    
-
-
-    <!-- https://schema.org/PropertyValue -->
-
-    <owl:Class rdf:about="https://schema.org/PropertyValue"/>
-    
-
-
-    <!-- https://schema.org/SoftwareApplication -->
-
-    <owl:Class rdf:about="https://schema.org/SoftwareApplication"/>
-    
-
-
-    <!-- https://schema.org/SoftwareSourceCode -->
-
-    <owl:Class rdf:about="https://schema.org/SoftwareSourceCode"/>
-    
-
-
-    <!-- https://schema.org/Table -->
-
-    <owl:Class rdf:about="https://schema.org/Table"/>
-    
-
-
-    <!-- https://schema.org/TechArticle -->
-
-    <owl:Class rdf:about="https://schema.org/TechArticle"/>
-    
-
-
-    <!-- https://schema.org/UpdateAction -->
-
-    <owl:Class rdf:about="https://schema.org/UpdateAction"/>
-    
-
-
-    <!-- https://schema.org/VideoObject -->
-
-    <owl:Class rdf:about="https://schema.org/VideoObject"/>
-    
-
-
-    <!-- https://schema.org/3DModel -->
-
-    <owl:Class rdf:about="https://schema.org/3DModel"/>
 </rdf:RDF>
 
 
