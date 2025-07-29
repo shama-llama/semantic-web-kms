@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import tempfile
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Union, cast
 
@@ -71,6 +72,136 @@ def get_agraph_session():
     return _agraph_session
 
 
+# Development terms that should be treated as optional in searches
+_DEV_OPTIONAL_TERMS = {
+    "commit", "commits",
+    "file", "files", 
+    "class", "classes",
+    "function", "functions",
+    "code", "codes",
+    "doc", "docs", "documentation",
+    "issue", "issues",
+}
+
+# Term expansion mapping - expands shorthand to related/equivalent terms
+_TERM_EXPANSIONS = {
+    "js": ["javascript", "node"],
+    "ts": ["typescript"],
+    "py": ["python"],
+    "php": ["laravel", "symfony", "composer"],
+    "docs": ["documentation", "readme"],
+    "code": ["codes", "coding", "source"],
+    "css": ["stylesheet", "style"],
+    "html": ["markup", "template"],
+    "sql": ["database", "query"],
+    "api": ["endpoint", "service"],
+    "config": ["configuration", "settings"],
+    "test": ["testing", "spec", "unit"],
+    "json": ["config", "data"],
+    "md": ["markdown", "readme"],
+}
+
+
+def _flexify_query_regex(raw: str) -> str:
+    """
+    Build a regex that:
+      - is plural/singular flexible per token,
+      - expands shorthand terms (js -> javascript|node),
+      - keeps token order,
+      - treats common dev terms as OPTIONAL (so 'php commit' can match 'php' in filenames, etc.)
+    """
+    tokens = re.findall(r"[A-Za-z0-9_+-]+", raw, flags=re.UNICODE)
+    if not tokens:
+        pat = re.escape(raw)
+        return pat.replace("\\", "\\\\").replace('"', '\\"')
+
+    def pluralize(token: str) -> str:
+        esc = re.escape(token)
+        t = token.lower()
+        # allow simple plural flex like code/codes, file/files, class/classes
+        if t.endswith("ies"):
+            stem = re.escape(token[:-3])
+            return f"{stem}(?:y|ies)"
+        if t.endswith("s") and len(t) > 2:
+            stem = re.escape(token[:-1])
+            return f"{stem}s?"
+        # default: allow optional 's' or 'es' after words like 'code' -> 'code'|'codes'
+        return f"{esc}(?:e?s)?"
+
+    def expand_term(token: str) -> str:
+        """Expand a token to include related terms if available."""
+        t_lower = token.lower()
+        if t_lower in _TERM_EXPANSIONS:
+            # Create alternatives: original + expansions, all pluralized
+            alternatives = [pluralize(token)]
+            for expansion in _TERM_EXPANSIONS[t_lower]:
+                # Handle multi-word expansions by escaping spaces
+                if " " in expansion:
+                    escaped_expansion = expansion.replace(" ", r"\s+")
+                    alternatives.append(pluralize(escaped_expansion))
+                else:
+                    alternatives.append(pluralize(expansion))
+            return f"(?:{'|'.join(alternatives)})"
+        else:
+            return pluralize(token)
+
+    parts = []
+    for tok in tokens:
+        p = expand_term(tok)
+        if tok.lower() in _DEV_OPTIONAL_TERMS:
+            # optional segment in the ordered chain
+            parts.append(rf"(?:\b{p}\b.*)?")
+        else:
+            parts.append(rf"\b{p}\b.*")
+
+    pat = "".join(parts)
+    if pat.endswith(".*"):
+        pat = pat[:-2]
+    # escape for SPARQL string literal
+    return pat.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def run_graph_sparql(construct_query: str, accept="application/ld+json"):
+    """
+    Execute a CONSTRUCT SPARQL query with proper Accept headers.
+    
+    Args:
+        construct_query: SPARQL CONSTRUCT query
+        accept: Accept header for response format
+        
+    Returns:
+        Query results in requested format
+    """
+    endpoint = (AGRAPH_URL if AGRAPH_URL and "/repositories/" in AGRAPH_URL
+                else f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}")
+    session = get_agraph_session()
+    resp = session.post(endpoint, data={"query": construct_query},
+                        headers={"Accept": accept}, timeout=(5, 75))
+    resp.raise_for_status()
+    return resp.text if "json" not in accept else resp.json()
+
+
+def _csv_escape(s: str) -> str:
+    """
+    Properly escape a string for CSV output.
+    
+    Args:
+        s: String to escape
+        
+    Returns:
+        CSV-safe escaped string with quotes
+    """
+    return '"' + s.replace('"', '""') + '"'
+
+
+# Common SPARQL prefixes for cleaner queries
+PREFIXES = """
+PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+"""
+
 # Memory-efficient dashboard stats queries based on WDO ontology
 DASHBOARD_QUERIES = {
     "repositories": "SELECT (COUNT(DISTINCT ?repo) AS ?count) WHERE { ?repo a <http://web-development-ontology.netlify.app/wdo#Repository> . }",
@@ -131,7 +262,7 @@ def detect_organization_directory(temp_dir: str) -> str:
 
 def run_dashboard_sparql(query: str) -> Any:
     """
-    Run a SPARQL query for the dashboard.
+    Run a SPARQL query for the dashboard with auto-prepended prefixes.
 
     Args:
         query (str): The SPARQL query string to execute.
@@ -154,7 +285,9 @@ def run_dashboard_sparql(query: str) -> Any:
         # Server URL needs repository appended
         agraph_endpoint = f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"
 
-    headers = {"Accept": "application/sparql-results+json"}
+    # Auto-prepend PREFIXES if not already present
+    if not query.lstrip().upper().startswith("PREFIX"):
+        query = PREFIXES + query
 
     # Use global session for connection pooling
     session = get_agraph_session()
@@ -166,8 +299,8 @@ def run_dashboard_sparql(query: str) -> Any:
     resp = session.post(
         agraph_endpoint,
         data={"query": query},
-        headers=headers,
-        timeout=30,  # Increased timeout for complex queries
+        headers={"Accept": "application/sparql-results+json"},
+        timeout=(5, 75),  # Optimized timeout (5s connection, 75s read)
     )
 
     # Debug logging
@@ -881,16 +1014,20 @@ def list_repositories() -> Any:
         organization = request.args.get("organization")
 
         # 1. Get all repositories with basic info
-        sparql_basic = """
-        PREFIX wdo: <http://web-development-ontology.netlify.app/wdo#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        org_filter = ""
+        if organization and is_valid_uri(organization):
+            org_filter = f"VALUES ?org {{ <{organization}> }} ?org wdo:hasRepository ?repo ."
+        
+        sparql_basic = f"""
+        {PREFIXES}
         SELECT ?repo ?name (MAX(?mod) AS ?lastUpdated)
-        WHERE {
+        WHERE {{
           ?repo a wdo:Repository .
-          OPTIONAL { ?repo rdfs:label ?name. }
+          {org_filter}
+          OPTIONAL {{ ?repo rdfs:label ?name. }}
           ?repo wdo:hasFile ?file .
           ?file wdo:hasModificationTimestamp ?mod .
-        }
+        }}
         GROUP BY ?repo ?name
         """
         data = run_dashboard_sparql(sparql_basic)
@@ -912,12 +1049,7 @@ def list_repositories() -> Any:
         for repo in repos:
             repo_uri = repo["id"]
             if not is_valid_uri(repo_uri):
-                logger.error(f"Invalid repository URI: {repo_uri}")
-                return jsonify({"error": f"Invalid repository URI: {repo_uri}"}), 400
-
-            # Validate repo_uri as a URI to prevent injection
-            if not is_valid_uri(repo_uri):
-                # Optionally, log or collect invalid repos
+                logger.warning(f"Skipping invalid repository URI: {repo_uri}")
                 continue
 
             # 2. Sample language
@@ -1099,25 +1231,38 @@ def search_entities() -> Any:
         JSON response with search results and semantic insights.
     """
     try:
-        query = request.args.get("query", "")
+        raw = request.args.get("query", "")
         entity_type = request.args.get("type")
         repository = request.args.get("repository")
-        limit = int(request.args.get("limit", 50))
+        
+        # Clamp limit and validate type
+        limit = max(1, min(int(request.args.get("limit", 50)), 200))
+        
+        if entity_type and not re.fullmatch(r"[A-Za-z0-9_-]+", entity_type):
+            return jsonify({"error": "Invalid entity type"}), 400
 
-        if not query:
+        if not raw:
             return jsonify({"error": "Query parameter is required"}), 400
+
+        # Build flexible regex for smart plural/singular matching
+        pat = _flexify_query_regex(raw)
 
         # Build SPARQL query based on parameters
         sparql_query = """
-        SELECT DISTINCT ?entity ?name ?entityType ?editorialNote ?file ?line ?repo ?confidence
+        SELECT DISTINCT ?entity ?name ?entityType ?editorialNote ?file ?line ?repo ?confidence ?fileStr ?commitMessage ?extension
         WHERE {
             ?entity a ?entityType .
             OPTIONAL { ?entity <http://www.w3.org/2000/01/rdf-schema#label> ?name . }
-            OPTIONAL { ?entity <http://www.w3.org/1994/02/skos/core#editorialNote> ?editorialNote . }
-            OPTIONAL { ?entity <http://web-development-ontology.netlify.app/wdo#hasSourceFile> ?file . }
+            OPTIONAL { ?entity <http://www.w3.org/2004/02/skos/core#editorialNote> ?editorialNote . }
+            OPTIONAL {
+              ?entity <http://web-development-ontology.netlify.app/wdo#hasSourceFile> ?file .
+              BIND(STR(?file) AS ?fileStr)
+            }
             OPTIONAL { ?entity <http://web-development-ontology.netlify.app/wdo#hasLineNumber> ?line . }
             OPTIONAL { ?entity <http://web-development-ontology.netlify.app/wdo#belongsToRepository> ?repo . }
             OPTIONAL { ?entity <http://web-development-ontology.netlify.app/wdo#hasConfidence> ?confidence . }
+            OPTIONAL { ?entity <http://web-development-ontology.netlify.app/wdo#hasCommitMessage> ?commitMessage . }
+            OPTIONAL { ?entity <http://web-development-ontology.netlify.app/wdo#hasExtension> ?extension . }
         """
 
         # Add filters
@@ -1125,13 +1270,15 @@ def search_entities() -> Any:
             sparql_query += f"    FILTER(?entityType = <http://web-development-ontology.netlify.app/wdo#{entity_type}>) .\n"
 
         if repository:
+            if not is_valid_uri(repository):
+                return jsonify({"error": "Invalid repository URI"}), 400
             sparql_query += f"    FILTER(?repo = <{repository}>) .\n"
 
-        # Add search filter
+        # Add search filter with escaped pattern and BOUND() guards
         sparql_query += f"""
             FILTER(
-                REGEX(?name, "{query}", "i") ||
-                REGEX(?editorialNote, "{query}", "i")
+                (BOUND(?name) && REGEX(?name, "{pat}", "i")) ||
+                (BOUND(?editorialNote) && REGEX(?editorialNote, "{pat}", "i"))
             ) .
         }}
         LIMIT {limit}
@@ -1182,11 +1329,11 @@ def search_entities() -> Any:
 
         # Generate semantic insights (simplified for now)
         semantic_insights = {
-            "relatedConcepts": [query, "code", "development"],
+            "relatedConcepts": [raw, "code", "development"],
             "suggestedQueries": [
-                f"{query} patterns",
-                f"{query} implementation",
-                f"{query} examples",
+                f"{raw} patterns",
+                f"{raw} implementation",
+                f"{raw} examples",
             ],
             "confidence": 0.8,
         }
@@ -1207,7 +1354,7 @@ def search_entities() -> Any:
 @app.route("/api/sparql", methods=["POST"])
 def sparql_query():
     """
-    Execute a SPARQL query against the triplestore.
+    Execute a SPARQL query against the triplestore using pooled session.
 
     Returns:
         flask.Response: A JSON response containing the SPARQL query results or an error message.
@@ -1224,28 +1371,37 @@ def sparql_query():
         On success: SPARQL query results as JSON.
         On error: {"error": "error message"}
     """
-    data = request.get_json()
-    query = data.get("query")
-    if not query:
-        return jsonify({"error": "Missing query"}), 400
+    try:
+        data = request.get_json()
+        query = data.get("query")
+        if not query:
+            return jsonify({"error": "Missing query"}), 400
 
-    # Handle both cloud and server URL formats
-    if AGRAPH_URL and "/repositories/" in AGRAPH_URL:
-        # Cloud URL already includes repository path
-        agraph_endpoint = AGRAPH_URL
-    else:
-        # Server URL needs repository appended
-        agraph_endpoint = f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"
+        # Handle both cloud and server URL formats
+        if AGRAPH_URL and "/repositories/" in AGRAPH_URL:
+            # Cloud URL already includes repository path
+            agraph_endpoint = AGRAPH_URL
+        else:
+            # Server URL needs repository appended
+            agraph_endpoint = f"{AGRAPH_URL}/repositories/{AGRAPH_REPO}"
 
-    headers = {"Accept": "application/sparql-results+json"}
-    auth = (AGRAPH_USER, AGRAPH_PASS) if AGRAPH_USER and AGRAPH_PASS else None
-    resp = requests.post(
-        agraph_endpoint, data={"query": query}, headers=headers, auth=auth, timeout=30
-    )
-    if resp.status_code == 200:
-        return jsonify(resp.json())
-    else:
-        return jsonify({"error": resp.text}), resp.status_code
+        # Use pooled session for better performance
+        session = get_agraph_session()
+        resp = session.post(
+            agraph_endpoint, 
+            data={"query": query}, 
+            headers={"Accept": "application/sparql-results+json"}, 
+            timeout=(5, 75)
+        )
+        
+        if resp.status_code == 200:
+            return jsonify(resp.json())
+        else:
+            return jsonify({"error": resp.text}), resp.status_code
+            
+    except Exception as e:
+        logger.error(f"SPARQL query error: {str(e)}")
+        return jsonify({"error": f"Query failed: {str(e)}"}), 500
 
 
 @app.route("/api/input-directory", methods=["GET"])
@@ -1371,12 +1527,23 @@ def get_graph_data() -> Any:
                     }
                 )
 
-        # Get relationships for edges
-        edges_query = """
-        SELECT DISTINCT ?source ?target ?relationship
-        WHERE {
-            ?source ?relationship ?target .
-        }
+        # Handle empty node set - early return
+        if not node_ids:
+            return jsonify({
+                "nodes": [],
+                "edges": [],
+                "clusters": []
+            })
+
+        # Get relationships for edges - optimized with VALUES for known nodes
+        values = " ".join(f"<{nid}>" for nid in node_ids)
+        edges_query = f"""
+        {PREFIXES}
+        SELECT DISTINCT ?source ?target ?relationship WHERE {{
+          VALUES ?source {{ {values} }}
+          VALUES ?target {{ {values} }}
+          ?source ?relationship ?target .
+        }}
         """
 
         edges_data = run_dashboard_sparql(edges_query)
@@ -1390,32 +1557,31 @@ def get_graph_data() -> Any:
             target = binding["target"]["value"]
             relationship = binding["relationship"]["value"].split("#")[-1]
 
-            # Only include edges between nodes we have
-            if source in node_ids and target in node_ids:
-                edge_type = "depends_on"
-                weight = 0.5
+            # All edges are already between known nodes due to VALUES constraint
+            edge_type = "depends_on"
+            weight = 0.5
 
-                if relationship in ["invokes", "callsFunction"]:
-                    edge_type = "calls"
-                    weight = 0.8
-                elif relationship in ["extendsType"]:
-                    edge_type = "extends"
-                    weight = 0.9
-                elif relationship in ["implementsInterface"]:
-                    edge_type = "implements"
-                    weight = 0.9
-                elif relationship in ["hasFile", "belongsToRepository"]:
-                    edge_type = "contains"
-                    weight = 1.0
+            if relationship in ["invokes", "callsFunction"]:
+                edge_type = "calls"
+                weight = 0.8
+            elif relationship in ["extendsType"]:
+                edge_type = "extends"
+                weight = 0.9
+            elif relationship in ["implementsInterface"]:
+                edge_type = "implements"
+                weight = 0.9
+            elif relationship in ["hasFile", "belongsToRepository"]:
+                edge_type = "contains"
+                weight = 1.0
 
-                edges.append(
-                    {
-                        "source": source,
-                        "target": target,
-                        "type": edge_type,
-                        "weight": weight,
-                    }
-                )
+            edges.append(
+                {
+                    "source": source,
+                    "target": target,
+                    "type": edge_type,
+                    "weight": weight,
+                }
+            )
 
         # Generate clusters based on repositories
         clusters = []
@@ -2007,7 +2173,7 @@ def get_entity_details(entity_id: str) -> Any:
         WHERE {{
             ?entity a ?type .
             OPTIONAL {{ ?entity <http://www.w3.org/2000/01/rdf-schema#label> ?label }}
-            OPTIONAL {{ ?entity <http://www.w3.org/1994/02/skos/core#editorialNote> ?editorialNote }}
+            OPTIONAL {{ ?entity <http://www.w3.org/2004/02/skos/core#editorialNote> ?editorialNote }}
             FILTER(?entity = <{entity_id}>)
         }}
         """
@@ -2306,11 +2472,9 @@ def health_check() -> Any:
         sparql_response_time = 0
 
         try:
-            import time
-
-            start_time = time.time()
+            start = time.time()
             run_dashboard_sparql(test_query)
-            sparql_response_time = int((time.time() - start_time) * 1000)
+            sparql_response_time = int((time.time() - start) * 1000)  # ms
             sparql_healthy = True
         except Exception as e:
             logger.warning(f"SPARQL health check failed: {e}")
@@ -2322,11 +2486,14 @@ def health_check() -> Any:
         output_dir = os.path.join("output")
         filesystem_healthy = os.path.exists(output_dir)
 
-        # Get system info
-        import psutil
-
-        memory_usage = psutil.virtual_memory().percent
-        disk_usage = psutil.disk_usage("/").percent
+        # Get system info (make psutil optional)
+        try:
+            import psutil
+            memory_usage = psutil.virtual_memory().percent
+            disk_usage = psutil.disk_usage("/").percent
+        except ImportError:
+            memory_usage = None
+            disk_usage = None
 
         health_status = {
             "status": (
@@ -2339,7 +2506,7 @@ def health_check() -> Any:
                 "api_server": True,
             },
             "performance": {
-                "sparql_response_time_ms": round(sparql_response_time * 1000, 2),
+                "sparql_response_time_ms": sparql_response_time,  # already in ms
                 "memory_usage": memory_usage,
                 "disk_usage": disk_usage,
             },
@@ -2385,19 +2552,16 @@ def export_data(format: str) -> Any:
         """
 
         if format == "json":
-            # Convert to JSON-LD format
-            data = run_dashboard_sparql(export_query)
+            # Convert to JSON-LD format using proper CONSTRUCT query handling
+            data = run_graph_sparql(export_query, accept="application/ld+json")
             return jsonify(data)
 
         elif format == "ttl":
-            # Return Turtle format
-            from rdflib import Graph
-
-            g = Graph()
-
-            # Load from TTL file if exists
+            # Return Turtle format - try file first, then live query
             ttl_path = get_output_path("wdkb.ttl")
             if os.path.exists(ttl_path):
+                from rdflib import Graph
+                g = Graph()
                 g.parse(ttl_path, format="turtle")
                 return (
                     g.serialize(format="turtle"),
@@ -2405,16 +2569,16 @@ def export_data(format: str) -> Any:
                     {"Content-Type": "text/turtle"},
                 )
             else:
-                return jsonify({"error": "No TTL file found"}), 404
+                # Fallback to live CONSTRUCT query
+                ttl = run_graph_sparql(export_query, accept="text/turtle")
+                return ttl, 200, {"Content-Type": "text/turtle"}
 
         elif format == "rdf":
-            # Return RDF/XML format
-            from rdflib import Graph
-
-            g = Graph()
-
+            # Return RDF/XML format - try file first, then live query
             ttl_path = get_output_path("wdkb.ttl")
             if os.path.exists(ttl_path):
+                from rdflib import Graph
+                g = Graph()
                 g.parse(ttl_path, format="turtle")
                 return (
                     g.serialize(format="xml"),
@@ -2422,10 +2586,12 @@ def export_data(format: str) -> Any:
                     {"Content-Type": "application/rdf+xml"},
                 )
             else:
-                return jsonify({"error": "No TTL file found"}), 404
+                # Fallback to live CONSTRUCT query  
+                rdfxml = run_graph_sparql(export_query, accept="application/rdf+xml")
+                return rdfxml, 200, {"Content-Type": "application/rdf+xml"}
 
         elif format == "csv":
-            # Export as CSV (simplified)
+            # Export as CSV with proper escaping
             csv_data = "Subject,Predicate,Object\n"
 
             # Get triples as CSV
@@ -2440,7 +2606,7 @@ def export_data(format: str) -> Any:
                 s = binding["s"]["value"]
                 p = binding["p"]["value"]
                 o = binding["o"]["value"]
-                csv_data += f'"{s}","{p}","{o}"\n'
+                csv_data += f'{_csv_escape(s)},{_csv_escape(p)},{_csv_escape(o)}\n'
 
             return csv_data, 200, {"Content-Type": "text/csv"}
 
