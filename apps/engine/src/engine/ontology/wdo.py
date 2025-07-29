@@ -1,16 +1,16 @@
 """This module provides the WDOOntology class."""
 
-from app.core.paths import get_web_dev_ontology_path
-from app.ontology.base import BaseOntology, register_ontology
-from app.ontology.bfo import BFOOntology
+from engine.core.paths import PathManager
+from engine.ontology.base import BaseOntology, register_ontology
+from engine.ontology.bfo import BFOOntology
 
 
 class WDOOntology(BaseOntology):
     """
     Web Development Ontology (WDO) handler for semantic annotation.
 
-    Loads the WDO ontology from OWL and provides dynamic class/property lookup and superclass traversal.
-    Integrates with BFOOntology for top-level ancestor resolution. If no bfo_ontology is provided, one is instantiated by default.
+    Loads the WDO ontology from OWL and provides dynamic class/property lookup and
+    superclass traversal.
     """
 
     def __init__(self, owl_path=None, bfo_ontology=None):
@@ -18,14 +18,15 @@ class WDOOntology(BaseOntology):
         Initialize the WDO ontology, optionally with a BFO ontology instance.
 
         Args:
-            owl_path (str, optional): Path to the WDO OWL file. If None, uses the default path.
-            bfo_ontology (BFOOntology, optional): An instance of BFOOntology. If None, a new instance is created.
-
+            owl_path (str, optional): Path to the WDO OWL file. If None, uses the
+                default path.
+            bfo_ontology (BFOOntology, optional): An instance of BFOOntology. If None,
+                a new instance is created.
         Side Effects:
-            Loads the ontology graph and sets up BFO integration.
+            Loads the WDO ontology graph from the specified OWL file if provided.
         """
         if owl_path is None:
-            owl_path = get_web_dev_ontology_path()
+            owl_path = str(PathManager.get_web_dev_ontology_path())
         if BaseOntology is not None:
             super().__init__(owl_path)
         if bfo_ontology is None:

@@ -1,13 +1,16 @@
-import tempfile
 import pathlib
 import shutil
+import tempfile
 import time
+
 
 def handle_organization_upload(files):
     """
     Save uploaded files, start background analysis, and return job id and status.
+
     Args:
         files (list): List of uploaded file objects.
+
     Returns:
         dict: Job id, status, message, files_uploaded.
     """
@@ -27,6 +30,6 @@ def handle_organization_upload(files):
             "message": "File upload and analysis started successfully",
             "files_uploaded": len([f for f in files if f.filename]),
         }
-    except Exception as e:
+    except Exception:
         shutil.rmtree(temp_dir, ignore_errors=True)
-        raise 
+        raise

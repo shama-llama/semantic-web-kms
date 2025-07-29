@@ -1,243 +1,223 @@
-"""Path utilities for Semantic Web KMS core modules."""
+"""Path utilities for Semantic Web KMS."""
 
-import os
+import json
 import re
-from typing import Optional
+from functools import cache
+from importlib import resources
+from pathlib import Path
+from typing import Any
 
-from app.core.config import (
-    BASIC_FORMAL_ONTOLOGY_PATH,
-    CARRIER_TYPES_PATH,
-    CODE_QUERIES_PATH,
-    CONTENT_TYPES_PATH,
-    EXCLUDED_DIRECTORIES_PATH,
-    LANGUAGE_MAPPING_PATH,
-    LOGS_DIR,
-    MAPPINGS_DIR,
-    ONTOLOGY_CACHE_FILENAME,
-    OUTPUT_DIR,
-    WEB_DEV_ONTOLOGY_PATH,
-)
+from engine import config as config_pkg
+from engine.core.config import settings as app_settings
 
-_current_input_dir: Optional[str] = None
+# --- Constants for internal project structure ---
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DATA_DIR = PROJECT_ROOT / "data"
+ONTOLOGY_DIR = DATA_DIR / "ontologies"
+
+# --- Constants derived from external configuration ---
+
+OUTPUT_DIR = PROJECT_ROOT / app_settings.OUTPUT_DIR_BASE
+LOGS_DIR = OUTPUT_DIR / "logs"
+
+# Pre-compiled regular expressions for performance
+
+_URI_UNSAFE_CHARS_PATTERN = re.compile(r"[^\w\-./]")
+_URI_MULTIPLE_UNDERSCORES_PATTERN = re.compile(r"_+")
+_URI_LEADING_TRAILING_UNDERSCORES_PATTERN = re.compile(r"(^_+|_+$)")
+
+_PATH_UNSAFE_CHARS_PATTERN = re.compile(r"[^\w\-.]")
 
 
-def set_input_dir(path: str) -> None:
+# --- Configuration Loading ---
+
+
+@cache
+def _load_config_json(filename: str) -> dict[str, Any]:
     """
-    Set the current input directory for extractors to use.
+    Load a JSON configuration file from the package data.
+
+    This is a private helper function to avoid repeating file-loading logic.
+    Using @lru_cache to cache results in memory, avoiding repeated file I/O.
 
     Args:
-        path (str): The input directory path to set.
-    Returns:
-        None
-    """
-    global _current_input_dir
-    _current_input_dir = path
-
-
-def get_input_dir() -> str:
-    """
-    Get the current input directory. Must be set by set_input_dir() before use.
+        filename: The name of the JSON file in the `engine.config` package.
 
     Returns:
-        str: The input directory to use.
+        The content of the JSON file as a dictionary.
 
     Raises:
-        RuntimeError: If the input directory has not been set.
+        FileNotFoundError: If the config file is missing.
+        json.JSONDecodeError: If the file is not valid JSON.
     """
-    if _current_input_dir is None:
-        raise RuntimeError(
-            "Input directory not set. Call set_input_dir(path) before using get_input_dir()."
-        )
-    return _current_input_dir
+    path = resources.files(config_pkg) / filename
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-def get_input_path(filename: str) -> str:
+def get_carrier_types() -> dict[str, Any]:
     """
-    Return the absolute path for a file in the input directory.
-
-    Args:
-        filename (str): The name of the file.
+    Load carrier types from the config JSON file.
 
     Returns:
-        str: The absolute path to the file in the input directory.
-
-    Raises:
-        RuntimeError: If the input directory has not been set.
+        A dictionary containing carrier types loaded from the config file.
     """
-    return os.path.join(get_input_dir(), filename)
+    return _load_config_json("carrier_types.json")
 
 
-def get_output_path(filename: str) -> str:
+def get_content_types() -> dict[str, Any]:
     """
-    Return the absolute path to a file in the output directory, always relative to project root.
-
-    Args:
-        filename (str): The file name or relative path inside output/
+    Load content types from the config JSON file.
 
     Returns:
-        str: Absolute path to the file in the output directory
+        A dictionary containing content types loaded from the config file.
     """
-    return os.path.join(OUTPUT_DIR, filename)
+    return _load_config_json("content_types.json")
 
 
-def get_log_path(filename: str) -> str:
+def get_language_mapping() -> dict[str, Any]:
     """
-    Return the absolute path for a file in the logs directory.
-
-    Args:
-        filename (str): The name of the log file.
+    Load language mapping from the config JSON file.
 
     Returns:
-        str: The absolute path to the log file in the logs directory.
+        A dictionary containing language mappings loaded from the config file.
     """
-    return os.path.join(LOGS_DIR, filename)
+    return _load_config_json("language_mapping.json")
 
 
-def get_language_mapping_path() -> str:
+def get_code_queries() -> dict[str, Any]:
     """
-    Return the path to language_mapping.json.
+    Load code queries from the config JSON file.
 
     Returns:
-        str: The path to the language mapping JSON file.
+        A dictionary containing code queries loaded from the config file.
     """
-    return LANGUAGE_MAPPING_PATH
+    return _load_config_json("code_queries.json")
 
 
-def get_code_queries_path() -> str:
+def get_excluded_directories() -> dict[str, Any]:
     """
-    Return the path to code_queries.json.
+    Load excluded directories from the config JSON file.
 
     Returns:
-        str: The path to the code queries JSON file.
+        A dictionary containing excluded directories loaded from the config file.
     """
-    return CODE_QUERIES_PATH
+    return _load_config_json("excluded_directories.json")
 
 
-def get_carrier_extensions_path() -> str:
+def get_ontology_cache() -> dict[str, Any]:
     """
-    Return the path to file_extensions.json.
+    Load the ontology cache from the config JSON file.
 
     Returns:
-        str: The path to the file extensions JSON file.
+        A dictionary containing the ontology cache loaded from the config file.
     """
-    return CARRIER_TYPES_PATH
+    return _load_config_json("ontology_cache.json")
 
 
-def get_excluded_directories_path() -> str:
+# --- Path Management ---
+
+
+class PathManager:
     """
-    Return the path to excluded_directories.json.
+    Manages input and output paths for a processing session.
 
-    Returns:
-        str: The path to the excluded directories JSON file.
+    This class avoids the use of global state for the input directory, making
+    the code more predictable, testable, and maintainable. An instance of this
+    class can be passed through your application's context.
     """
-    return EXCLUDED_DIRECTORIES_PATH
+
+    def __init__(self, input_dir: str | Path):
+        """
+        Initialize PathManager with the given input directory.
+
+        Args:
+            input_dir: The input directory as a string or Path.
+
+        Raises:
+            FileNotFoundError: If the input directory does not exist.
+        """
+        self.input_dir = Path(input_dir).resolve()
+        if not self.input_dir.is_dir():
+            raise FileNotFoundError(f"Input directory does not exist: {self.input_dir}")
+
+    def get_input_path(self, filename: str | Path) -> Path:
+        """Return the absolute path for a file in the input directory."""
+        return self.input_dir / filename
+
+    @staticmethod
+    def get_output_path(filename: str | Path) -> Path:
+        """Return the absolute path for a file in the output directory."""
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        return OUTPUT_DIR / filename
+
+    @staticmethod
+    def get_log_path(filename: str | Path) -> Path:
+        """Return the absolute path for a file in the logs directory."""
+        LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        return LOGS_DIR / filename
+
+    @staticmethod
+    def get_web_dev_ontology_path() -> Path:
+        """Return the path to wdo.owl."""
+        return ONTOLOGY_DIR / "wdo.owl"
+
+    @staticmethod
+    def get_basic_formal_ontology_path() -> Path:
+        """Return the path to bfo.owl."""
+        return ONTOLOGY_DIR / "bfo.owl"
 
 
-def get_content_types_path() -> str:
-    """
-    Return the path to content_types.json.
-
-    Returns:
-        str: The path to the content types JSON file.
-    """
-    return CONTENT_TYPES_PATH
-
-
-def get_web_dev_ontology_path() -> str:
-    """
-    Return the path to wdo.owl.
-
-    Returns:
-        str: The path to the web development ontology OWL file.
-    """
-    return WEB_DEV_ONTOLOGY_PATH
-
-
-def get_basic_formal_ontology_path() -> str:
-    """
-    Return the path to bfo.owl.
-
-    Returns:
-        str: The path to the basic formal ontology OWL file.
-    """
-    return BASIC_FORMAL_ONTOLOGY_PATH
-
-
-def get_carrier_types_path() -> str:
-    """
-    Return the absolute path to the carrier_types.json file.
-
-    Returns:
-        str: The absolute path to the carrier types JSON file.
-    """
-    return os.path.join(MAPPINGS_DIR, "carrier_types.json")
-
-
-def get_ontology_cache_path() -> str:
-    """
-    Return the full path to the ontology cache JSON file.
-
-    Returns:
-        str: The full path to the ontology cache JSON file.
-    """
-    return os.path.join(MAPPINGS_DIR, ONTOLOGY_CACHE_FILENAME)
+# --- String and Path Sanitization ---
 
 
 def uri_safe_string(text: str) -> str:
     """
-    Convert a string to URI-safe format by replacing problematic characters with underscores.
+    Convert a string to a URI-safe format.
+
+    Replaces spaces and most non-alphanumeric characters with underscores.
+    Forward slashes and periods are preserved for file paths.
 
     Args:
-        text (str): The input string to convert.
+        text: The input string to convert.
 
     Returns:
-        str: The URI-safe version of the input string.
+        The URI-safe version of the input string.
     """
     if not text:
         return ""
 
-    # Replace spaces and other problematic characters with underscores
-    # This includes: spaces, tabs, newlines, and other whitespace
-    # Also includes: \, :, *, ?, ", <, >, |, and other filesystem-incompatible chars
-    # Note: We preserve forward slashes for file paths
-    uri_safe = re.sub(r"[^\w\-./]", "_", str(text))
-
-    # Replace multiple consecutive underscores with a single one
-    uri_safe = re.sub(r"_+", "_", uri_safe)
-
-    # Remove leading/trailing underscores
-    uri_safe = re.sub(r"(^_+|_+$)", "", uri_safe)
-
+    uri_safe = _URI_UNSAFE_CHARS_PATTERN.sub("_", text)
+    uri_safe = _URI_MULTIPLE_UNDERSCORES_PATTERN.sub("_", uri_safe)
+    uri_safe = _URI_LEADING_TRAILING_UNDERSCORES_PATTERN.sub("", uri_safe)
     return uri_safe
 
 
-def uri_safe_file_path(file_path: str) -> str:
+def uri_safe_file_path(file_path: str | Path) -> str:
     """
-    Convert a file path to URI-safe format while preserving directory structure.
+    Convert a file path into a URI-safe string.
+
+    This function sanitizes each component of the path individually while
+    preserving the directory separators.
 
     Args:
-        file_path (str): The file path to convert.
+        file_path: The file path to convert.
 
     Returns:
-        str: The URI-safe version of the file path with preserved directory structure.
+        The URI-safe version of the file path.
     """
     if not file_path:
         return ""
 
-    # Split the path into components
-    path_components = file_path.split("/")
+    path = Path(file_path)
+    safe_parts = []
+    for component in path.parts:
+        safe_component = _PATH_UNSAFE_CHARS_PATTERN.sub("_", component)
+        safe_component = _URI_MULTIPLE_UNDERSCORES_PATTERN.sub("_", safe_component)
+        safe_component = _URI_LEADING_TRAILING_UNDERSCORES_PATTERN.sub(
+            "", safe_component
+        )
+        safe_parts.append(safe_component)
 
-    # Make each component URI-safe while preserving the structure
-    safe_components = []
-    for component in path_components:
-        if component:
-            # Replace problematic characters in each component, but preserve dots
-            safe_component = re.sub(r"[^\w\-.]", "_", component)
-            # Replace multiple consecutive underscores with a single one
-            safe_component = re.sub(r"_+", "_", safe_component)
-            # Remove leading/trailing underscores
-            safe_component = re.sub(r"(^_+|_+$)", "", safe_component)
-            safe_components.append(safe_component)
-
-    # Rejoin with forward slashes
-    return "/".join(safe_components)
+    return "/".join(safe_parts)

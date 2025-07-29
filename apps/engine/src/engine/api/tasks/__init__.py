@@ -1,1 +1,1 @@
-# This package will contain Celery/background task modules 
+# This package will contain Celery/background task modules

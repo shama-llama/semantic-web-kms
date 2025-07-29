@@ -6,4 +6,4 @@ MESSAGES = {
     "sparql_error": "Error executing SPARQL query: {error}",
     "not_found": "Requested resource not found.",
     "internal_error": "Internal server error.",
-} 
+}

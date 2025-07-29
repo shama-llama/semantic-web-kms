@@ -1,27 +1,30 @@
-"""This module provides AllegroGraphRESTClient for interacting with AllegroGraph via HTTP."""
+"""AllegroGraphRESTClient for interacting with AllegroGraph over HTTPS."""
 
-import os
+from pathlib import Path
 
 import requests
 from requests.auth import HTTPBasicAuth
 
+from engine.core.config import settings
+
 
 class AllegroGraphRESTClient:
-    """A manual REST client for interacting with AllegroGraph, bypassing the hanging issues in the official agraph-python library."""
+    """A manual REST client for interacting with AllegroGraph."""
 
     def __init__(self):
         """
-        Initialize the REST client with environment variables and session.
+        Initialize the REST client with settings from config.py and session.
 
         Raises:
-            ValueError: If any required AllegroGraph environment variable is missing.
+            ValueError: If any required AllegroGraph setting is missing.
         """
-        self.repo_url = os.environ.get("AGRAPH_CLOUD_URL")
-        self.username = os.environ.get("AGRAPH_USERNAME")
-        self.password = os.environ.get("AGRAPH_PASSWORD")
+        self.repo_url = settings.AGRAPH_CLOUD_URL
+        self.username = settings.AGRAPH_USERNAME
+        self.password = settings.AGRAPH_PASSWORD
         if not self.repo_url or not self.username or not self.password:
-            raise ValueError("Missing one or more AllegroGraph environment variables.")
-        # At this point, all are str (not None)
+            raise ValueError(
+                "Missing one or more AllegroGraph credentials in settings."
+            )
         self.auth = HTTPBasicAuth(self.username, self.password)
         self.session = requests.Session()
         self.session.auth = self.auth
@@ -32,7 +35,7 @@ class AllegroGraphRESTClient:
         Upload a Turtle (TTL) file to the repository's statements endpoint.
 
         Args:
-            file_path (str): Path to the Turtle (.ttl) file to upload.
+            file_path (str or Path): Path to the Turtle (.ttl) file to upload.
 
         Returns:
             bool: True if the file was uploaded successfully, False otherwise.
@@ -40,7 +43,8 @@ class AllegroGraphRESTClient:
         Raises:
             None. All exceptions are caught and logged; returns False on error.
         """
-        if not os.path.exists(file_path):
+        file_path = Path(file_path)
+        if not file_path.exists():
             print(f"Error: File not found at '{file_path}'")
             return False
 
@@ -48,10 +52,10 @@ class AllegroGraphRESTClient:
         statements_url = repo_url.rstrip("/") + "/statements"
         headers = {"Content-Type": "application/x-turtle"}
 
-        print(f"Uploading '{os.path.basename(file_path)}' to {statements_url}...")
+        print(f"Uploading '{file_path.name}' to {statements_url}...")
 
         try:
-            with open(file_path, "rb") as f:
+            with file_path.open("rb") as f:
                 response = self.session.post(
                     statements_url, data=f, headers=headers, timeout=60
                 )
@@ -76,7 +80,8 @@ class AllegroGraphRESTClient:
                 response_text contains the response body or error message.
 
         Raises:
-            None. All exceptions are caught and logged; returns (None, error_message) on error.
+            None. All exceptions are caught and logged; returns (None, error_message)
+            on error.
         """
         statements_url = self.repo_url.rstrip("/") + "/statements"  # type: ignore
         try:

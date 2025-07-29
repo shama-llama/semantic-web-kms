@@ -71,7 +71,7 @@
     "NotebookFile",
     "Organization",
     "PHPCode",
-    "PackageDeclaration",
+    "ImportDeclaration",
     "Paragraph",
     "Parameter",
     "PrimitiveType",
@@ -197,7 +197,7 @@
     "usesFramework"
   ],
   "data_properties": [
-    "endsAtLine",
+    "hasEndLine",
     "hasAccessModifier",
     "hasCanonicalName",
     "hasCommitHash",
@@ -234,7 +234,7 @@
     "isAsynchronous",
     "isFinal",
     "isStatic",
-    "startsAtLine"
+    "hasStartLine"
   ],
   "annotation_properties": [
     "comment",

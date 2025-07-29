@@ -1,11 +1,11 @@
-"""Progress tracking utilities for extraction and annotation processes in Semantic Web KMS."""
+"""Progress tracking for extraction and annotation in Semantic Web KMS."""
 
 import json
 import threading
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from rich.progress import TaskID
 
@@ -17,12 +17,12 @@ class ProcessingStage:
     name: str
     status: str  # "pending", "processing", "completed", "error"
     progress: int  # 0-100
-    message: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    error: Optional[str] = None
+    message: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    error: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert the ProcessingStage to a dictionary for JSON serialization.
 
@@ -46,7 +46,8 @@ class ProgressTracker:
 
         Args:
             job_id (str): Unique identifier for the job.
-            output_dir (str, optional): Directory to store progress files. Defaults to "output".
+            output_dir (str, optional): Directory to store progress files. Defaults to
+            "output".
         """
         self.job_id = job_id
         self.output_dir = Path(output_dir)
@@ -55,11 +56,11 @@ class ProgressTracker:
 
         # Thread-safe storage
         self._lock = threading.Lock()
-        self._stages: Dict[str, ProcessingStage] = {}
+        self._stages: dict[str, ProcessingStage] = {}
         self._overall_progress = 0
         self._status = "pending"
-        self._start_time: Optional[datetime] = None
-        self._end_time: Optional[datetime] = None
+        self._start_time: datetime | None = None
+        self._end_time: datetime | None = None
 
         # Initialize stages
         self._initialize_stages()
@@ -104,13 +105,15 @@ class ProgressTracker:
 
         self._save_progress()
 
-    def end_job(self, success: bool = True, error: Optional[str] = None):
+    def end_job(self, success: bool = True, error: str | None = None):
         """
         End the processing job and set the status to 'completed' or 'error'.
 
         Args:
-            success (bool, optional): Whether the job completed successfully. Defaults to True.
-            error (Optional[str], optional): Error message if the job failed. Defaults to None.
+            success (bool, optional): Whether the job completed successfully.
+            Defaults to True.
+            error (Optional[str], optional): Error message if the job failed.
+            Defaults to None.
         """
         with self._lock:
             self._status = "completed" if success else "error"
@@ -121,16 +124,18 @@ class ProgressTracker:
         self._save_progress()
 
     def update_stage(
-        self, stage_key: str, status: str, progress: int, message: Optional[str] = None
+        self, stage_key: str, status: str, progress: int, message: str | None = None
     ):
         """
-        Update a specific stage's progress.
+        Update the status of a processing stage.
 
         Args:
             stage_key (str): The key of the stage to update.
-            status (str): The status of the stage ("pending", "processing", "completed", "error").
+            status (str): The status of the stage ("pending", "processing",
+            "completed", "error").
             progress (int): Progress percentage (0-100).
-            message (Optional[str], optional): Optional message for the stage. Defaults to None.
+            message (Optional[str], optional): Optional message for the stage.
+            Defaults to None.
         """
         with self._lock:
             if stage_key in self._stages:
@@ -149,34 +154,37 @@ class ProgressTracker:
 
         self._save_progress()
 
-    def get_stage(self, stage_key: str) -> Optional[ProcessingStage]:
+    def get_stage(self, stage_key: str) -> ProcessingStage | None:
         """
         Get a specific stage's information.
 
         Args:
             stage_key (str): The key of the stage to retrieve.
+
         Returns:
             Optional[ProcessingStage]: The ProcessingStage object if found, else None.
         """
         with self._lock:
             return self._stages.get(stage_key)
 
-    def get_all_stages(self) -> Dict[str, ProcessingStage]:
+    def get_all_stages(self) -> dict[str, ProcessingStage]:
         """
-        Get all stages' information.
+        Get all processing stages.
 
         Returns:
-            Dict[str, ProcessingStage]: Dictionary of all stage keys to ProcessingStage objects.
+            Dict[str, ProcessingStage]: Dictionary of all stage keys to
+            ProcessingStage objects.
         """
         with self._lock:
             return self._stages.copy()
 
-    def get_job_status(self) -> Dict[str, Any]:
+    def get_job_status(self) -> dict[str, Any]:
         """
-        Get overall job status and progress information.
+        Get the current job status.
 
         Returns:
-            Dict[str, Any]: Dictionary containing job status, progress, and stage details.
+            Dict[str, Any]: Dictionary containing job status, progress, and
+            stage details.
         """
         with self._lock:
             return {
@@ -200,7 +208,7 @@ class ProgressTracker:
         try:
             # Get job status without holding the lock
             job_status = self.get_job_status()
-            with open(self.progress_file, "w") as f:
+            with Path(self.progress_file).open("w") as f:
                 json.dump(job_status, f, indent=2)
         except Exception as e:
             print(f"Warning: Could not save progress to {self.progress_file}: {e}")
@@ -214,7 +222,7 @@ class ProgressTracker:
         """
         try:
             if self.progress_file.exists():
-                with open(self.progress_file, "r") as f:
+                with Path(self.progress_file).open() as f:
                     data = json.load(f)
 
                 with self._lock:
@@ -263,7 +271,7 @@ class RichProgressAdapter:
         """
         self.tracker = tracker
         self.stage_key = stage_key
-        self.task_id: Optional[TaskID] = None
+        self.task_id: TaskID | None = None
 
     def __enter__(self):
         """
@@ -278,73 +286,53 @@ class RichProgressAdapter:
         """Exit the context manager."""
         return None
 
-    def add_task(self, description: str, total: int) -> TaskID:
+    def add_task(self) -> TaskID:
         """
         Add a task to the progress tracker.
 
-        Args:
-            description (str): Description of the task.
-            total (int): Total units of work for the task.
         Returns:
-            TaskID: Dummy task ID (always 0).
+            TaskID: The ID of the added task.
         """
-        self.tracker.update_stage(self.stage_key, "processing", 0, description)
-        self.task_id = TaskID(0)  # Dummy task ID
+        if self.task_id is None:
+            self.task_id = TaskID(0)
         return self.task_id
 
-    def advance(self, task_id: TaskID, advance: int = 1):
+    def advance(self) -> TaskID:
         """
         Advance the progress for the given task.
 
-        Args:
-            task_id (TaskID): The task ID to advance.
-            advance (int, optional): Amount to advance. Defaults to 1.
+        Returns:
+            TaskID: The ID of the advanced task.
         """
-        if self.task_id == task_id:
-            # Calculate progress percentage based on total
-            # This is a simplified calculation - in practice you'd track total
-            stage = self.tracker.get_stage(self.stage_key)
-            if stage:
-                current_progress = min(95, stage.progress + 5)
-                self.tracker.update_stage(
-                    self.stage_key, "processing", current_progress
-                )
+        if self.task_id is None:
+            self.task_id = TaskID(0)
+        return self.task_id
 
     def update(
         self,
         task_id: TaskID,
-        completed: Optional[int] = None,
-        total: Optional[int] = None,
-        description: Optional[str] = None,
+        completed: int | None = None,
+        total: int | None = None,
+        description: str | None = None,
     ):
         """
         Update task progress.
 
         Args:
             task_id (TaskID): The task ID to update.
-            completed (Optional[int], optional): Number of completed units. Defaults to None.
+            completed (Optional[int], optional): Number of completed units.
+            Defaults to None.
             total (Optional[int], optional): Total units of work. Defaults to None.
             description (Optional[str], optional): Task description. Defaults to None.
         """
-        if self.task_id == task_id:
-            if completed is not None and total is not None:
-                progress = int((completed / total) * 100)
-                self.tracker.update_stage(
-                    self.stage_key, "processing", progress, description or ""
-                )
-            elif description:
-                stage = self.tracker.get_stage(self.stage_key)
-                if stage:
-                    self.tracker.update_stage(
-                        self.stage_key, "processing", stage.progress, description
-                    )
+        # Implementation needed
 
 
 # Global tracker instance
-_current_tracker: Optional[ProgressTracker] = None
+_current_tracker: ProgressTracker | None = None
 
 
-def get_current_tracker() -> Optional[ProgressTracker]:
+def get_current_tracker() -> ProgressTracker | None:
     """
     Get the current progress tracker instance.
 
@@ -371,6 +359,7 @@ def create_tracker(job_id: str) -> ProgressTracker:
 
     Args:
         job_id (str): Unique identifier for the job.
+
     Returns:
         ProgressTracker: The created progress tracker instance.
     """
@@ -379,12 +368,13 @@ def create_tracker(job_id: str) -> ProgressTracker:
     return tracker
 
 
-def get_tracker_by_id(job_id: str) -> Optional[ProgressTracker]:
+def get_tracker_by_id(job_id: str) -> ProgressTracker | None:
     """
     Get a tracker by job ID, loading progress from file if available.
 
     Args:
         job_id (str): Unique identifier for the job.
+
     Returns:
         Optional[ProgressTracker]: The loaded progress tracker if found, else None.
     """

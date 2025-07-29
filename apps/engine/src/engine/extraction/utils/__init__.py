@@ -1,4 +1,4 @@
-"""Utility functions for extraction subpackage (file, string, RDF, and code analysis helpers)."""
+"""Utility functions for extraction subpackage."""
 
 MESSAGES = {
     "util_success": "Utility operation completed successfully.",

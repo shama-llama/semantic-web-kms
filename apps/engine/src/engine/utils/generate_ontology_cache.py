@@ -1,15 +1,14 @@
-"""Utility to generate a JSON cache of ontology classes and properties from the WDO ontology."""
+"""Utility to generate a JSON cache of classes and properties from the WDO ontology."""
 
 import json
 import re
-from typing import Any, Dict, List
+from typing import Any
 
-from app.core.paths import get_ontology_cache_path, get_web_dev_ontology_path
-from app.ontology.wdo import WDOOntology
+from engine.core.paths import PathManager
+from engine.ontology.wdo import WDOOntology
 
-# Output path for the cache
-ONTOLOGY_PATH: str = get_web_dev_ontology_path()
-CACHE_PATH: str = get_ontology_cache_path()
+ONTOLOGY_PATH: str = str(PathManager.get_web_dev_ontology_path())
+CACHE_PATH = PathManager.get_web_dev_ontology_path().parent / "ontology_cache.json"
 
 
 def get_local_name(uri: str) -> str:
@@ -54,17 +53,16 @@ def is_valid_class_name(name: str) -> bool:
         True
     """
     # Filter out hash-like names (32+ character hex strings)
-    if re.match(r"^N[a-f0-9]{32}$", name):
-        return False
-    return True
+    return not re.match(r"^N[a-f0-9]{32}$", name)
 
 
 def main() -> None:
     """
     Generate and write a JSON cache of ontology classes and properties.
 
-    This function loads the WDO ontology, extracts all class and property names (object, data, annotation),
-    filters out hash-like class names, and writes the results to a JSON cache file.
+    This function loads the WDO ontology, extracts all class and property names
+    (object, data, annotation), filters out hash-like class names, and writes the
+    results to a JSON cache file.
 
     Args:
         None.
@@ -74,6 +72,7 @@ def main() -> None:
 
     Raises:
         IOError: If writing the cache file fails.
+        OSError: If writing the cache file fails.
         Exception: If ontology loading or processing fails.
 
     Side Effects:
@@ -82,43 +81,41 @@ def main() -> None:
     ontology: WDOOntology = WDOOntology(ONTOLOGY_PATH)
 
     # Classes - filter out hash-like names
-    class_uris: List[str] = ontology.get_all_classes()
-    classes: List[str] = sorted(
-        {
-            get_local_name(uri)
-            for uri in class_uris
-            if is_valid_class_name(get_local_name(uri))
-        }
-    )
+    class_uris: list[str] = ontology.get_all_classes()
+    classes: list[str] = sorted({
+        get_local_name(uri)
+        for uri in class_uris
+        if is_valid_class_name(get_local_name(uri))
+    })
 
     # Object Properties
     from rdflib.namespace import OWL
 
-    object_prop_uris: List[str] = [
+    object_prop_uris: list[str] = [
         str(s)
         for s in ontology.graph.subjects(predicate=None, object=OWL.ObjectProperty)
     ]
-    object_properties: List[str] = sorted(
-        {get_local_name(uri) for uri in object_prop_uris}
-    )
+    object_properties: list[str] = sorted({
+        get_local_name(uri) for uri in object_prop_uris
+    })
 
     # Data Properties
-    data_prop_uris: List[str] = [
+    data_prop_uris: list[str] = [
         str(s)
         for s in ontology.graph.subjects(predicate=None, object=OWL.DatatypeProperty)
     ]
-    data_properties: List[str] = sorted({get_local_name(uri) for uri in data_prop_uris})
+    data_properties: list[str] = sorted({get_local_name(uri) for uri in data_prop_uris})
 
     # Annotation Properties
-    annotation_prop_uris: List[str] = [
+    annotation_prop_uris: list[str] = [
         str(s)
         for s in ontology.graph.subjects(predicate=None, object=OWL.AnnotationProperty)
     ]
-    annotation_properties: List[str] = sorted(
-        {get_local_name(uri) for uri in annotation_prop_uris}
-    )
+    annotation_properties: list[str] = sorted({
+        get_local_name(uri) for uri in annotation_prop_uris
+    })
 
-    cache: Dict[str, Any] = {
+    cache: dict[str, Any] = {
         "classes": classes,
         "object_properties": object_properties,
         "data_properties": data_properties,
@@ -126,10 +123,10 @@ def main() -> None:
     }
 
     try:
-        with open(CACHE_PATH, "w") as f:
+        with CACHE_PATH.open("w", encoding="utf-8") as f:
             json.dump(cache, f, indent=2)
         print(f"Ontology cache updated: {CACHE_PATH}")
-    except IOError as e:
+    except OSError as e:
         print(f"Failed to write ontology cache: {e}")
         raise
 

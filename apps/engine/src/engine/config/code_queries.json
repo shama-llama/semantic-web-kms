@@ -12,15 +12,12 @@
     "EnumDefinition": [
       "(class_definition name: (identifier) @name superclasses: (argument_list (identifier) @sc (#eq? @sc \"Enum\"))) @enum"
     ],
-    "PackageDeclaration": [
-      "(mod_item name: (identifier) @name) @module"
-    ],
     "AttributeDeclaration": [
-      "(class_definition body: (block (expression_statement (assignment left: (attribute object: (identifier) @obj attribute: (identifier) @attr) (#eq? @obj \"self\"))))) @attribute"
+      "(expression_statement (assignment left: (attribute object: (identifier) @obj attribute: (identifier) @attr) (#eq? @obj \"self\"))) @attribute",
+      "(class_definition body: (block (expression_statement (assignment left: (identifier) @attr)))) @attribute"
     ],
     "VariableDeclaration": [
-      "(expression_statement (assignment left: (identifier) @name)) @variable",
-      "(expression_statement (assignment left: (typed_parameter (identifier) @name))) @variable"
+      "(function_definition body: (block (expression_statement (assignment left: (identifier) @name)))) @variable"
     ],
     "FunctionCall": [
       "(call function: [(identifier) @func (attribute attribute: (identifier) @func)])"
@@ -49,10 +46,11 @@
       "(lexical_declaration (variable_declarator name: (identifier) @name value: (object))) @enum"
     ],
     "AttributeDeclaration": [
-      "(method_definition name: (property_identifier) @attr) @attribute"
+      "(public_field_definition name: (property_identifier) @attr) @attribute",
+      "(expression_statement (assignment left: (member_expression object: (this) property: (property_identifier) @attr))) @attribute"
     ],
     "VariableDeclaration": [
-      "[(lexical_declaration (variable_declarator name: (identifier) @name)) (variable_declaration (variable_declarator name: (identifier) @name))] @variable"
+      "(lexical_declaration (variable_declarator name: (identifier) @name)) @variable"
     ],
     "FunctionCall": [
       "(call_expression function: [(identifier) @func (member_expression property: (property_identifier) @func)])"
@@ -114,9 +112,6 @@
     "EnumDefinition": [
       "(enum_declaration name: (identifier) @name) @enum"
     ],
-    "PackageDeclaration": [
-      "(package_declaration (scoped_identifier) @name) @module"
-    ],
     "AttributeDeclaration": [
       "(field_declaration (variable_declarator name: (identifier) @attr)) @attribute"
     ],
@@ -153,9 +148,6 @@
     "EnumDefinition": [
       "(enum_declaration name: (identifier) @name) @enum"
     ],
-    "PackageDeclaration": [
-      "(namespace_declaration name: (_) @name) @module"
-    ],
     "AttributeDeclaration": [
       "(field_declaration (variable_declaration (variable_declarator (identifier) @attr))) @attribute"
     ],
@@ -184,9 +176,6 @@
     ],
     "InterfaceDefinition": [
       "(type_declaration (type_spec name: (type_identifier) @name type: (interface_type))) @interface"
-    ],
-    "PackageDeclaration": [
-      "(package_clause (package_identifier) @name) @module"
     ],
     "AttributeDeclaration": [
       "(struct_type (field_declaration_list (field_declaration name: (field_identifier) @attr))) @attribute"
@@ -250,9 +239,6 @@
     "TraitDefinition": [
       "(trait_declaration name: (name) @name) @trait"
     ],
-    "PackageDeclaration": [
-      "(namespace_definition name: (qualified_name) @name) @module"
-    ],
     "AttributeDeclaration": [
       "(property_declaration (property_element name: (variable_name) @attr)) @attribute"
     ],
@@ -284,9 +270,6 @@
     ],
     "EnumDefinition": [
       "(enum_item (type_identifier) @name) @enum"
-    ],
-    "PackageDeclaration": [
-      "(mod_item (identifier) @name) @module"
     ],
     "AttributeDeclaration": [
       "(field_declaration_list (field_declaration name: (field_identifier) @attr)) @attribute"

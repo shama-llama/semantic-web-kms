@@ -40,27 +40,27 @@
       "regex": "\\.(html|htm|xml|xhtml|ejs|hbs|handlebars|mustache|njk|twig|liquid|jinja2?|pug|haml|slim|blade\\.php)$"
     },
     {
-      "class": "ImageFile",
+      "class": "AssetFile",
       "regex": "(?i)\\.(jpe?g|png|gif|bmp|tiff?|webp|ico|svg|psd|ai|raw|heic|avif)$"
     },
     {
-      "class": "VideoFile",
+      "class": "AssetFile",
       "regex": "(?i)\\.(mp4|avi|mov|wmv|flv|webm|mkv)$"
     },
     {
-      "class": "AudioFile",
+      "class": "AssetFile",
       "regex": "(?i)\\.(mp3|wav|ogg|flac|aac|wma)$"
     },
     {
-      "class": "FontFile",
+      "class": "AssetFile",
       "regex": "(?i)\\.(woff2?|ttf|otf|eot)$"
     },
     {
-      "class": "ThreeDimensionalModelFile",
+      "class": "AssetFile",
       "regex": "(?i)\\.(glb|gltf|fbx|obj|stl|blend)$"
     },
     {
-      "class": "UserInterfaceDesignFile",
+      "class": "AssetFile",
       "regex": "(?i)\\.(fig|sketch|xd|psd|ai)$"
     },
     {

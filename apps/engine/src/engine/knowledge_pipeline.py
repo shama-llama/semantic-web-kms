@@ -1,11 +1,10 @@
-"""Complete knowledge pipeline script to run extraction, annotation, and upload to AllegroGraph triplestore."""
+"""Complete knowledge pipeline script to run extraction, annotation, and upload."""
 
 import argparse
 import logging
-import os
+import pathlib
 import subprocess  # nosec: B404 - usage is safe, see run_cmd below
 import sys
-from typing import List
 
 # Load environment variables from .env if present
 try:
@@ -13,10 +12,11 @@ try:
 
     load_dotenv()
 except ImportError:
-    pass  # python-dotenv not installed; skip loading .env
+    pass
 
-# Parse --input-dir and set input dir before any other imports
-from app.core.paths import set_input_dir
+from engine.core.paths import PathManager
+from engine.core.progress_tracker import get_current_tracker
+from engine.triplestore.agraph_connection import AllegroGraphRESTClient
 
 parser = argparse.ArgumentParser(description="Run the complete knowledge pipeline.")
 parser.add_argument(
@@ -52,51 +52,40 @@ parser.add_argument(
     help="Set logging level",
 )
 args, unknown = parser.parse_known_args()
-if args.input_dir:
-    set_input_dir(args.input_dir)
 
-# Now import the rest
-# Remove: from typing import List (duplicate)
-
-# Paths
-from app.core.paths import get_output_path
-
-# Import progress tracking
-from app.core.progress_tracker import get_current_tracker
-from app.triplestore.agraph_connection import AllegroGraphRESTClient
-
-APP_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if os.path.basename(APP_ROOT) == "app":
-    APP_ROOT = os.path.dirname(APP_ROOT)
+APP_ROOT = pathlib.Path(pathlib.Path(pathlib.Path(__file__).resolve()).parent).parent
+if pathlib.Path(APP_ROOT).name == "app":
+    APP_ROOT = pathlib.Path(APP_ROOT).parent
 # Remove all assignments to OUTPUT_DIR and TTL_PATH
-EXTRACTION_CMD = [sys.executable, "-m", "app.extraction.main_extractor"]
-ANNOTATION_CMD = [sys.executable, "-m", "app.annotation.semantic_annotator"]
+EXTRACTION_CMD = [sys.executable, "-m", "engine.extraction.main_extractor"]
+ANNOTATION_CMD = [sys.executable, "-m", "engine.annotation.semantic_annotator"]
 TEMPLATE_GENERATION_CMD = [
     sys.executable,
     "-m",
-    "app.annotation.generate_class_templates",
+    "engine.annotation.generate_class_templates",
 ]
 # Always use absolute path for output
 # Paths
-EXTRACTION_CMD = [sys.executable, "-m", "app.extraction.main_extractor"]
-ANNOTATION_CMD = [sys.executable, "-m", "app.annotation.semantic_annotator"]
+EXTRACTION_CMD = [sys.executable, "-m", "engine.extraction.main_extractor"]
+ANNOTATION_CMD = [sys.executable, "-m", "engine.annotation.semantic_annotator"]
 TEMPLATE_GENERATION_CMD = [
     sys.executable,
     "-m",
-    "app.annotation.generate_class_templates",
+    "engine.annotation.generate_class_templates",
 ]
 # Always use absolute path for output
-OUTPUT_DIR = os.path.abspath("output")
-TTL_PATH = get_output_path("wdkb.ttl")
+OUTPUT_DIR = pathlib.Path("output").resolve()
+TTL_PATH = PathManager.get_output_path("wdkb.ttl")
 
 # If input_dir is set, add it to the subprocess commands
 if args.input_dir:
-    EXTRACTION_CMD += ["--input-dir", args.input_dir]
-    ANNOTATION_CMD += ["--input-dir", args.input_dir]
+    input_path = str(PathManager(args.input_dir).get_input_path(""))
+    EXTRACTION_CMD += ["--input-dir", input_path]
+    ANNOTATION_CMD += ["--input-dir", input_path]
 
 # Setup complete logging
-log_path = os.path.join("logs", "knowledge_pipeline.log")
-os.makedirs(os.path.dirname(log_path), exist_ok=True)
+log_path = pathlib.Path("logs") / "knowledge_pipeline.log"
+log_path.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=getattr(logging, args.log_level),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -112,7 +101,7 @@ logging.basicConfig(
 logger = logging.getLogger("knowledge_pipeline")
 
 
-def run_cmd(cmd: List[str], desc: str) -> None:
+def run_cmd(cmd: list[str], desc: str) -> None:
     """
     Run a subprocess command and exit on failure.
 
@@ -124,14 +113,13 @@ def run_cmd(cmd: List[str], desc: str) -> None:
         None
 
     Raises:
-        SystemExit: If the subprocess returns a non-zero exit code, the function prints an error and exits the program.
+        SystemExit: If the subprocess returns a non-zero exit code, the function
+        prints an error and exits the program.
     """
     # Security note: cmd is a predefined list of commands, not user input
     logger.info(f"Starting {desc}...")
     print(f"\n[STEP] {desc}...")
-    result = subprocess.run(
-        cmd, check=False
-    )  # nosec: B603 - cmd is trusted, shell=False
+    result = subprocess.run(cmd, check=False)  # nosec: B603 - cmd is trusted, shell=False
     if result.returncode != 0:
         error_msg = f"{desc} failed with return code {result.returncode}"
         logger.error(error_msg)
@@ -155,13 +143,16 @@ def run_extraction_with_progress() -> None:
 
     try:
         # Import and run the main extractor directly
-        from app.extraction.main_extractor import main as run_extraction
-
-        # Pass input_dir if available and set exit_on_completion=False for pipeline use
         input_dir = (
-            args.input_dir if hasattr(args, "input_dir") and args.input_dir else None
+            args.input_dir if hasattr(args, "input_dir") and args.input_dir else ""
         )
-        run_extraction(input_dir, exit_on_completion=False)
+        from engine.extraction.pipeline import ExtractionPipeline
+
+        # Use parallel processing with 4 workers and batch processing for better performance
+        pipeline = ExtractionPipeline(
+            input_dir, str(TTL_PATH), max_workers=4, batch_size=500
+        )
+        pipeline.run()
 
         if tracker:
             # Update extraction stage to completed
@@ -196,14 +187,9 @@ def run_annotation_with_progress() -> None:
 
     try:
         # Import and run the semantic annotator directly
-        from app.annotation.semantic_annotator import main as run_annotation
+        from engine.annotation.semantic_annotator import main as run_annotation
 
-        # Pass input_dir if available
-        input_dir = (
-            args.input_dir if hasattr(args, "input_dir") and args.input_dir else None
-        )
-        # Run annotation with efficient postprocessing
-        run_annotation(input_dir)
+        run_annotation()
 
         if tracker:
             # Update semantic annotation stage to completed
@@ -256,7 +242,8 @@ def upload_ttl_to_allegrograph(ttl_path: str) -> None:
 
     Raises:
         SystemExit: If the upload fails, prints an error and exits the program.
-        ValueError: If AllegroGraphRESTClient initialization fails due to missing environment variables.
+        ValueError: If AllegroGraphRESTClient initialization fails due to missing
+        environment variables.
     """
     logger.info("Starting TTL upload to AllegroGraph...")
     print("\n[STEP] Uploading TTL to AllegroGraph...")
@@ -294,8 +281,8 @@ def print_pipeline_summary() -> None:
     console.print()
 
     # Check if TTL file exists and get its size
-    if os.path.exists(TTL_PATH):
-        size_mb = os.path.getsize(TTL_PATH) / (1024 * 1024)
+    if pathlib.Path(TTL_PATH).exists():
+        size_mb = pathlib.Path(TTL_PATH).stat().st_size / (1024 * 1024)
         print(f"✓ Knowledge graph generated: {TTL_PATH}")
         print(f"  Size: {size_mb:.2f} MB")
     else:
@@ -357,7 +344,7 @@ def main() -> None:
         # Step 4: Upload to AllegroGraph (unless skipped)
         if not args.skip_upload:
             logger.info("Phase 4: Upload to AllegroGraph")
-            upload_ttl_to_allegrograph(TTL_PATH)
+            upload_ttl_to_allegrograph(str(TTL_PATH))
         else:
             logger.info("Skipping upload phase as requested")
             print("[SKIP] Upload phase skipped")
@@ -370,14 +357,16 @@ def main() -> None:
 
         console.print(
             Panel(
-                f"[bold green]Complete knowledge pipeline finished successfully![/bold green]\n"
-                f"All phases completed and knowledge graph saved to: [cyan]{TTL_PATH}[/cyan]",
+                f"[bold green]Complete knowledge pipeline finished successfully!"
+                f"[/bold green]\n"
+                f"All phases completed and knowledge graph saved to: [cyan]{TTL_PATH}"
+                f"[/cyan]",
                 title="🎉 Pipeline Complete",
                 border_style="green",
             )
         )
 
-        logger.info("Complete knowledge pipeline completed successfully")
+        logger.info("Complete knowledge pipeline finished successfully")
 
     except Exception as e:
         logger.error(f"Pipeline failed: {str(e)}", exc_info=True)

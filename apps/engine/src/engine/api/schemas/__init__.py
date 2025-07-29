@@ -1,1 +1,1 @@
-# This package will contain all schema (validation) models 
+# This package will contain all schema (validation) models

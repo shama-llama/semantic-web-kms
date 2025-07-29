@@ -1,28 +1,37 @@
 """This module provides the BaseOntology class."""
 
-import os
-from typing import Dict, List, Optional, Set, Union
+import pathlib
 
 from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
 
 
 class BaseOntology:
-    """Base class for ontology wrappers using rdflib."""
+    """
+    Base class for ontology handling using RDFLib.
 
-    def __init__(self, owl_path: Optional[str] = None):
+    Args:
+        owl_path (Optional[str]): Path to the OWL ontology file. If None, an
+            empty graph is created.
+
+    Side Effects:
+        Loads the ontology graph from the specified OWL file if provided.
+    """
+
+    def __init__(self, owl_path: str | None = None):
         """
         Initialize the ontology and parse the OWL file if provided.
 
         Args:
-            owl_path (Optional[str]): Path to the OWL ontology file. If None, an empty graph is created.
+            owl_path (Optional[str]): Path to the OWL ontology file. If None, an
+                empty graph is created.
 
         Side Effects:
             Loads the ontology graph and extracts namespaces if a file is provided.
         """
         self.graph = Graph()
-        self.ontology_uri: Optional[str] = None
-        self.namespaces: Dict[str, Namespace] = {}
-        if owl_path and os.path.exists(owl_path):
+        self.ontology_uri: str | None = None
+        self.namespaces: dict[str, Namespace] = {}
+        if owl_path and pathlib.Path(owl_path).exists():
             self.graph.parse(owl_path)
             self._extract_namespaces()
             self.ontology_uri = self._get_ontology_uri()
@@ -37,7 +46,7 @@ class BaseOntology:
         for prefix, ns in self.graph.namespaces():
             self.namespaces[prefix] = Namespace(ns)
 
-    def _get_ontology_uri(self) -> Optional[str]:
+    def _get_ontology_uri(self) -> str | None:
         """
         Return the ontology URI if present in the graph.
 
@@ -48,7 +57,7 @@ class BaseOntology:
             return str(s)
         return None
 
-    def get_namespace(self, name: str) -> Optional[Namespace]:
+    def get_namespace(self, name: str) -> Namespace | None:
         """
         Return the Namespace object for a given prefix name.
 
@@ -60,7 +69,7 @@ class BaseOntology:
         """
         return self.namespaces.get(name)
 
-    def get_class_uri(self, class_name: str) -> Optional[URIRef]:
+    def get_class_uri(self, class_name: str) -> URIRef | None:
         """
         Return the URIRef for a class by name (label or local part).
 
@@ -82,7 +91,7 @@ class BaseOntology:
                 return URIRef(str(s))
         return None
 
-    def get_property_uri(self, prop_name: str) -> Optional[URIRef]:
+    def get_property_uri(self, prop_name: str) -> URIRef | None:
         """
         Return the URIRef for a property by name (label or local part).
 
@@ -106,7 +115,7 @@ class BaseOntology:
                 return URIRef(str(s))
         return None
 
-    def get_superclass_chain(self, class_uri: Union[str, URIRef]) -> List[str]:
+    def get_superclass_chain(self, class_uri: str | URIRef) -> list[str]:
         """
         Return the full superclass chain for a class URI, up to the root.
 
@@ -114,11 +123,12 @@ class BaseOntology:
             class_uri (Union[str, URIRef]): The URI of the class (as string or URIRef).
 
         Returns:
-            List[str]: List of superclass URIs as strings, from immediate parent up to the root.
+            List[str]: List of superclass URIs as strings, from immediate parent up
+                to the root.
         """
-        chain: List[str] = []
+        chain: list[str] = []
         current = URIRef(class_uri)
-        visited: Set[URIRef] = set()
+        visited: set[URIRef] = set()
         while True:
             superclass = self.graph.value(current, RDFS.subClassOf)
             if superclass and superclass not in visited:
@@ -129,7 +139,7 @@ class BaseOntology:
                 break
         return chain
 
-    def get_all_classes(self) -> List[str]:
+    def get_all_classes(self) -> list[str]:
         """
         Return a list of all class URIs in the ontology.
 
@@ -138,14 +148,14 @@ class BaseOntology:
         """
         return [str(s) for s in self.graph.subjects(RDF.type, OWL.Class)]
 
-    def get_all_properties(self) -> List[str]:
+    def get_all_properties(self) -> list[str]:
         """
         Return a list of all property URIs in the ontology.
 
         Returns:
             List[str]: List of all property URIs as strings.
         """
-        props: Set[str] = set()
+        props: set[str] = set()
         for s in self.graph.subjects(RDF.type, OWL.ObjectProperty):
             props.add(str(s))
         for s in self.graph.subjects(RDF.type, OWL.DatatypeProperty):
@@ -153,20 +163,21 @@ class BaseOntology:
         return list(props)
 
     def get_subclasses(
-        self, class_uri: Union[str, URIRef], direct_only: bool = False
-    ) -> List[str]:
+        self, class_uri: str | URIRef, direct_only: bool = False
+    ) -> list[str]:
         """
         Return all subclasses of a given class URI.
 
         Args:
             class_uri (Union[str, URIRef]): The URI of the class (as string or URIRef).
-            direct_only (bool): If True, only direct subclasses are returned. If False, returns recursively.
+            direct_only (bool): If True, only direct subclasses are returned. If False,
+                returns recursively.
 
         Returns:
             List[str]: List of subclass URIs as strings.
         """
-        subclasses: Set[str] = set()
-        to_visit: List[URIRef] = [URIRef(class_uri)]
+        subclasses: set[str] = set()
+        to_visit: list[URIRef] = [URIRef(class_uri)]
         while to_visit:
             current = to_visit.pop()
             for s in self.graph.subjects(RDFS.subClassOf, current):
@@ -178,7 +189,7 @@ class BaseOntology:
 
 
 # Central ontology registry
-_ontology_registry: Dict[str, type] = {}
+_ontology_registry: dict[str, type] = {}
 
 
 def register_ontology(name: str, ontology_cls: type) -> None:

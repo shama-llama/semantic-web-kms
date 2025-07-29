@@ -4,7 +4,8 @@ import logging
 import threading
 import time
 from collections import deque
-from typing import Any, Callable, Deque, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger("rate_limiter")
 
@@ -43,7 +44,7 @@ class RateLimiter:
 
         # Thread safety
         self._lock = threading.Lock()
-        self._request_times: Deque[float] = deque()
+        self._request_times: deque[float] = deque()
         self._last_request_time: float = 0.0
 
         # Calculate minimum delay between requests
@@ -96,7 +97,7 @@ class RateLimiter:
         self,
         func: Callable[..., Any],
         *args,
-        error_handler: Optional[Callable[..., Any]] = None,
+        error_handler: Callable[..., Any] | None = None,
         **kwargs,
     ) -> Any:
         """
@@ -113,6 +114,7 @@ class RateLimiter:
 
         Raises:
             Exception: If the function fails after max retries
+            ValueError: If the rate limit is exceeded after max retries
         """
         for attempt in range(self.max_retries + 1):
             try:
@@ -141,8 +143,9 @@ class RateLimiter:
                     else:
                         logger.error("Max retries reached for rate limit. Giving up.")
                         raise ValueError(
-                            f"Rate limit exceeded after {self.max_retries} retries: {error_msg}"
-                        )
+                            f"Rate limit exceeded after {self.max_retries} retries: "
+                            f"{error_msg}"
+                        ) from e
 
                 # Handle other errors with custom handler if provided
                 if error_handler:
@@ -231,7 +234,7 @@ class RateLimiter:
             delay += secrets.SystemRandom().uniform(0, delay * 0.1)
         return float(delay)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics for the rate limiter.
 
@@ -240,9 +243,9 @@ class RateLimiter:
         """
         with self._lock:
             current_time = time.time()
-            recent_requests = len(
-                [t for t in self._request_times if current_time - t <= 60]
-            )
+            recent_requests = len([
+                t for t in self._request_times if current_time - t <= 60
+            ])
 
             return {
                 "requests_per_minute": self.requests_per_minute,

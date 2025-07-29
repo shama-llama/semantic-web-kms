@@ -1,17 +1,17 @@
 """This module provides the BFO class."""
 
-import os
+import pathlib
 
 from rdflib import OWL, RDF, RDFS, Graph, Namespace, URIRef
 
-from app.core.paths import get_basic_formal_ontology_path
+from engine.core.paths import PathManager
 
 
 class BFOOntology:
     """Wrapper for the Basic Formal Ontology (BFO) using rdflib."""
 
     BFO_NAMESPACE = "http://purl.obolibrary.org/obo/"
-    BFO_OWL_PATH = get_basic_formal_ontology_path()
+    BFO_OWL_PATH = PathManager.get_basic_formal_ontology_path()
     ENTITY_URI = URIRef(f"{BFO_NAMESPACE}BFO_0000001")
 
     def __init__(self, owl_path=None):
@@ -19,12 +19,12 @@ class BFOOntology:
         Initialize the BFO ontology, parsing the OWL file.
 
         Args:
-            owl_path (str, optional): Path to the BFO OWL file. If None, uses the default path.
-
+            owl_path (str, optional): Path to the BFO OWL file. If None, uses the
+                default path.
         Side Effects:
-            Loads the ontology graph and sets the namespace.
+            Loads the BFO ontology graph from the specified OWL file if provided.
         """
-        self.ontology_path = owl_path or os.path.abspath(self.BFO_OWL_PATH)
+        self.ontology_path = owl_path or pathlib.Path(self.BFO_OWL_PATH).resolve()
         self.graph = Graph()
         self.graph.parse(self.ontology_path)
         self.namespace = Namespace(self.BFO_NAMESPACE)
@@ -59,7 +59,8 @@ class BFOOntology:
         Return all direct subclasses of 'entity' (BFO_0000001) as (uri, label) tuples.
 
         Returns:
-            List[Tuple[str, Optional[str]]]: List of tuples containing subclass URIs and their labels.
+            List[Tuple[str, Optional[str]]]: List of tuples containing subclass URIs
+                and their labels.
         """
         top_level = []
         for s in self.graph.subjects(RDFS.subClassOf, self.ENTITY_URI):

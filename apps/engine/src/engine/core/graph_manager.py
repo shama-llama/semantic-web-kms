@@ -1,6 +1,6 @@
 """Graph management utilities for RDF graphs and ontologies."""
 
-from typing import Any, Dict
+from typing import Any
 
 from rdflib import Graph
 
@@ -14,6 +14,7 @@ class GraphManager:
 
         Args:
             ontology (Any): The ontology object containing namespaces to bind.
+
         Raises:
             AttributeError: If the ontology does not have a 'namespaces' attribute.
         """
@@ -30,6 +31,7 @@ class GraphManager:
             s (Any): The subject of the triple (must be an rdflib term).
             p (Any): The predicate of the triple (must be an rdflib term).
             o (Any): The object of the triple (must be an rdflib term).
+
         Returns:
             None
         Raises:
@@ -44,6 +46,7 @@ class GraphManager:
         Args:
             path (str): The file path to serialize the graph to.
             fmt (str, optional): The serialization format (default: "turtle").
+
         Returns:
             None
         Raises:
@@ -51,12 +54,13 @@ class GraphManager:
         """
         self.graph.serialize(destination=path, format=fmt)
 
-    def stats(self) -> Dict[str, int]:
+    def stats(self) -> dict[str, int]:
         """
-        Return statistics about the graph, including triple, subject, predicate, and object counts.
+        Return statistics about the graph.
 
         Returns:
-            Dict[str, int]: A dictionary with counts of total triples, subjects, predicates, and objects.
+            Dict[str, int]: A dictionary with counts of total triples, subjects,
+            predicates, and objects.
         """
         return {
             "total_triples": len(self.graph),
